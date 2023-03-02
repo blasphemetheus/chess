@@ -11,3 +11,7 @@ Part 1: identifiable components of software system
 - what is needed as common knowledge to make communication successful?
 
 Part 2: how you should proceed about implementing these pieces. Demo software soon pls. Memo shouldn't exceed two pages, at most one page per part hmm.
+
+I want to support the FEN system of denoting chess games.
+
+So (Forsyth Edwards Notation) is what FEN means, should be able to find summaries of it online, but it's basically a way to compress the blank parts of the board into a numeral and record any pieces that are placed as a letter, either capital or not capital

@@ -50,7 +50,7 @@ defmodule TileTest do
       end
     end
     test "invalid tile color string raises error, empty tile" do
-      exc = assert_raise ArgumentError, fn ->
+      assert_raise ArgumentError, fn ->
         renderTile("cool", :empty)
       end
     end

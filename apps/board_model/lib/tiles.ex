@@ -2,6 +2,7 @@ defmodule Tile do
   @moduledoc """
   Tile Docs, this is the tile stuff
   """
+  require TileError
 
   @doc """
   function for rendering tiles graphically
@@ -37,8 +38,16 @@ defmodule Tile do
     end
   end
 
-  def renderTile(color, _) do
+  def renderTile(_color, _) do
     raise ArgumentError, message: "invalid color"
+  end
+
+
+  def renderTile(tileColor) do
+    case tileColor do
+      :orange -> "◻"
+      :blue -> "◼"
+    end
   end
 
   @doc """

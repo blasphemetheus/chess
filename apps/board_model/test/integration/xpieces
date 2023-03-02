@@ -1,0 +1,9 @@
+  # testing harness, name it xpieces. Harness consumes it's json input from STDIN and produces results to stdout
+  # inputs have the shape [pieceIndex, color, location, boardstate]
+  # outputs should look like this:
+  # [for the ", color, " ", piece, " on ", location, "the following locations are threatened: " list_of_locations]
+  # where list_of_locations is a list of of the format [location, location, location], or [] if empty
+  
+  # the idea is that besides unit tests, multi-component projects need
+  # Integration Tests : these test compose several components and run tests on the composite that exercise functions across the components. 
+  # An illustration of this idea is this task.

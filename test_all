@@ -1,0 +1,4 @@
+#!/bin/bash
+# the test_all bash script, by Bradelius Fargyle
+
+mix test --cover

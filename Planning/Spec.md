@@ -75,3 +75,30 @@ Second phase -> remote proxy pattern to go from the monolithic prototype system 
 - a remote proxy player
 - a remote proxy server
 - a communication layer (TCP, could do webhooks? or whatever networking solution elixir docs suggest)
+
+
+## Next steps
+The Royal Game of Ur
+
+This is a simple dice and choice based board game, similar to tables games like backgammon. There is a prescribed route for players to move their pieces along. If a player gets their piece to the end then that piece is 'home' and has scored. When a player gets all their pieces 'home' they win. Their are a couple possible routes to play for, but I will implement two.
+
+One is 
+ __   __
+|  | |  |
+V  | |  V
+0  | |  0
+0  | |  0
+V  | |  V
+|  | |  |
+|  | |  |
+|__| |__|
+
+so a 3 X 8 grid where the middle column both players can use. Other possible routes start at the bottom sides and go around the board and back down the middle, tho that seems more annoying to draw.
+
+To play, 2 players gather. One player starts.
+That player rolls four dice (d4 marked with a special mark on one tip) and if they roll that white mark it counts as 1 'space' they can move on their turn. If they get 4 marks then they can move one piece 4 spaces. If 0 then 0 spaces. Also possible moves are limited by the placements of the end of the board and of the position of your own and other pieces (and rosettes).
+
+There are safe spaces along the outside columns and 'combat spaces in the middle. In the alternate version the only safe spaces are the first 4 spaces on each side. If possible a player must move a piece. If a piece is on a rosette it cannot be captured (safe). Also if you land on any rosette the player gets an exra roll. To remove a piece from the board, player must roll exactly the number of spaces remaining until the end of the course plus 1. If not exactly that number, removing the piece is not an option. Each player has 7 moving tokens that they must run through the course.
+
+
+OPTIONAL: There are also possibly 21 white balls used for wagers. When a player skips a box marked with a rosette they place a token in the pot. If a player lands on a rosette they May take a token from the pot.
