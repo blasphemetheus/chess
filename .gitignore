@@ -1,4 +1,4 @@
-#.gitignore
+.gitignore
 #  FOR ANY CONTRIBUTERS PLEASE UNCOMMENT THE .gitignore in this file
 # This is so you can change this file however you'd like and so you don't 
 # try to merge conflicting .gitignores
