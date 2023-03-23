@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-03-23T20:29:57.139Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0" etag="EJyC7TSHG9uA3IolFU6q" version="21.1.0" type="github" pages="3">
+<mxfile host="app.diagrams.net" modified="2023-03-23T20:34:51.861Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0" etag="ZrvPQlgkj6jsko48NEkj" version="21.1.0" type="github" pages="3">
   <diagram name="gchess_eventual_tcp" id="5f0bae14-7c28-e335-631c-24af17079c00">
     <mxGraphModel dx="1298" dy="513" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="none" math="0" shadow="0">
       <root>
@@ -400,7 +400,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="UrqbuiKWvMA4o3Jq6fLM" name="Model">
-    <mxGraphModel dx="345" dy="140" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="506" dy="205" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -432,7 +432,7 @@
           <mxGeometry x="1" y="8" width="90" height="30" as="geometry" />
         </mxCell>
         <mxCell id="eCQYx24zuToegmJU3gOi-15" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.plaque_frame;dx=10;whiteSpace=wrap;" vertex="1" parent="1">
-          <mxGeometry x="300" y="40" width="200" height="90" as="geometry" />
+          <mxGeometry x="300" y="30" width="200" height="100" as="geometry" />
         </mxCell>
         <mxCell id="eCQYx24zuToegmJU3gOi-315" value="Backwards Chess" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="380" y="10" width="120" height="30" as="geometry" />
@@ -873,7 +873,7 @@
           <mxGeometry x="5" width="5" height="5" as="geometry" />
         </mxCell>
         <mxCell id="eCQYx24zuToegmJU3gOi-318" value="" style="group" vertex="1" connectable="0" parent="1">
-          <mxGeometry x="420" y="65" width="40" height="40" as="geometry" />
+          <mxGeometry x="440" y="60" width="40" height="40" as="geometry" />
         </mxCell>
         <mxCell id="eCQYx24zuToegmJU3gOi-92" value="" style="group" vertex="1" connectable="0" parent="eCQYx24zuToegmJU3gOi-318">
           <mxGeometry width="40" height="10" as="geometry" />
@@ -1327,6 +1327,24 @@
         </mxCell>
         <mxCell id="eCQYx24zuToegmJU3gOi-322" value="Board module" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.wave2;dy=0.3;" vertex="1" parent="1">
           <mxGeometry x="300" y="170" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="eCQYx24zuToegmJU3gOi-323" value="GameRunner module" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="330" y="35" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="eCQYx24zuToegmJU3gOi-328" value="" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.sharpArrow2;dy1=0.67;dx1=18;dx2=18;dy3=0.15;dx3=27;notch=6.5;rotation=59;" vertex="1" parent="1">
+          <mxGeometry x="377" y="100" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="eCQYx24zuToegmJU3gOi-327" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.star" vertex="1" parent="1">
+          <mxGeometry x="375" y="57.5" width="50" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="eCQYx24zuToegmJU3gOi-329" value="" style="shape=mxgraph.arrows2.wedgeArrowDashed2;html=1;bendable=0;startWidth=50;stepSize=15;rounded=0;" edge="1" parent="1" target="eCQYx24zuToegmJU3gOi-330">
+          <mxGeometry width="100" height="100" relative="1" as="geometry">
+            <mxPoint x="440" y="230" as="sourcePoint" />
+            <mxPoint x="520" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eCQYx24zuToegmJU3gOi-330" value="&lt;div&gt;All the pieces...&lt;/div&gt;&lt;div&gt;pawn&lt;/div&gt;&lt;div&gt;rook&lt;/div&gt;&lt;div&gt;knight&lt;/div&gt;&lt;div&gt;bishop&lt;/div&gt;&lt;div&gt;queen&lt;/div&gt;&lt;div&gt;king&lt;/div&gt;&lt;div&gt;Promoting&lt;br&gt;&lt;/div&gt;" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=card;whiteSpace=wrap;size=20;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="125" width="100" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
