@@ -9,7 +9,7 @@
 # move said applications out of the umbrella.
 import Config
 
-config :my_app, IO, pipe: MockCLIViewPipe
+config :view, IO, pipe: MockCLIViewPipe
 
 # Sample configuration:
 #

@@ -83,7 +83,8 @@ defmodule MoveCollection do
     |> move!({:h, 2}, {:g, 3}, :orange, :pawn)
     |> move!({:d, 6}, {:g, 3}, :blue, :bishop)
 
-    GameRunner.takeTurns(%GameRunner{board: placements})
+    #import GameRunner
+    #GameRunner.takeTurns(%GameRunner{board: placements})
   end
 
   def carokannsmotheredmate() do
@@ -129,7 +130,7 @@ defmodule MoveCollection do
     |> move!({:f, 1}, {:d, 3}, :orange, :bishop)
     |> move!({:b, 4}, {:c, 3}, :blue, :bishop)
 
-    GameRunner.takeTurns(%GameRunner{board: placements})
+    #GameRunner.takeTurns(%GameRunner{board: placements})
 
   end
 

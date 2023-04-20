@@ -77,7 +77,9 @@ defmodule View.CLI do
   end
   ############################################################
 
-  def displayBoard(board, color) do
+
+
+  def displayBoard(board, color, first_p, second_p) do
     displayOrder(board.order)
     displayTurn(color, {first_p, second_p})
     displayPlacements(board.placements, color)
@@ -89,10 +91,16 @@ defmodule View.CLI do
 
   def displayGame(game) do
     displayPlayers(game)
-    displayBoard(game.placements, game.turn)
+    displayBoard(game.placements, game.turn, game.first, game.second)
   end
 
-  def displayImpalable(impalable_loc), do: IO.puts("#{impalable_loc}")
+  def displayPlayers(game) do
+    IO.puts("#{inspect(game)}")
+  end
+
+  def displayImpalable(impale_square) do
+    IO.puts("The pawn at #{inspect(impale_square)} is impalable (en passant)")
+  end
 
   def displayCastleable({first_c, second_c}) do
     IO.puts("#{first_c} #{second_c}")
@@ -102,8 +110,8 @@ defmodule View.CLI do
     IO.puts("#{fullmoves} #{halfmove_clock}")
   end
 
-  def displayTurn(color, {first_p, second_p} = players_tuple) do
-    IO.put("#{color}, #{first_p} #{second_p} ")
+  def displayTurn(color, {first_p, second_p}) do
+    IO.puts("#{color}, #{first_p} #{second_p} ")
   end
 
   def displayOrder({first, second}), do: IO.puts("ORDER: #{inspect(first)}, then #{inspect(second)}")
@@ -111,22 +119,18 @@ defmodule View.CLI do
   def displayPlacements(placements, color \\ :orange)
   def displayPlacements(placements, :orange) do
     placements
-    |> Board.reverseBoard()
-    |> Board.printBoard()
+    |> Board.reversePlacements()
+    |> Board.printPlacements()
   end
   def displayPlacements(placements, :blue) do
     placements
-    |> Board.printBoard()
+    |> Board.printPlacements()
   end
 
   def displayPlacements(placements, color, impale_square) do
     placements
     |> insertSprintedPawn(impale_square, Board.otherColor(color))
     |> displayPlacements(color)
-  end
-
-  def displayImpalable(impale_square) do
-    IO.puts("The pawn at #{inspect(impale_square)} is impalable (en passant)")
   end
 
   def insertSprintedPawn(board, impale_square, color) do
@@ -186,7 +190,7 @@ defmodule View.CLI do
   def showGameStatus(board, {tag, opponent} = tags, taken, time_elapsed, turns) do
     displays(:metadata, tags, taken, time_elapsed, turns)
     board
-    |> displayBoard()
+    |> displayBoard(board.order[0], tag, opponent)
   end
 
   ##################################################
@@ -207,7 +211,7 @@ defmodule View.CLI do
   def displays(:turn_intro, turn, player) do
     case player do
       nil -> IO.puts("The Turn is: #{inspect(turn)}")
-      other -> IO.puts("The Turn is: #{inspect(turn)}, with player: #{inspect(player)}")
+      _other -> IO.puts("The Turn is: #{inspect(turn)}, with player: #{inspect(player)}")
 
     end
   end

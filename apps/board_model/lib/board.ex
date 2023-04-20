@@ -18,8 +18,8 @@ defmodule Board do
   @firstColor :orange
   @secondColor :blue
   @piecetypes [:pawn, :bishop, :knight, :rook, :queen, :king]
-  @move_only [:sprint, :march, :castle, :promote]
-  @castling_priveleges [:short, :long, :both, :none, :left, :right]
+  #@move_only [:sprint, :march, :castle, :promote]
+  #@castling_priveleges [:short, :long, :both, :none, :left, :right]
   # short and long and left and right are disagreeing notions of how a board's orientation works,
   # but it's simple enough to support both, so I'm going to (it's a bad idea)
   # short is always kingside, long is always queenside, but if you're orange,
@@ -179,7 +179,7 @@ defmodule Board do
 
     col = case row do
       0 -> 0
-      _ when is_list() -> length(List.first(board))
+      list when is_list(list) -> length(List.first(board))
     end
 
     check = fn (col, row) when good_col_n_row(col, row) -> {col, row} end
@@ -230,18 +230,6 @@ defmodule Board do
 
   def behind(placements, {e_col, e_row}, :blue) do
     get_at(placements, {e_col, e_row + 1})
-  end
-
-  @doc """
-  returns whether the location provided is in front of a pawn
-  on the provided placements, with the provided pieceColor
-  """
-  def in_front_of_enemy_pawn(placements, loc, color) do
-    opponent = otherColor(color)
-    case behind(placements, loc, color) do
-      {:pawn, ^opponent} -> true
-      _any -> false
-    end
   end
 
   @doc """
@@ -392,18 +380,15 @@ defmodule Board do
   @doc """
   Given a location, a color, and placements, returns
   whether the location is in front of an enemy pawn
-  """
-  def in_front_of_enemy_pawn(placements, {col, row}, :orange) do
-    case Board.get_at(placements, {col, row - 1}) do
-      {:pawn, :blue} -> true
-      any -> false
-    end
-  end
 
-  def in_front_of_enemy_pawn(placements, {col, row}, :blue) do
-    case Board.get_at(placements, {col, row + 1}) do
-      {:pawn, :orange} -> true
-      any -> false
+  returns whether the location provided is in front of a pawn
+  on the provided placements, with the provided pieceColor
+  """
+  def in_front_of_enemy_pawn(placements, loc, color) do
+    opponent = otherColor(color)
+    case behind(placements, loc, color) do
+      {:pawn, ^opponent} -> true
+      _any -> false
     end
   end
 
@@ -447,28 +432,28 @@ defmodule Board do
     travel_spot not in threatens(placements, otherColor(playerColor))
   end
 
-  def ensureRookspotContainsRookForCastle(playerColor, moveType, placements, rook_spot) do
-    case rookspotContainsRookForCastle(playerColor, moveType, placements, rook_spot) do
+  def ensureRookspotContainsRookForCastle(playerColor, placements, rook_spot) do
+    case rookspotContainsRookForCastle(playerColor, placements, rook_spot) do
       true -> true
       false -> raise MoveError, message: "uncastleable because no rook at #{inspect(rook_spot)}"
     end
   end
 
-  def rookspotContainsRookForCastle(playerColor, moveType, placements, rook_spot) do
-    that_rook = case get_at(placements, rook_spot) do
+  def rookspotContainsRookForCastle(playerColor, placements, rook_spot) do
+    case get_at(placements, rook_spot) do
       {^playerColor, :rook} -> true
       _ -> false
     end
   end
 
-  def ensureNoPiecesBetweenRookAndKingForCastle(playerColor, moveType, placements, start_loc, rook_spot) do
-    case noPiecesBetweenRookAndKingForCastle(playerColor, moveType, placements, start_loc, rook_spot) do
+  def ensureNoPiecesBetweenRookAndKingForCastle(placements, start_loc, rook_spot) do
+    case noPiecesBetweenRookAndKingForCastle(placements, start_loc, rook_spot) do
       true -> true
-      false -> raise MoveError, "move #{moveType} invalid as there is a piece in the way"
+      false -> raise MoveError, "castle invalid as there is a piece in the way"
     end
   end
 
-  def noPiecesBetweenRookAndKingForCastle(playerColor, moveType, placements, start_loc, rook_spot) do
+  def noPiecesBetweenRookAndKingForCastle(placements, start_loc, rook_spot) do
     pieces_between(placements, rook_spot, start_loc) |> length() == 0
   end
 
@@ -490,11 +475,11 @@ defmodule Board do
 
     rook_spot = rookspot(playerColor, moveType)
 
-    ensureRookspotContainsRookForCastle(playerColor, moveType, placements, rook_spot)
+    ensureRookspotContainsRookForCastle(playerColor, placements, rook_spot)
 
     that_rook = get_at(placements, rook_spot)
 
-    ensureNoPiecesBetweenRookAndKingForCastle(playerColor, moveType, placements, start_loc, rook_spot)
+    ensureNoPiecesBetweenRookAndKingForCastle(placements, start_loc, rook_spot)
 
     travel_spot = castle_travel_spot(start_loc, end_loc)
 
@@ -738,6 +723,8 @@ defmodule Board do
 
   def printFEN(board) do
     placement_str = printPlacements(board.placements, "")
+    other = "other"
+    placement_str <> other
   end
 
   def  blue_or_orange(true) do
@@ -820,10 +807,10 @@ defmodule Board do
   iex> Board.kingImmobile(Board.startingPosition(), :orange)
   false
 
-  iex> Board.kingImmobile(Board.kingImmobilePosition(), :orange)
+  iex> Board.kingImmobile(MoveCollection.kingBlockedByOwnPieces(), :orange)
   false
 
-  iex> Board.kingImmobile(Board.kingImmobilePosition(), :blue)
+  iex> Board.kingImmobile(MoveCollection.shorteststalemate(), :blue)
   true
 
   """
@@ -885,12 +872,21 @@ defmodule Board do
   def noPieceCanMove(placements, to_play) do
     ## TODO - FILL OUT SO IT WORKS WITH SPECIFIC COLOR
     ## WARNING GENERATED CODE
+    # list o location, placement
+
 
     placements
-    |> fetch_locations()
-    |> Enum.all?(fn rank -> Enum.all?(rank,
-      fn tile -> immobile(placements, tile)
-     end) end)
+    |> fetch_locations(to_play)
+    |> Enum.all?(fn {loc, _placement} -> immobile(placements, loc)
+    end)
+  end
+
+  @doc """
+  Given a placements and a location, returns whether that piece can move nowhere
+  """
+  def immobile(placements, loc) do
+    possible_moves(placements, loc) |> length() == 0
+    # check for stuff extra?
   end
 
   @doc """
@@ -1382,8 +1378,8 @@ defmodule Board do
     board
     |> listify()
     |> Enum.filter(fn
-      _other -> false
       {^color, ^piecetype} -> true
+      _other -> false
     end)
   end
 
@@ -1395,8 +1391,8 @@ defmodule Board do
     board
     |> listify()
     |> Enum.filter(fn
-      _other -> false
       {_col, ^piecetype} -> true
+      _other -> false
     end)
   end
 
@@ -1408,8 +1404,9 @@ defmodule Board do
     board
     |> listify()
     |> Enum.filter(fn
-      _other -> false
       {^color, _piecetype} -> true
+
+      _other -> false
     end)
   end
 
@@ -1471,18 +1468,21 @@ defmodule Board do
     (total == 1 and king == 1) or (total == 2 and king == 1 and minor_pieces == 1)
   end
 
+  @doc """
+  Given a board and a color representing the turn, returns whether the current
+  board is a draw or not
+  """
   def isDraw(board, to_play) do
-    # TODO
+    isInsufficientMaterial(board) or isStalemate(board, to_play) or isThreeFoldRepitition(board, to_play) or isFiftyMoveRule(board)
+  end
+
+  def isThreeFoldRepitition(_board, _to_play) do
+    #todo
     false
   end
 
-  def isCheckmate(board, to_play) do
-    # TODO
-    false
-  end
-
-  def immobile(board, {pieceColor, pieceType}) do
-    # TODO
+  def isFiftyMoveRule(_board) do
+    #todo
     false
   end
 

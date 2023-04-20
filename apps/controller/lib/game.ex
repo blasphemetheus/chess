@@ -41,8 +41,10 @@ defmodule GameRunner do
     i = String.trim(input)
     {:ok, {s_loc, e_loc, playerColor, pieceType}} = parseMove(i)
 
-    board
-    |> move(s_loc, e_loc, playerColor, pieceType)
+    case color do
+      ^playerColor -> board |> move(s_loc, e_loc, playerColor, pieceType)
+      _any -> raise ArgumentError, message: "tried to move another's piece"
+    end
   end
 
 
@@ -172,7 +174,7 @@ defmodule GameRunner do
   def playTurn(game, player) do
     case player.type do
       :human -> playHumanTurn(game, player)
-      :cpu -> playCPUTurn(game, player)
+      :cpu -> playCPUTurn(game)
       _ -> raise GameException, message: "Invalid player type #{inspect(player)}"
     end
   end
@@ -230,12 +232,16 @@ defmodule GameRunner do
     # if the player times out, end the game as a timeout loss
   end
 
-  def playCPUTurn(game, player) do
+  def playCPUTurn(game) do
     turn = game.turn
+
+    player = case turn do
+      :orange -> game.first
+      :blue -> game.second
+    end
+
     selected_move = possible_moves(game.board, turn)
     |> Enum.random()
-
-    dbg()
 
     new_board = Board.makeMove(game.board, selected_move)
     takeTurns(%{game | board: new_board, turn: nextTurn(turn)})

@@ -1,6 +1,6 @@
 defmodule Main do
   import Board
-  import View
+  import View.CLI
   import TournamentOrganizer
   alias TournamentOrganizer, as: TO
 
