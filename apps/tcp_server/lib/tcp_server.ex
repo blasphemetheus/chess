@@ -3,10 +3,15 @@ defmodule TCPServer do
   Documentation for `TCPServer`.
   """
   require Logger
-  # tcp servers:
+  # tcp servers that just mirror:
   # - listen to a port until port is available the server gets hold of the socket
   # - waits for a client connection on that port and accepts it
   # - reads the client request and writes a response back
+
+  # should be in a different app probably (for handling tcp connections)
+  def tcpConnect(socket, port) do
+    "hmmb"
+  end
 
   def accept(port) do
     # the options below:
@@ -22,14 +27,26 @@ defmodule TCPServer do
       )
 
     Logger.info("Accepting Connections on port #{port}")
-    loop_acceptor(socket)
+    loop_acceptor(socket, 0)
   end
 
-  defp loop_acceptor(socket) do
+  #defp loop_acceptor(socket) do
+  #  {:ok, client} = :gen_tcp.accept(socket)
+  #  {:ok, pid} = Task.Supervisor.start_child(TCPServer.TaskSupervisor, fn -> serve(client) end)
+  #  :ok = :gen_tcp.controlling_process(client, pid)
+  #  loop_acceptor(socket)
+  #end
+
+  defp loop_acceptor(socket, 1000) do
+    Logger.info("Timeout: Closing socket on socket #{socket}")
+    :gen_tcp.close(socket)
+  end
+
+  defp loop_acceptor(socket, n) do
     {:ok, client} = :gen_tcp.accept(socket)
     {:ok, pid} = Task.Supervisor.start_child(TCPServer.TaskSupervisor, fn -> serve(client) end)
     :ok = :gen_tcp.controlling_process(client, pid)
-    loop_acceptor(socket)
+    loop_acceptor(socket, n+1)
   end
 
   defp serve(socket) do
@@ -75,4 +92,11 @@ defmodule TCPServer do
     :gen_tcp.send(socket, "ERROR\r\n")
     exit(error)
   end
+
+    # client api custom
+    def play() do
+      IO.puts("someone tried to play over TCP but this isn't implemented yet")
+      {:error, "Online Play not implemented yet"}
+    end
+
 end

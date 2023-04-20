@@ -3,10 +3,10 @@ defmodule CLIView.MixProject do
 
   def project do
     [
-      app: :cli_view,
+      app: :view,
       version: "0.1.0",
       elixir: "~> 1.13",
-      start_permanent: Mix.env() == :prod,
+      start_permanent: Mix.env() == :dev,
       deps: deps()
     ]
   end
@@ -21,6 +21,8 @@ defmodule CLIView.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:board_model, in_umbrella: true},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]

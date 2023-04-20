@@ -43,9 +43,16 @@ defmodule Location do
   defp dumbRow(formal_row), do: formal_row - 1
 
   # converts a dumb location into a formal location
+  @doc """
+  Given a dumb location, returns a formal location
+
+  iex> Location.formalLocation({0, 0})
+  {:a, 1}
+  """
   def formalLocation({dumb_row, dumb_col}) when not is_integer(dumb_row) or not is_integer(dumb_col) do
     raise ArgumentError, message: "dumb location is not well-formed (doesn't have 2 integers)"
   end
+
   def formalLocation({dumb_row, dumb_col}) do
     {formalCol(dumb_col), formalRow(dumb_row)}
   end
@@ -65,5 +72,8 @@ defmodule Location do
   end
 
   def formalRow(dumb_row), do: dumb_row + 1
+
+  def nextTo(col, other_col) when is_atom(col) and is_atom(other_col), do: nextTo(dumbColumn(col), dumbColumn(other_col))
+  def nextTo(row, other_row) when is_integer(row) and is_integer(other_row), do: abs(row - other_row) == 1
 
 end # end o module

@@ -2,11 +2,14 @@ defmodule TCPServerTest do
   use ExUnit.Case, async: true
 
   setup do
-    {:ok, serve} = TCPServer.accept(4040)
+    {:ok, serve} = TCPServer.accept(4041)
     %{serve: serve}
+    #on_exit(fn -> TCPServer.stop_accepting() end)
   end
 
-  test "greets the world" do
+  @tag :skip
+  test "test timeout" do
     assert true
   end
+
 end

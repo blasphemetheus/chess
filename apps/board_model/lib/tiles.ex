@@ -14,7 +14,7 @@ defmodule Tile do
   """
   def renderTile(:orange, piece) do
     case piece do
-      :empty -> "◻"
+      :mt -> "◻"
       :king -> "♔"
       :queen -> "♕"
       :rook -> "♖"
@@ -27,7 +27,7 @@ defmodule Tile do
 
   def renderTile(:blue, piece) do
     case piece do
-      :empty -> "◼"
+      :mt -> "◼"
       :king -> "♚"
       :queen -> "♛"
       :rook -> "♜"
@@ -91,5 +91,25 @@ defmodule Tile do
     pt = assignExtPieceType(pieceType)
 
     "{\"tileColor\":\"" <> tc <> "\",\"contains\":[\"" <> pc <> "\", \"" <> pt <> "\"]}"
+  end
+
+  def nestedTileColors do
+    ## same as all_locations_nested(:formal) in Board
+    8..1
+    |> Enum.map(fn rank -> 1..8
+    |> Enum.map(fn file -> {Board.int_to_column(file), rank} |> Tile.loc_to_color() end) end)
+    ## NOW ON TO OTHER STUFF
+  end
+
+
+  @doc """
+  Given a formal location, returns either :blue or :orange, representing what color tile should be there
+  """
+  def loc_to_color({file, rank}) do
+    file_num = file |> Board.column_to_int()
+    case rem(file_num + rank, 2) do
+      0 -> :blue #even
+      1 -> :orange #odd
+    end
   end
 end

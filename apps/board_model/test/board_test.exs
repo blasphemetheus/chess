@@ -3,13 +3,13 @@ defmodule BoardTest do
   doctest Board
   import Board
 
-  describe "Board.makeBoard(_,_)" do
+  describe "Board.make2DList(_,_)" do
     test "make 3x3 board" do
-      assert makeBoard(3, 3) == [[:mt, :mt, :mt], [:mt, :mt, :mt], [:mt, :mt, :mt]]
+      assert make2DList(3, 3) == [[:mt, :mt, :mt], [:mt, :mt, :mt], [:mt, :mt, :mt]]
     end
 
     test "make 8 by 8 board" do
-      assert makeBoard(8, 8) == [
+      assert make2DList(8, 8) == [
                [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
                [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
                [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
@@ -22,7 +22,7 @@ defmodule BoardTest do
     end
 
     test "make 5 by 5 board" do
-      assert makeBoard(5, 5) == [
+      assert make2DList(5, 5) == [
                [:mt, :mt, :mt, :mt, :mt],
                [:mt, :mt, :mt, :mt, :mt],
                [:mt, :mt, :mt, :mt, :mt],
@@ -32,71 +32,71 @@ defmodule BoardTest do
     end
 
     test "make 3 by 4 and 4 by 3 boards" do
-      assert makeBoard(3, 4) == [
+      assert make2DList(3, 4) == [
                [:mt, :mt, :mt],
                [:mt, :mt, :mt],
                [:mt, :mt, :mt],
                [:mt, :mt, :mt]
              ]
 
-      assert makeBoard(4, 3) == [[:mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt]]
+      assert make2DList(4, 3) == [[:mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt]]
     end
 
     test "make sure argument bounds works, raise arg errors if outside 3 by 3 and 8 by 8 inclusive to things like 3 by 8 and 8 by 3" do
       assert_raise BoardError, fn ->
-        makeBoard(2, 3)
+        make2DList(2, 3)
       end
 
       assert_raise BoardError, fn ->
-        makeBoard(3, 2)
+        make2DList(3, 2)
       end
 
       assert_raise BoardError, fn ->
-        makeBoard(9, 3)
+        make2DList(9, 3)
       end
 
       assert_raise BoardError, fn ->
-        makeBoard(3, 9)
+        make2DList(3, 9)
       end
     end
 
     test "make sure zero and one raise arg errors" do
       assert_raise BoardError, fn ->
-        makeBoard(0, 0)
+        make2DList(0, 0)
       end
 
       assert_raise BoardError, fn ->
-        makeBoard(1, 1)
+        make2DList(1, 1)
       end
     end
   end
 
-  # end of describe makeboard tests
+  # end of describe make2DList tests
 
-  describe "private recMakeBoard(cols, rows)" do
+  describe "private rec2DList(cols, rows)" do
     test "make empty boards" do
-      assert recMakeBoard(1, 0) == []
-      assert recMakeBoard(0, 0) == []
-      assert recMakeBoard(0, 1) == []
-      assert recMakeBoard(0, 6) == []
+      assert rec2DList(1, 0) == []
+      assert rec2DList(0, 0) == []
+      assert rec2DList(0, 1) == []
+      assert rec2DList(0, 6) == []
     end
 
     test "make 1 by 1 board" do
-      assert recMakeBoard(1, 1) == [[:mt]]
+      assert rec2DList(1, 1) == [[:mt]]
     end
 
     test "make 2 by 1 boards and 1 by 2" do
-      assert recMakeBoard(1, 2) == [[:mt], [:mt]]
-      assert recMakeBoard(2, 1) == [[:mt, :mt]]
+      assert rec2DList(1, 2) == [[:mt], [:mt]]
+      assert rec2DList(2, 1) == [[:mt, :mt]]
     end
 
     test "make 1 by 8 and 8 by 1" do
-      assert recMakeBoard(1, 8) == [[:mt], [:mt], [:mt], [:mt], [:mt], [:mt], [:mt], [:mt]]
-      assert recMakeBoard(8, 1) == [[:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt]]
+      assert rec2DList(1, 8) == [[:mt], [:mt], [:mt], [:mt], [:mt], [:mt], [:mt], [:mt]]
+      assert rec2DList(8, 1) == [[:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt]]
     end
 
     test "make 8 by 8" do
-      assert recMakeBoard(8, 8) == [
+      assert rec2DList(8, 8) == [
                [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
                [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
                [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
@@ -109,7 +109,7 @@ defmodule BoardTest do
     end
 
     test " make absurdly long ones" do
-      assert recMakeBoard(64, 1) == [
+      assert rec2DList(64, 1) == [
                [
                  :mt,
                  :mt,
@@ -178,7 +178,7 @@ defmodule BoardTest do
                ]
              ]
 
-      assert recMakeBoard(64, 2) == [
+      assert rec2DList(64, 2) == [
                [
                  :mt,
                  :mt,
@@ -315,7 +315,7 @@ defmodule BoardTest do
     end
   end
 
-  # end of recMakeBoard(cols, rows) tests
+  # end of rec2DList(cols, rows) tests
 
   describe "Board.placePiece(board, location, pieceColor, pieceType) tests" do
     #setup "initialize all the various boards" do
@@ -465,7 +465,7 @@ defmodule BoardTest do
         [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
         [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt]]
 
-      just_orange_pawns_placed = makeBoard(8,8)
+      just_orange_pawns_placed = make2DList(8,8)
       |> placePiece({:a, 2}, :orange, :pawn)
       |> placePiece({:b, 2}, :orange, :pawn)
       |> placePiece({:c, 2}, :orange, :pawn)
@@ -475,7 +475,7 @@ defmodule BoardTest do
       |> placePiece({:g, 2}, :orange, :pawn)
       |> placePiece({:h, 2}, :orange, :pawn)
 
-      just_blue_pieces_placed = makeBoard(8,8)
+      just_blue_pieces_placed = make2DList(8,8)
       |> placePiece({:a, 8}, :blue, :rook)
       |> placePiece({:b, 8}, :blue, :knight)
       |> placePiece({:c, 8}, :blue, :bishop)
@@ -558,8 +558,8 @@ defmodule BoardTest do
     end
 
     test "real boards" do
-      a3x3 = makeBoard(3,3)
-      #a8x8 = makeBoard(8,8)
+      a3x3 = make2DList(3,3)
+      #a8x8 = make2DList(8,8)
 
       assert fLocationIsEmpty(a3x3, {:b, 2}) == true
       assert fLocationIsEmpty([[:mt, :mt, :mt], [:mt, :notempty, :mt], [:mt, :mt, :mt]], {:b, 2}) == false
@@ -732,7 +732,7 @@ defmodule BoardTest do
 
   describe "printBoard (board)" do
     test "startingposition" do
-      assert printBoard(startingPosition()) == "♜♞♝♛♚♝♞♜\r♟︎♟︎♟︎♟︎♟︎♟︎♟︎♟︎\r◼◼◼◼◼◼◼◼\r◼◼◼◼◼◼◼◼\r◼◼◼◼◼◼◼◼\r◼◼◼◼◼◼◼◼\r♙♙♙♙♙♙♙♙\r♖♘♗♕♔♗♘♖\r"
+      assert printPlacements(startingPosition()) == "♜♞♝♛♚♝♞♜\r♟︎♟︎♟︎♟︎♟︎♟︎♟︎♟︎\r◼◼◼◼◼◼◼◼\r◼◼◼◼◼◼◼◼\r◼◼◼◼◼◼◼◼\r◼◼◼◼◼◼◼◼\r♙♙♙♙♙♙♙♙\r♖♘♗♕♔♗♘♖\r"
     end
   end
 

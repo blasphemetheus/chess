@@ -52,3 +52,15 @@ A game ends in four different ways. A move resulting in checkmate, a move result
 
 
 
+
+OOh FEN is awesome and has many insights on how best to represent a chessboard
+Here's a chess.com article which helps clarify it https://www.chess.com/terms/fen-chess
+
+the FEN fields
+
+placements, --------------- (the placements on the board where empty spaces are represented by numerals of how many spaces are there)
+turn,  ------------------------(whose turn is it, w or b, in our case :orange or :blue)
+castlingAvailability, ---------(Qk for White may only castle queenside and black only kingside)
+enPassantCaptureSquare, --------(e3 if a white pawn just moved e2 -> e4 and it's black's turn)
+Halfmove Clock, ----------------(how many moves both players have made since the last pawn advance or piece capture, used to enforce the 50 move draw, if counter gets to 100 (each player making 50 moves) the game ends in a draw, represented by a number that goes up every time a move happens are there is not a certain action taken),
+fullmove number -----------------(how many full turns have taken place and been completed)

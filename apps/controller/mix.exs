@@ -1,9 +1,9 @@
-defmodule Referee.MixProject do
+defmodule Controller.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :referee,
+      app: :controller,
       version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
@@ -25,6 +25,8 @@ defmodule Referee.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:board_model, in_umbrella: true},
+      {:view, in_umbrella: true}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
       # {:sibling_app_in_umbrella, in_umbrella: true}
