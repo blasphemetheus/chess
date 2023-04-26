@@ -1,35 +1,115 @@
-# Chess
+# GChess
 Distributed Implementation of Chess.
 [![License](https://img.shields.io/badge/license-GPLv3-blue)](https://github.com/blasphemetheus/gchess/blob/main/LICENSE)
 
-Play Chess over the network with custom visuals and a working referee, observers, etc. Start with the basic 'model' stuff, then move on to 'view' then 'controller'. This is kind of Object Oriented style but really I want this to be a software dev level project where I make a version of chess that can be played over a network. Doesn't need to be constrained to an OOD structure. Needs Test driven development ala Fundies 1 and 2 classes at NU Khoury. A functional programming language so some more difficulties, some benefits. Easy test running. Need automated players in some capacity, don't need to be too complicated. Running along the basic ideas of the course I took back in Fall 2019, Software Dev with Mathias  (https://felleisen.org/matthias/4500-f19/assignments.html) though the vesely documentation also would work as an outline (https://vesely.io/teaching/CS4500f19/).
+Play Chess over the network (eventually).
 
-The plan is for anyone who wants to contribute to create their own chess model (in whatever language they prefer) and merge it in here as an alternate model. That model should be able to connect to the tcp_server and communicate via JSON in the common ways. The point is to have a sort of 'json-api' , really an interface, that'll work cross-language. And a tournament could be held with players from different networks using different models and different ways of choosing the next move. At that point it'd be an automated tourney tool to test chess-engines. All that is just a glimmer of ambition in my eye. It's best to focus on the here and now, which is a non-functional chess engine :D.
+Current development only supports a Command Line Interface (CLI) view. Using that view, a snapshot of the board is displayed on the screen via the shell one used to run the program. Only local play is supported currently, but online is the goal.
+
+This is an elixir umbrella application, with each subcomponent of the application in it's own `apps` folder.
+
+### Useful links:
+- [elixir website](https://elixir-lang.org/)
+- [erlange site, that which elixir is built on](https://www.erlang.org/)
+- [gen_tcp erlang module docs](https://www.erlang.org/doc/man/gen_tcp.html)
+- [protohackers, may be useful to improve knowledge of tcp_server codebase](https://protohackers.com/)
+- [Nx repo (ML)](https://github.com/elixir-nx/nx/tree/main/nx)
+- [Chess Programming Wiki](https://www.chessprogramming.org/Rules_of_Chess)
+- [Phoenix Framework site](https://www.phoenixframework.org/)
+- [Scenic on Hex](https://hexdocs.pm/scenic/welcome.html)
+- [Scenic on GitHub](https://github.com/ScenicFramework/scenic)
+- [git_cheat_sheet](link=https://github.com/JinnaBalu/GitCheatSheet/blob/master/use-cases/git-push-with-ssh.md)
+- [Software Dev 2019 Fall NU with Mathias](https://felleisen.org/matthias/4500-f19/assignments.html)
+
+## Architecture
+There are a number of subcomponents:
+
+- `board_model` -> a model of the board of a game of chase, including the position (placements) as well as information like halfmove_clock and impale_square (en_passant-enabling location), but notably not the history of a game
+- `controller` -> mediates between the model and view, and broadly running games. The takeTurns fn does a lot of work here, and the Main module is located here. Which should probably be removed but whatever
+- `view` -> a representation of the game, of the model, as presented to the user. Right now only the `CLI` view is present, but there will be a `scenic` view, which will use a dependency to present an application to the user to click on etc, as well as a `phoenix` view, which will allow a user to interact with the program via the browser.
+- `tcp_server` -> this is to support tcp connections to enable our online functionality. There will be server and client-specific code here, but right now it's a sort of template/example codebase drawn mostly from the elixir website's echo server tutorial.
+The protohackers website might help me make this subcomponent meatier by providing networking problems to create solutions to.
+ 
+
+ ## End Goals
+ The ambition is to play over a network. Also the goal is to implement observers of games and multiple 'levels' of heuristics-based CPU players. A stretch goal is to try out the [Nx](https://github.com/elixir-nx/nx/tree/main/nx) library and surrounding Machine Learning stack to enable this stuff.
+
+ Test-Driven development is an objectively great way to code. This repo has featured more 'write now, debug later' development, which has been made easier with the `dbg()` tools and the REPL that `iex` makes possible. That's not ideal. The most pressing `TODO` is to: 
+ - provide better unit testing coverage for the currently present codebase, as it eliminates bugs proactively and gives good feedback when implementing changes. Also helps identify redundancies in the codebase.
+ 
+Followed by
+- Make better automated players (using concepts from a half-remembered AI course in python to implement heuristics, search trees, monte carlo trees, alpha beta pruning, etc to provide some level of ai in tournaments that is more interesting than random or deterministic move selection).
+- [Heuristics](https://www.quora.com/What-are-some-heuristics-for-quickly-evaluating-chess-positions): Start with making a 
+    - `material_value` heuristic
+    - `center_of_board` or `control_center` heuristic
+    - `difference_in_position` where you ask how is my position different from my opponents position? If not, then is equal
+    - `pawn_structure_quality` heuristic (where isolated, chained, passed, backward, double, triple, quadrupled), so each player has a heuristic value calculated, also uses open and half-open files as an input. Determines as an output whether the match is open or closed (pawns blocking in the center)
+    - `space_controlled` heuristic (counting up squares controlled by each side, often dictated by the pawn lines)
+    - `squares_threatened` alphazero goes by threatening apparently
+    - `weak_strong_squares` where a square cannot be defended by a pawn, with a weaker score if that square would become a strong square for the opponent if they were to reach it with a piece
+    - `closed_open_agreement_with_pieces` knights like closed, bishops like open
+    - `minor_piece_imbalance` so is it bishop vs bishop opposite color or bishop vs knight? and is that good or bad?
+    - `development` which is who has more pieces out and on active squares
+    - `king_safety` looking for structural weaknesses in the pawns near the king and whether there are a bunch of opponent pieces near the king
+    - `initiative` who is able to dictate the pace of the game, who has the opportunity to make more forcing moves access to more crushing tactics etc
+
+- Document the current codebase and the planned features still in development
+ 
+
+ ## Background
+ I am using a functional programming language so some more difficulties, some benefits. Easy test running. It's also immutable, so testing is free from side effects for most subjects (as long as I don't stray too far).
+ 
+ I do need automated players in some capacity, don't need to be too complicated. Running along the basic ideas of the course I took back in [Fall 2019, Software Dev with Mathias](https://felleisen.org/matthias/4500-f19/assignments.html) though the [vesely documentation](https://vesely.io/teaching/CS4500f19/) also would work as an outline .
+
+## Architecture
+The controller component runs everything. There is a CLI_Intro section of the controller which (assuming no arguments are passed in initially indicating to do things automatically with defaults) decides on the context (local between humans, computer, online etc) as well as the details of the matchup (tournament, matchup or game).
+
+The Tournament Organizer will communicate between the tcp_server and the model.
+
+There will be client and server difference. As the Client needs to have a model that sends data over the pipe which is turned into a move in a game, there needs to be a common API (in json or in bytecode or binary packets, it doesn't matter too much). Once there is a common language to communicate with, disparate players can play in the same tournament.
+
+So there exists a sort of 'json-api' , really an interface, that'll work cross-language. And a tournament could be held with players from different networks using different models and different ways of choosing the next move. At that point it'd be an automated tourney tool to test chess-engines.
+
+All that is just a glimmer of ambition. It's best to focus on making the chess engine a complete work.
+
+## Contributing
+Contributions can be made by:
+- creating your own chess model (in whatever language you prefer) to merge in here as an alternate client. The online `tcp_server` stuff should be standardized and an API will be documented for any branches to conform to. I might make one in Golang if I get that far (I like that language but don't know much of it) or Python if I truly wish to get into the AI stuff.Might also change how this interconnection is possible later (as I'm basically just drawing on the software dev class for ideas here, might be impractical).
+- [Making PRs](https://docs.github.com/en/desktop/contributing-and-collaborating-using-github-desktop/working-with-your-remote-repository-on-github-or-github-enterprise/creating-an-issue-or-pull-request) to change the existing elixir codebase. This is just [something that's an option with any open source project](https://dev.to/doctolib/make-your-first-pull-request-to-an-open-source-project-1m57).
 
 # License
 going with GPL-3.0-or-later
 [![License](https://img.shields.io/badge/license-GPLv3-blue)](https://github.com/blasphemetheus/gchess/blob/main/LICENSE)
 
-Though I do want to be able to use this package on my own closed source thing later? So I should switch to MIT if that becomes a reality. I guess if someone contributes then this is something I will address. Shrug.
+So you can use it for open source projects with attribution and notification of changes. Or something close to that, it's linked above.
 
 # Requirements/installation
-you must have elixir installed on this machine. I think that's it, other than cloning the repo onto your machine. Try running the tests if you're not sure if it worked. Oh yeah you'll definitely need Git to clone the repo to your machine and keep track of code and whatnot. There could be a future version of this that uses `phoenix` or `scenic` but don't hold your breath. Actually `Scenic` looks cool.
+you must have elixir installed on this machine, and git as well. Then you need to clone this github repo into a local directory run `mix deps.get` to build the dependencies. If you're having any elixir or erlang versioning issues, just use your package manager to get `asdf` to manage versions and make sure it's got compatible versions of elixir and erlang on it.
 
-You can also do `iex -S mix` to compile everything and start an interactive session (though this requires knowing about `iex`). You should then be able to run something along the lines of `Main.welcome()` or `Main.startGUI()` to do a simple instance in your Command Line Interface. You can use `mix compile` if that seems more familiar to you. Eventually I'll figure out the ways to just run `./gchess` as an executable but that may require a dependecy or to check for operating systems. Making it a shell script should work just fine actually.
+I think that's it. Try running the tests with `mix test` to confirm it's functional.
 
+Eventually, there will be some dependencies, but not for now.
+
+You should run `iex -S mix` to compile everything and start an interactive session (`iex` is a useful Command Line Utility that enables REPL). You should then be able to run:
+- `Main.welcome()` to do a simple instance in your Command Line Interface.
+- `Main.tournament()`
+- `Main.play()` to play a game vs yourself (or a friend on the same system)
+- `Main.train()` to play the computer (random moves for now)
+- `Main.simulation()` to watch a computer play another computer in a game etc
+
+Eventually I'll figure out the ways to just run `./gchess` as an executable but that may require a dependecy or to check for operating systems.
 # Testing
-Demonstrate how to run test harness.
+There is a shell script that can run all unit tests. We leverage the `mix test` command to do this.
 
-Explain how to run complete set of internal unit tests And Individual unit tests
+For convenience you have the option of running on the command line in the `gchess` repository: `sh test_all` this is easier to remember if you don't have exposure to elixir. The only thing the test_all script does is run `mix test --cover`, running the elixir test suite with an option enabled to display coverage. This may become more complicated as testing expands. It probably won't. 
 
-Try and do the basic process of good design by starting with unit tests, etc when actually writing the code.
+Currently the most-tested component is the board, running in at around 70% coverage. Then the View.CLI at around 30%.
 
-# Test Me
-We maintain a script that can run all unit tests. We leverage the `mix test` command to do this.
+You can test a specific test or describe block by noting the file and path and just naming it. Shell script should support faster arguments soon.
 
-For convenience you have the option of running on the command line in the `gchess` repository: `sh test_all` this is easier to remember if you don't have exposure to elixir. The only thing the test_all script does is run `mix test --cover`, running the elixir test suite with an option enabled to display coverage. This may become more complicated as testing expands. It probably won't.
+`mix test apps/board_model/test/board.test.exs` to pick a file to test, or even
 
-As we go, there may be other testing scripts which cover specific testing needs.
+`mix test apps/board_model/test/board.test.exs:98` to pick a test at a line number.
 
 The class this project is based off of (memories of) is a software development course that required delivering periodic tests to run off of other classmates' environments. So there is some unnecessary testing complexity, but just ignore it, it won't hurt you.
 
