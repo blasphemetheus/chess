@@ -10,6 +10,7 @@ defmodule Board do
   ## IMPORTS ##
   require BoardError
   import Location
+  import Moves
   #import MoveError
 
   ## MODULE ATTRIBUTES ## (useful for constants among other things)
@@ -46,7 +47,7 @@ defmodule Board do
 
   This struct will probably be added to with the FEN stuff as I create it
   """
-  defstruct placements: [], order: [@firstColor, @secondColor], move_is_possible: [true, true], impale_square: :no_impale, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 1
+  defstruct placements: [], order: [@firstColor, @secondColor], impale_square: :noimpale, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 1
   ## %Board{placements: rec2DList(columns, rows)}
 
   ### FUNCTIONS ###
@@ -134,9 +135,6 @@ defmodule Board do
     reverseRanks(List.replace_at(reverseRanks(board), row, new_rank))
   end
 
-  # TODO : debug, honestly I think this implementation of placing piece is broken, but
-  # it'll work for my purposes for now. I'm just reversing these lists but not in the right moments
-  # I bet this wouldn't pass tests
   def fLocationIsEmpty(board, {_formal_col, _formal_row} = formal_location) do
     dLocationIsEmpty(board, dumbLocation(formal_location))
   end
@@ -175,16 +173,16 @@ defmodule Board do
   given a board, returns the board size as a dimensions matrix (so like {3, 4} for 3 columns, 4 rows)
   """
   def boardSize(board) do
-    row = length(board)
+    rows = length(board)
 
-    col = case row do
+    cols = case rows do
       0 -> 0
-      list when is_list(list) -> length(List.first(board))
+      _num -> length(List.first(board))
     end
 
     check = fn (col, row) when good_col_n_row(col, row) -> {col, row} end
 
-    check.(col, row)
+    check.(cols, rows)
   end
 
   # Location: {:a, 1 } {0, 0} (a dumb location would be {0, 7})
@@ -192,10 +190,6 @@ defmodule Board do
   returns whether the given location is in the rankupZone for that piece color given a boardSize dimension matrix (col then row)
   """
   def inRankUpZone(board_dimensions, location, pieceColor) do
-    ## TODO : DEBUG THIS (dumb locations are not intuitive,
-    #         {:a, 1} does NOT translate to {0, 0} as it turns out)
-    #         (it translates to {0, 7} because of the way the board is stored)
-
     # rank up zone is the last and top most for orange (equivalent of white in chess)
 
     {_columns, rows} = board_dimensions
@@ -224,22 +218,30 @@ defmodule Board do
   given placements, loc and a playerColor
   return the placement at the loc behind the loc provided
   """
-  def behind(placements, {e_col, e_row}, :orange) do
-    get_at(placements, {e_col, e_row - 1})
+  def behind_at(placements, loc, color) do
+    get_at(placements, behind(loc, color))
   end
 
-  def behind(placements, {e_col, e_row}, :blue) do
-    get_at(placements, {e_col, e_row + 1})
+  def behind({e_col, e_row}, :orange) do
+    {e_col, e_row - 1}
+  end
+
+  def behind({e_col, e_row}, :blue) do
+    {e_col, e_row + 1}
   end
 
   @doc """
   given a playerColor and moveType,
   return the spot in the castle where the rook is
   """
-  def rookspot(:orange, :shortcastle), do: {:h, 1}
-  def rookspot(:orange, :longcastle), do: {:a, 1}
-  def rookspot(:blue, :shortcastle), do: {:h, 8}
-  def rookspot(:blue, :longcastle), do: {:a, 8}
+  def rookspot(color, :longcastle), do: long_rookspot(color)
+  def rookspot(color, :shortcastle), do: short_rookspot(color)
+
+  def short_rookspot(:orange), do: {:h, 1}
+  def short_rookspot(:blue), do: {:h, 8}
+
+  def long_rookspot(:blue), do: {:a, 8}
+  def long_rookspot(:orange), do: {:a, 1}
 
   @doc """
   given placements, and a start and end location,
@@ -267,17 +269,16 @@ defmodule Board do
 
   def placementNotEmpty(placement), do: placement != :mt
 
-  def ensurePlacementAgreesWithProvidedInfo({moving_color, moving_type} = moving_piece, playerColor, pieceType, start_loc) do
-    case placementAgreesWithProvidedInfo({moving_color, moving_type}, playerColor, pieceType, start_loc) do
+  def ensurePlacementAgreesWithProvidedInfo({moving_color, moving_type} = moving_piece, playerColor, pieceType) do
+    case placementAgreesWithProvidedInfo({moving_color, moving_type}, playerColor, pieceType) do
       true -> true
       false -> raise MoveError,
-        message: "Mismatch: the placement of the piece at the LOCATION #{
-        inspect(start_loc)} and the provided info do not match, PROVIDED: #{
+        message: "Mismatch: the placement of the piece at the LOCATION and the provided info do not match, PROVIDED: #{
         inspect({playerColor, pieceType})} PRESENT : #{inspect(moving_piece)}"
     end
   end
 
-  def placementAgreesWithProvidedInfo({moving_color, moving_type} = moving_piece, playerColor, pieceType, _start_loc) do
+  def placementAgreesWithProvidedInfo({moving_color, moving_type} = moving_piece, playerColor, pieceType) do
     is_tuple(moving_piece) and moving_color == playerColor and moving_type == pieceType
   end
 
@@ -345,19 +346,19 @@ defmodule Board do
   def passiveIsMoving(_movetype, :mt), do: true
   def passiveIsMoving(_movetype, {_color, _type}), do: false
 
-  def ensureRushingMovesHaveNoPiecesInBetween(moveType, placements, end_loc, start_loc) do
-    case rushingMovesHaveNoPiecesInBetween(moveType, placements, end_loc, start_loc) do
-      true -> true
-      false -> raise MoveError, message:  "move #{moveType
+  def ensureRushingMovesHavePiecesInBetween(moveType, placements, end_loc, start_loc) do
+    case rushingMovesHavePiecesInBetween(moveType, placements, end_loc, start_loc) do
+      false -> false
+      true -> raise MoveError, message:  "move #{moveType
         } invalid as there is at least one piece in the way"
     end
   end
 
-  def rushingMovesHaveNoPiecesInBetween(moveType, placements, end_loc, start_loc) do
+  def rushingMovesHavePiecesInBetween(moveType, placements, end_loc, start_loc) do
     if moveType in [:vertical, :diagonal, :horizontal, :longcastle, :shortcastle, :sprint] do
-      pieces_between(placements, end_loc, start_loc) |> length() == 0
+      blocked(placements, end_loc, start_loc)
     else
-      true
+      false
     end
   end
 
@@ -386,7 +387,7 @@ defmodule Board do
   """
   def in_front_of_enemy_pawn(placements, loc, color) do
     opponent = otherColor(color)
-    case behind(placements, loc, color) do
+    case behind_at(placements, loc, color) do
       {:pawn, ^opponent} -> true
       _any -> false
     end
@@ -407,29 +408,206 @@ defmodule Board do
     castle_dirs in [:kingside, :both]
   end
 
-  def ensureKingCheckDoesntDisruptCastle(movetype, placements, player_color) do
-    case kingCheckDoesntDisruptCastle(movetype, placements, player_color) do
+  def ensureKingCheckDoesntDisruptCastle(movetype, board, player_color) do
+    case kingCheckDoesntDisruptCastle(movetype, board, player_color) do
       true -> true
       false -> raise MoveError, message: "Not castleable, king in check"
     end
   end
 
-  def kingCheckDoesntDisruptCastle(movetype, placements, player_color) do
+  def kingCheckDoesntDisruptCastle(movetype, board, player_color) do
     movetype in [:longcastle, :shortcastle] and
-    not isCheck(placements, player_color)
+
+    not kingThreatened(board, player_color)
   end
 
-  def ensureKingNotPassingThroughCheckForCastle(playerColor, moveType, placements, travel_spot) do
-    case kingNotPassingThroughCheckForCastle(playerColor, moveType, placements, travel_spot) do
+  @doc """
+  Given a board and a color, returns a boolean representing whether the king is threatened,
+  avoiding infinite recursion (by making a move and checking it with this fn say) :)
+  """
+  def kingThreatened(board, player_color) do
+    king_loc = findKing(board.placements, player_color)
+    # taking inspiration from
+    # https://github.com/official-stockfish/Stockfish/blob/0405f3540366cc16245d51531881c55d3726c8b5/src/position.cpp#L338
+    # separating out my isCheck function from the checking if the next move makes check happen
+    # this interior check for check will look at the attackers_of (attackers_to in stockfish)
+    # then filter them for those on my side
+    enemy_attackers = attackers_of(board, king_loc)
+    |> Enum.filter(fn
+      {_loc, {color, _piece_type}} -> otherColor(color) == player_color end)
+
+    enemy_attackers |> length() == 0
+  end
+
+  def attackers_of(board, location) do
+    placements = board.placements
+    color = case get_at(placements, location) do
+      :mt -> raise ArgumentError, message: "trying to find attackers_of an open square"
+      {color, _piece_type} -> color
+    end
+
+    line = fn
+      {_loc, {_piececolor, :queen}} -> true
+      {_loc, {_piececolor, :pawn}} -> false
+      {_loc, {_piececolor, :knight}} -> false
+      {_loc, {_piececolor, :king}} -> false
+      {_loc, {_piececolor, :bishop}} -> false
+      {_loc, {_piececolor, :rook}} -> true
+    end
+
+    bishop_queen = fn
+      {_loc, {_piececolor, :queen}} -> true
+      {_loc, {_piececolor, :pawn}} -> false
+      {_loc, {_piececolor, :knight}} -> false
+      {_loc, {_piececolor, :king}} -> false
+      {_loc, {_piececolor, :bishop}} -> true
+      {_loc, {_piececolor, :rook}} -> false
+    end
+    peer_one_in_every_direction(location, color, placements) ++
+    peer_horse_moves(location, color, placements) ++
+    [scan(:right, location, color, placements, line), scan(:left, location, color, placements, line),
+    scan(:up, location, color,placements, line), scan(:down, location, color, placements, line),
+    scan(:sidleright, location, color, placements, bishop_queen), scan(:veerright,location, color, placements, bishop_queen),
+    scan(:sidleleft, location, color, placements, bishop_queen), scan(:veerleft, location, color, placements, bishop_queen)]
+    |> Enum.reject(fn
+      [] -> true
+      :ob -> true
+      {_loc, :mt} -> true
+      _any -> false
+    end)
+    |> Enum.uniq()
+  end
+
+  def reject_ob_and_process(:ob, _function, _placements) do
+    []
+  end
+
+  def reject_ob_and_process({_col, _row} = loc, function, placements) when loc |> is_tuple() do
+    new = {loc, get_at(placements, loc)}
+    case new |> function.() do
+      true -> new
+      false -> []
+    end
+  end
+
+  def reject_ob_and_process(list, function, placements) when list |> is_list() do
+    #Enum.map(fn item -> reject_ob_and_process(item, function, placements))
+    list
+    |> Enum.reject(fn
+      :ob -> true
+      {_col, _row} -> false
+    end)
+    |> Enum.map(fn
+      {col, row} -> {{col, row}, get_at(placements, {col, row})}
+    end)
+    |> Enum.reject(fn
+      {col, :mt} -> true
+      any -> false
+     end)
+    |> Enum.filter(function)
+  end
+
+  def peer_one_in_every_direction(loc, color, placements) do
+
+    line_short = fn
+      {_loc, {_piececolor, :queen}} -> true
+      {_loc, {_piececolor, :pawn}} -> false
+      {_loc, {_piececolor, :knight}} -> false
+      {_loc, {_piececolor, :king}} -> true
+      {_loc, {_piececolor, :bishop}} -> false
+      {_loc, {_piececolor, :rook}} -> true
+    end
+
+    left = sidestep(loc, color, :left)
+    right = sidestep(loc, color, :right)
+    forw = forwardstep(loc, color)
+    backs = backstep(loc, color)
+
+    sides = [left, right, forw, backs]
+    |> reject_ob_and_process(line_short, placements)
+
+    front_diag = fn
+      {_loc, {_piececolor, :queen}} -> true
+      {_loc, {_piececolor, :pawn}} -> true
+      {_loc, {_piececolor, :knight}} -> false
+      {_loc, {_piececolor, :king}} -> true
+      {_loc, {_piececolor, :bishop}} -> true
+      {_loc, {_piececolor, :rook}} -> false
+    end
+    front_diag = [duck(loc, color, :left), duck(loc, color, :right)]
+    |> reject_ob_and_process(front_diag, placements)
+
+    back_diag = fn
+      {_loc, {_piececolor, :queen}} -> true
+      {_loc, {_piececolor, :pawn}} -> false
+      {_loc, {_piececolor, :knight}} -> false
+      {_loc, {_piececolor, :king}} -> true
+      {_loc, {_piececolor, :bishop}} -> true
+      {_loc, {_piececolor, :rook}} -> false
+    end
+    back_diag = [roll(loc, color, :left), roll(loc, color, :right)]
+    |> reject_ob_and_process(back_diag, placements)
+
+    front_diag ++ sides ++ back_diag
+  end
+
+  def peer_horse_moves(loc, color, placements) do
+
+    horse  = fn
+      {_loc, {_piececolor, :queen}} -> false
+      {_loc, {_piececolor, :pawn}} -> false
+      {_loc, {_piececolor, :knight}} -> true
+      {_loc, {_piececolor, :king}} -> false
+      {_loc, {_piececolor, :bishop}} -> false
+      {_loc, {_piececolor, :rook}} -> false
+    end
+
+    [gallop(loc, color, :left), gallop(loc, color, :right),
+    trot(loc, color, :left), trot(loc, color, :right),
+    rear(loc, color, :left), rear(loc, color, :right),
+    turnabout(loc, color, :left), turnabout(loc, color, :right)]
+    |> reject_ob_and_process(horse, placements)
+  end
+
+  def atom_to_function(:right, loc, color), do: sidestep(loc, color, :right)
+  def atom_to_function(:left , loc, color), do: sidestep(loc, color, :left)
+  def atom_to_function(:up , loc, color), do: forwardstep(loc, color)
+  def atom_to_function(:down , loc, color), do: backstep(loc, color)
+  def atom_to_function(:sidleright , loc, color), do: roll(loc, color, :right)
+  def atom_to_function(:sidleleft , loc, color), do: roll(loc, color, :left)
+  def atom_to_function(:veerleft , loc, color), do: duck(loc, color, :left)
+  def atom_to_function(:veerright , loc, color), do: duck(loc, color, :right)
+
+  def scan(direction, {_col, _row} = loc, color, placements, function) do
+        new = atom_to_function(direction, loc, color)
+        if new == :ob do
+          []
+        else
+          new_placement = get_at(placements, new)
+          case new_placement do
+            :mt ->
+              scan(direction, new, color, placements, function)
+            {color, type} ->
+
+              case {new, new_placement} |> function.() do
+                true -> {new, new_placement}
+                false -> []
+              end
+          end
+        end
+  end
+
+  def ensureKingNotPassingThroughCheckForCastle(playerColor, moveType, board, travel_spot) do
+    case kingNotPassingThroughCheckForCastle(playerColor, moveType, board, travel_spot) do
       true -> true
       false -> raise MoveError, message: "In Between Castling Location #{inspect(travel_spot)
       } is threatened by the opposing player's pieces, castling in this direction impossible for now"
     end
   end
 
-  def kingNotPassingThroughCheckForCastle(playerColor, moveType, placements, travel_spot) do
+  def kingNotPassingThroughCheckForCastle(playerColor, moveType, board, travel_spot) do
     (moveType == :shortcastle or moveType == :longcastle) and
-    travel_spot not in threatens(placements, otherColor(playerColor))
+    travel_spot not in threatens(board, otherColor(playerColor))
   end
 
   def ensureRookspotContainsRookForCastle(playerColor, placements, rook_spot) do
@@ -453,8 +631,8 @@ defmodule Board do
     end
   end
 
-  def noPiecesBetweenRookAndKingForCastle(placements, start_loc, rook_spot) do
-    pieces_between(placements, rook_spot, start_loc) |> length() == 0
+  def noPiecesBetweenRookAndKingForCastle(placements, {s_col, s_row} = start_loc, {r_col, r_row} = rook_spot) when s_row == r_row do
+    pieces_between(placements, s_row, {column_to_int(s_col), column_to_int(r_col)}) |> length() == 0
   end
 
   def ensureNewBoardDoesNotPutYouInCheck(new_board, playerColor) do
@@ -465,13 +643,110 @@ defmodule Board do
   end
 
   def newBoardDoesNotPutYouInCheck(new_board, playerColor) do
-    not Board.isCheck(new_board, playerColor)
+    not Board.kingThreatened(new_board, playerColor)
   end
 
-  def helpMove!(:king, placements, start_loc, end_loc, playerColor, _end_loc_placement, moveType, _impalable_loc, _promote_type, castleable_dirs) when moveType == :longcastle or moveType == :shortcastle do
+  @doc """
+  Provides additional checking for helping piecetype perform a move on a board, checks for
+  more piece and move specific information, and eventually calls the function that performs
+  the moves on the placements
+  """
+  def helpMove(:king, board, start_loc, end_loc, playerColor, _end_loc_placement, moveType, _impalable_loc, _promote_type, castleable_dirs) when moveType == :longcastle or moveType == :shortcastle do
+    placements = board.placements
+    #castling move
+    unless castleNotSpent(moveType, castleable_dirs) do
+      {:error, "castle has been spent, but trying to castle"}
+    else
+      unless kingCheckDoesntDisruptCastle(moveType, board, playerColor) do
+        {:error, "The king is in check, disrupting this castle attempt"}
+      else
+        rook_spot = rookspot(playerColor, moveType)
+
+        unless rookspotContainsRookForCastle(playerColor, placements, rook_spot) do
+          {:error, "rookspot does not contain rook, which is needed for a castle"}
+        else
+          that_rook = get_at(placements, rook_spot)
+          unless noPiecesBetweenRookAndKingForCastle(placements, start_loc, rook_spot) do
+            {:error, "there are pieces between the rook and king, so no castle"}
+          else
+            travel_spot = castle_travel_spot(start_loc, end_loc)
+            unless kingNotPassingThroughCheckForCastle(moveType, board, playerColor, travel_spot) do
+              {:error, "king passing through check for castle"}
+            else
+              castlingMove(placements, start_loc, end_loc, {playerColor, :king}, rook_spot, travel_spot, that_rook)
+            end
+          end
+        end
+      end
+    end
+  end
+
+
+  def helpMove(:king, board, start_loc, end_loc, playerColor, _end_loc_placement, _moveType, _impalable_loc, _promote_type, _castle) do
+    # not castling, king move
+    typicalMove(board.placements, start_loc, end_loc, {playerColor, :king})
+  end
+
+  def helpMove(:knight, board, start_loc, end_loc, playerColor, _end_loc_placement, _moveType, _impalable_loc, _promote_type, _castle) do
+    # knight move
+    typicalMove(board.placements, start_loc, end_loc, {playerColor, :knight})
+  end
+
+  def helpMove(:pawn, board, start_loc, end_loc, player_color, _end_loc_placement, moveType, impalable_loc, _promote_type, _castle) when moveType == :capture and impalable_loc == end_loc and impalable_loc != :noimpale do
+    placements = board.placements
+    # pawn, impaling
+    # ignore passivity because it is a capture on empty space affecting the pawn behind the empty space
+    unless impalingCaptureInFrontOfEnemyPawn(moveType, impalable_loc, placements, end_loc, player_color) do
+      {:error, "the impaling capture is not in front of an enemy pawn?? something is amiss in the previous move"}
+    else
+      if behind_at(placements, end_loc, player_color) != {:pawn, otherColor(player_color)} do
+        {:error, "strange, the contents of the loc behind the impale square should be an enemy pawn, they are not"}
+      else
+        pawn_behind_loc = behind(end_loc, player_color)
+        # impale AKA enpassant
+        # perform impale, with side effect of pawn behind where you're going being removed
+        impalingMove(placements, start_loc, end_loc, {:pawn, player_color}, pawn_behind_loc)
+      end
+    end
+  end
+
+  def helpMove(:pawn, board, start_loc, end_loc, player_color, end_loc_placement, moveType, _impalable_loc, promote_type, _castle) when moveType == :promote or moveType == :promotecapture do
+    placements = board.placements
+    # pawn promoting
+    unless passivityMatchesResult(moveType, end_loc_placement) do
+      {:error, "passivity does not match result"}
+    else
+      promotingMove(placements, start_loc, end_loc, {player_color, :pawn}, promote_type)
+    end
+  end
+
+  def helpMove(:pawn, board, start_loc, end_loc, player_color, end_loc_placement, moveType, _impalable_loc, _promote_type, _castle) when moveType == :promote or moveType == :promotecapture do
+    placements = board.placements
+    # pawn, not promoting, not impaling
+    unless passivityMatchesResult(moveType, end_loc_placement) do
+      {:error, "passivity does not match result"}
+    else
+      typicalMove(placements, start_loc, end_loc, {player_color, :pawn})
+    end
+  end
+
+  # bishop, rook, queen, not (king, pawn, knight)
+  def helpMove(piece_type, board, start_loc, end_loc, player_color, _end_loc_placement, moveType, _impalable_loc, _promote_type, _castle) do
+    placements = board.placements
+    if rushingMovesHavePiecesInBetween(moveType, placements, end_loc, start_loc) do
+      {:error, "rushing move has pieces in between"}
+    else
+      typicalMove(placements, start_loc, end_loc, {player_color, piece_type})
+    end
+  end
+
+  ############################################
+
+  def helpMove!(:king, board, start_loc, end_loc, playerColor, _end_loc_placement, moveType, _impalable_loc, _promote_type, castleable_dirs) when moveType == :longcastle or moveType == :shortcastle do
+    placements = board.placements
     # a castling move
     ensureCastleNotSpent(moveType, castleable_dirs)
-    ensureKingCheckDoesntDisruptCastle(moveType, placements, playerColor)
+    ensureKingCheckDoesntDisruptCastle(moveType, board, playerColor)
 
     rook_spot = rookspot(playerColor, moveType)
 
@@ -488,20 +763,26 @@ defmodule Board do
     castlingMove(placements, start_loc, end_loc, {playerColor, :king}, rook_spot, travel_spot, that_rook)
   end
 
-  def helpMove!(:king, placements, start_loc, end_loc, playerColor, _end_loc_placement, _moveType, _impalable_loc, _promote_type, _castle) do
-    typicalMove(placements, start_loc, end_loc, {playerColor, :king})
+  def helpMove!(:king, board, start_loc, end_loc, playerColor, _end_loc_placement, _moveType, _impalable_loc, _promote_type, _castle) do
+    typicalMove(board.placements, start_loc, end_loc, {playerColor, :king})
   end
 
-  def helpMove!(:knight, placements, start_loc, end_loc, playerColor, _end_loc_placement, _moveType, _impalable_loc, _promote_type, _castle) do
-    typicalMove(placements, start_loc, end_loc, {playerColor, :knight})
+  def helpMove!(:knight, board, start_loc, end_loc, playerColor, _end_loc_placement, _moveType, _impalable_loc, _promote_type, _castle) do
+    typicalMove(board.placements, start_loc, end_loc, {playerColor, :knight})
   end
 
-  def helpMove!(:pawn, placements, start_loc, end_loc, player_color, _end_loc_placement, moveType, impalable_loc, _promote_type, _castle) when moveType == :capture and impalable_loc == end_loc and impalable_loc != :noimpale do
+  def helpMove!(:pawn, board, start_loc, end_loc, player_color, _end_loc_placement, moveType, impalable_loc, _promote_type, _castle) when moveType == :capture and impalable_loc == end_loc and impalable_loc != :noimpale do
+    placements = board.placements
     # impaling
     # ignore passivity because it is a capture on empty space affecting the pawn behind the empty space
     ensureImpalingCaptureInFrontOfEnemyPawn(moveType, impalable_loc, placements, end_loc, player_color)
 
-    pawn_behind_loc = behind(placements, end_loc, player_color)
+    case pawn_behind_contents = behind_at(placements, end_loc, player_color) do
+      :mt -> true
+      any ->
+        raise ArgumentError, message: "strange, the contents should be mt"
+    end
+    pawn_behind_loc = behind(end_loc, player_color)
 
       # impale AKA enpassant
     # perform impale, with side effect of pawn behind where you're going being removed
@@ -527,7 +808,7 @@ defmodule Board do
 
   # bishop, rook, queen, not (king, pawn, knight)
   def helpMove!(piece_type, placements, start_loc, end_loc, player_color, _end_loc_placement, moveType, _impalable_loc, _promote_type, _castle) do
-    ensureRushingMovesHaveNoPiecesInBetween(moveType, placements, end_loc, start_loc)
+    ensureRushingMovesHavePiecesInBetween(moveType, placements, end_loc, start_loc)
 
     typicalMove(placements, start_loc, end_loc, {player_color, piece_type})
   end
@@ -564,23 +845,239 @@ defmodule Board do
     |> remove_at(pawn_behind_loc)
   end
 
-  def promotingMove(placements, start_loc, end_loc, moving_piece, promote_type) do
+  def promotingMove(placements, start_loc, end_loc, {color, :pawn} = moving_piece, promote_type) do
     placements
-    |> replace_at(start_loc, promote_type)
-    |> replace_at(end_loc, moving_piece)
+    |> replace_at(start_loc, :mt)
+    |> replace_at(end_loc, {color, promote_type})
   end
+
+  @doc """
+  Given a color, an order (list of two ordered colors) and the castleable directions for each color in order,
+  returns the castleable directions for the the color
+  """
+  def grabCastleable(color, first_castleable, second_castleable, [first, second]) do
+    case color do
+      ^first -> first_castleable
+      ^second -> second_castleable
+    end
+  end
+
 
   @doc """
   returns a tuple {ok: placements} containing the placements of the completed move
   or an error tuple {error: reason} if the move is invalid
   """
-  def move!(placements, start_loc, end_loc, playerColor, pieceType, castleable_directions \\ :neither, promote_type \\ :nopromote, impalable_loc \\ :noimpale) do
+  def move(board, start_loc, end_loc, playerColor, pieceType, promote_type \\ :nopromote) do
+    placements = board.placements
+    castleable_directions = grabCastleable(playerColor, board.first_castleable, board.second_castleable, board.order)
+    impalable_loc = board.impale_square
+    moving_piece = get_at(placements, start_loc)
+
+    unless placementNotEmpty(moving_piece) do
+      {:error, "start location is empty, cannot move empty"}
+    else
+      unless placementAgreesWithProvidedInfo(moving_piece, playerColor, pieceType) do
+        {:error, "start location has a different color or piecetype than indicated"}
+      else
+        end_loc_placement = get_at(placements, end_loc)
+        ## they call my moving bool, 'passive' in some other chess engines,
+        ## taking is then labeled 'active'
+        case pieceType do
+          :pawn -> pawn_move_take_validation(board, start_loc, end_loc, playerColor, moving_piece, end_loc_placement, promote_type)
+          _other -> normal_validation(board, start_loc, end_loc, pieceType, playerColor, moving_piece, end_loc_placement)
+        end
+      end
+    end
+  end
+
+  def pawn_move_take_validation(board, start_loc, end_loc, playerColor, moving_piece, end_loc_placement, promote_type) do
+    if end_loc_placement == :mt do
+      # moving
+      if diagonalMove(start_loc, end_loc) do
+        {:error, "attempting to move a pawn diagonally, a direction you can only take"}
+      else
+        commence_move(board, start_loc, end_loc, playerColor, :pawn, promote_type, moving_piece, end_loc_placement)
+      end
+    else
+      # taking
+      unless notTakingOwnPiece(end_loc_placement, playerColor) do
+        {:error, "attempting to take own piece"}
+      else
+        if verticalMove(start_loc, end_loc) do
+          {:error, "attempting to take vertically, a direction you can only move"}
+        else
+          commence_move(board, start_loc, end_loc, playerColor, :pawn, promote_type, moving_piece, end_loc_placement)
+        end
+      end
+    end
+  end
+
+  def diagonalMove({s_col, s_row}, {e_col, e_row}) when s_col |> is_atom and e_col |> is_atom do
+    diagonalMove({s_col |> column_to_int(), s_row}, {e_col |> column_to_int(), e_row})
+  end
+  def verticalMove({s_col, s_row}, {e_col, e_row}) when s_col |> is_atom and e_col |> is_atom do
+    verticalMove({s_col |> column_to_int(), s_row}, {e_col |> column_to_int(), e_row})
+  end
+  def diagonalMove({s_col, s_row}, {e_col, e_row}), do: abs(s_row - e_row) == 1 and abs(s_col - e_col) == 1
+  def verticalMove({s_col, s_row}, {e_col, e_row}), do: s_col == e_col and abs(s_row - e_row) == 1 or abs(s_row - e_row) == 2
+
+  def normal_validation(board, start_loc, end_loc, pieceType, playerColor, moving_piece, end_loc_placement) do
+    if end_loc_placement != :mt do
+      unless notTakingOwnPiece(end_loc_placement, playerColor) do
+        {:error, "attempting to take own piece"}
+      else
+        commence_move(board, start_loc, end_loc, playerColor, pieceType, :nopromote, moving_piece, end_loc_placement)
+      end
+    else
+      commence_move(board, start_loc, end_loc, playerColor, pieceType, :nopromote, moving_piece, end_loc_placement)
+    end
+  end
+
+  @spec commence_move(
+          atom
+          | %{
+              :first_castleable => any,
+              :impale_square => any,
+              :order => [...],
+              :placements => any,
+              :second_castleable => any,
+              optional(any) => any
+            },
+          any,
+          any,
+          any,
+          any,
+          any,
+          any,
+          any
+        ) ::
+          {:error, <<_::64, _::_*8>>}
+          | {:ok,
+             %{
+               :first_castleable => any,
+               :halfmove_clock => number,
+               :impale_square => :noimpale | {any, any},
+               :order => [...],
+               :placements => list,
+               :second_castleable => any,
+               optional(any) => any
+             }}
+  def commence_move(board, start_loc, end_loc, playerColor, pieceType, promote_type, _moving_piece, end_loc_placement) do
+    placements = board.placements
+    castleable_directions = grabCastleable(playerColor, board.first_castleable, board.second_castleable, board.order)
+    impalable_loc = board.impale_square
+
+
+    moveType = Moves.retrieveMoveType(start_loc, end_loc, pieceType, playerColor)
+
+    unless moveTypeValid(moveType) do
+      {:error, "invalid movetype"}
+    else
+
+    # so we know that just based on locations as well as color and type of the piece, we have plausible moves
+    # Now we compare the conditions of the board with what movetype we're doing,
+    if rushingMovesHavePiecesInBetween(moveType, placements, end_loc, start_loc) do
+      {:error, "rushing move has a piece blocking where you're trying to go"}
+    else
+      unless promoteTypeValid(promote_type, moveType) do
+        {:error, "promote type is invalid"}
+      else
+        case helpMove(pieceType, board, start_loc, end_loc, playerColor, end_loc_placement, moveType, impalable_loc, promote_type, castleable_directions) do
+          {:error, msg} -> {:error, msg}
+          result ->
+            new_board = %{board | placements: result}
+            if newBoardDoesNotPutYouInCheck(new_board, playerColor) do
+              {:error, "new Board puts you in check, so you can't make this move"}
+            else
+              # also stuff about adjusting board metadata for moveType
+              new_placements = new_board.placements
+
+              # adjust impale_square
+              impale_eval = case moveType do
+                :sprint -> %{board | impale_square: behind(end_loc, playerColor)}
+                any -> %{board | impale_square: :noimpale}
+              end
+
+              # adjust castleable for the right playerColor
+              castle_eval = cond do
+                castleable_directions == :neither ->
+                  impale_eval
+                pieceType == :king and playerColor == :orange ->
+                  %{impale_eval | first_castleable: :neither}
+                pieceType == :king and playerColor == :blue ->
+                  %{impale_eval | second_castleable: :neither}
+                pieceType == :rook and long_rookspot(playerColor) == start_loc ->
+                  Map.put(impale_eval, whichCastleable(playerColor), removeOption(castleable_directions, :longcastle))
+                pieceType == :rook and short_rookspot(playerColor) == start_loc ->
+                  Map.put(impale_eval, whichCastleable(playerColor), removeOption(castleable_directions, :shortcastle))
+                true ->
+                  impale_eval
+              end
+
+              # adjust half-move clock,
+              #    reset if capture or pawn move, or castle move, otherwise increment one
+              halfmove_clock_eval = cond do
+                isCastle(moveType) or pieceType == :pawn or isCapture(placements, end_loc) ->
+                  %{castle_eval | halfmove_clock: 0}
+                true ->
+                  new_halfmove_clock = castle_eval.halfmove_clock + 1
+                  %{castle_eval | halfmove_clock: new_halfmove_clock}
+              end
+
+              # adjust fullmove number,
+              fullmove_eval = case playerColor do
+                :orange ->
+                  halfmove_clock_eval
+                :blue -> %{halfmove_clock_eval | fullmove_number: board.fullmove_number + 1}
+              end
+
+              {:ok, %{fullmove_eval | placements: new_placements}}
+            end
+        end
+      end
+    end
+  end
+  end
+  # ignores en passant captures, otherwise works
+  def isCapture(placements, end_loc) do
+    case get_at(placements, end_loc) do
+      {color, type} -> true
+      :mt -> false
+    end
+  end
+
+  def removeOption(:both, :shortcastle), do: :queenside
+  def removeOption(:both, :longcastle), do: :kingside
+  def removeOption(:queenside, :longcastle), do: :neither
+  def removeOption(:queenside, :shortcastle), do: :queenside
+  def removeOption(:kingside, :shortcastle), do: :neither
+  def removeOption(:kingside, :longcastle), do: :kingside
+
+  def whichCastleable(:orange), do: :first_castleable
+  def whichCastleable(:blue), do: :second_castleable
+
+  def isCastle(:longcastle), do: true
+  def isCastle(:shortcastle), do: true
+  def isCastle(any), do: false
+
+  # def move!(board, start_loc, end_loc, playerColor, pieceType, promote_type \\ :nopromote) do
+  #   case move(board, start_loc, end_loc, playerColor, pieceType, promote_type) do
+  #     {:ok, new_board} -> new_board
+  #     {:error, message} -> raise MoveError, message: message
+  #   end
+  # end
+
+  def move!(board, start_loc, end_loc, playerColor, pieceType, promote_type \\ :nopromote) do
+    placements = board.placements
+    castleable_directions = grabCastleable(playerColor, board.first_castleable, board.second_castleable, board.order)
+    impalable_loc = board.impale_square
+
     moving_piece = get_at(placements, start_loc)
 
 
     ensurePlacementNotEmpty(moving_piece)
 
-    ensurePlacementAgreesWithProvidedInfo(moving_piece, playerColor, pieceType, start_loc)
+    ensurePlacementAgreesWithProvidedInfo(moving_piece, playerColor, pieceType)
 
     end_loc_placement = get_at(placements, end_loc)
 
@@ -598,26 +1095,18 @@ defmodule Board do
     # so we know that just based on locations as well as color and type of the piece, we have plausible moves
     # Now we compare the conditions of the board with what movetype we're doing,
 
-    ensureRushingMovesHaveNoPiecesInBetween(moveType, placements, end_loc, start_loc)
+    ensureRushingMovesHavePiecesInBetween(moveType, placements, end_loc, start_loc)
 
     ensurePromoteTypeValid(promote_type, moveType)
 
     # movetype_validator =
     # move_fn
-    new_board = helpMove!(pieceType, placements, start_loc, end_loc, playerColor, end_loc_placement, moveType, impalable_loc, promote_type, castleable_directions)
+    new_board = %{board | placements: helpMove!(pieceType, board, start_loc, end_loc, playerColor, end_loc_placement, moveType, impalable_loc, promote_type, castleable_directions)}
 
     ensureNewBoardDoesNotPutYouInCheck(new_board, playerColor)
+    new_placements = new_board.placements
 
-    new_board
-  end
-
-  def move(placements, start_loc, end_loc, playerColor, pieceType, castling \\ :neither, promote \\ :nopromote, impale_loc \\ :noimpale) do
-    try do
-      new_placements = move!(placements, start_loc, end_loc, playerColor, pieceType, castling, promote, impale_loc)
-      {:ok, new_placements}
-    catch
-      reason -> {:error, reason}
-    end
+    %{board | placements: new_placements}
   end
 
   @doc """
@@ -655,7 +1144,7 @@ defmodule Board do
     # %Board{
     #   placements: startingPosition(),
     #   order: [@firstColor, @secondColor],
-    #   impale_square: :no_impale,
+    #   impale_square: :noimpale,
     #   first_castleable: :both,
     #   second_castleable: :both,
     #   halfmove_clock: 0,
@@ -701,7 +1190,7 @@ defmodule Board do
     |> Board.reverseRanks()
     #|> Enum.intersperse(:switch_tiles)
     |> Enum.map(fn
-      x -> printRank(x, "\t") <> line_sep
+      x -> printRank(x, "\t ") <> line_sep
       end) |> to_string() |> inspect()
     #Enum.intersperse()
     Tile.renderTile(:blue)
@@ -731,21 +1220,22 @@ defmodule Board do
     false
   end
 
-  def listBoard(board) do
-    Board.Utils.nested_convert_to_formal(board) |> Board.reverseRanks()
+  def listPlacements(placements) do
+    #Board.Utils.nested_convert_to_formal(placements) |>
+    placements
+    |> Board.reverseRanks()
     |> Enum.map(fn
       x -> Enum.map(x, fn
         y -> translate(y) end) end)
   end
 
-  def printRank(rank, sep \\ "\t")
+  def printRank(rank, sep \\ "\t ")
 
   def printRank(rank, sep) do
     Enum.map(rank, fn
       x -> translate(x) <> sep end)
     |> to_string()
   end
-
 
   def translate(pieceColor, pieceType)do
     Tile.renderTile(pieceColor, pieceType)
@@ -764,10 +1254,14 @@ defmodule Board do
    (checkmate, stalemate, or insufficient material)
   """
   def isOver(board, to_play) do
-    placements = board.placements
-    isCheckmate(placements, to_play) or
-    isStalemate(placements, to_play) or
-    isInsufficientMaterial(placements)
+    isFiftyMoveRepitition(board, to_play) or
+    isCheckmate(board, to_play) or
+    isStalemate(board, to_play) or
+    isInsufficientMaterial(board)
+  end
+
+  def isFiftyMoveRepitition(board, to_play) do
+    board.halfmove_clock == 50
   end
 
   @doc """
@@ -785,43 +1279,47 @@ defmodule Board do
   the player is in stalemate
   """
   def isStalemate(board, to_play) do
+    placements = board.placements
     #   Complete (check)             todo                              todo                                    todo
     kingImmobile(board, to_play) and
     not isCheck(board, to_play) and
-    noMovesResolvingCheck(board, to_play) and
     noPieceCanMove(board, to_play)
   end
 
   @doc """
   Returns true when the king is being threatened by the opposing player's pieces
   """
-  def isCheck(board, to_play) do
-    threatened = threatens(board, otherColor(to_play))
-    king_loc = findKing(board, to_play)
+  def isCheck(board, to_play) when board |> is_struct() do
+    threatening_moves = threatens(board, otherColor(to_play))
+    threatened = threatening_moves |> Enum.map(&move_to_end_loc/1)
+    king_loc = findKing(board.placements, to_play)
     Enum.member?(threatened, king_loc)
   end
 
+  def move_to_end_loc({_start_loc, end_loc}), do: end_loc
+
   @doc """
   Returns true if no king move will escape check
-
-  iex> Board.kingImmobile(Board.startingPosition(), :orange)
-  false
-
-  iex> Board.kingImmobile(MoveCollection.kingBlockedByOwnPieces(), :orange)
-  false
-
-  iex> Board.kingImmobile(MoveCollection.shorteststalemate(), :blue)
-  true
-
   """
-  def kingImmobile(board, color) do
-    king_loc = findKing(board, color)
-    my_king_moves = possible_moves(board, king_loc, color)
+  def kingImmobile(board, color) when board |> is_struct() do
+    placements = board.placements
+    king_loc = findKing(placements, color)
+    my_unappraised_king_moves = possible_moves(board, king_loc, color)
+    my_real_king_moves = my_unappraised_king_moves
+    |> Enum.map(fn {movetype, end_loc} ->
+      appraise_move(board, king_loc, end_loc, {color, :king})
+    end)
+    |> Enum.reject(fn
+      {:error, message} -> true
+      {:ok, board_struct} -> false
+    end)
+    |> Enum.map(fn {:ok, board_struct} -> board_struct end)
     # no possible moves
-    my_king_moves |> length() == 0
+    my_real_king_moves |> length() == 0
 
     # so there's generated possible moves, wh
   end
+
 
   @doc """
   Maps a function to each location on the placements of the board,
@@ -835,50 +1333,80 @@ defmodule Board do
   Reduces a function to each location on the placements of the board, returns a list,
   with the function reduced onto each location.
   """
-  def reduce_placements(board, acc, fun) do
-    Enum.map(board, fn rank -> Enum.map(rank, fn tile -> fun.(tile, acc) end) end)
+  def reduce_placements(placements, acc, fun) do
+    Enum.map(placements, fn rank -> Enum.map(rank, fn tile -> fun.(tile, acc) end) end)
   end
+
+  def transform_list_loc_placement_tuple_to_tuple_piecetype_list_possible_moves(list_loc_placement_tuple, board, to_play) do
+    list_loc_placement_tuple
+    |> Enum.map(fn
+      {loc, {^to_play, piece_type}} ->
+        {piece_type, possible_moves(board, loc, to_play)}
+    end)
+  end
+
+  def perform_list_possible_moves(list_tuple_piecetype_list_possible_moves, board, to_play) do
+    list_tuple_piecetype_list_possible_moves
+    |> Enum.map(fn
+      [] -> []
+      {piece_type, [{start_loc, end_loc}]} when start_loc |> is_tuple() and end_loc |> is_tuple() ->
+        move(board, start_loc, end_loc, to_play, piece_type, :nopromote)
+      {piece_type, list_moves} when list_moves |> is_list() and length(list_moves) > 1 ->
+        list_moves
+        |> Enum.map(fn
+          {start_loc, end_loc, promote_to} ->
+            move(board, start_loc, end_loc, to_play, piece_type, promote_to)
+          {start_loc, end_loc} ->
+            move(board, start_loc, end_loc, to_play, piece_type, :nopromote)
+        end)
+      {piece_type, []} when piece_type |> is_atom() ->
+        []
+
+      # {start_loc, end_loc} when end_loc |> is_tuple() ->
+      #   #TODO: figure out why this clause is necessary, shouldn't be
+      #   move(board, start_loc, end_loc, to_play, "cool", :nopromote)
+      # {start_loc, {^to_play, piece_type,}, end_loc} ->
+      #   move(board, start_loc, end_loc, to_play, piece_type, :nopromote)
+    end)
+    |> List.flatten()
+  end
+
 
   @doc """
   given a board and a color, returns true if there are no possible
   moves by pieces of that color that would resolve check
   (if you're not in check, this is not a useful fn :) )
   """
-  def noMovesResolvingCheck(board, to_play) do
-
-    threatened = threatens(board, otherColor(to_play))
-    king_loc = findKing(board, to_play)
-    king_moves = possible_moves(board, to_play, king_loc)
+  def noMovesResolvingCheck(board, to_play) when board |> is_struct() do
+    threatening_moves = threatens(board, otherColor(to_play))
+    threatened = threatening_moves |> Enum.map(&move_to_end_loc/1)
+    king_loc = findKing(board.placements, to_play)
+    king_moves = possible_moves(board, king_loc, to_play)
     # in the format [ {loc, placement} ...]
-    all_friendly_pieces = fetch_locations(board, to_play)
+    all_friendly_pieces = fetch_locations(board.placements, to_play)
 
     # we want to change the : list of {loc, placement} to : list of possible_moves,
     # then go through them, apply them onto the board,
     # and call isCheck on the new_board for to_play,
     # then, reduce the list of booleans to one result with Enum.all?()
     # so if one is not check, then there is a move resolving check, so false
-    all_friendly_pieces
-    |> Enum.map(fn
-      {loc, {^to_play, _piece_type}} -> possible_moves(board, to_play, loc)
-    end)
-    |> Enum.map(fn
-      {start_loc, {^to_play, piece_type,}, end_loc} ->
-        move(start_loc, end_loc, to_play, piece_type, board.castling, board.promote, board.impale_loc)
-    end)
 
-    Enum.all?(king_moves, fn move -> Enum.member?(threatened, move) end)
+    all_friendly_pieces_moves = all_friendly_pieces
+    |> transform_list_loc_placement_tuple_to_tuple_piecetype_list_possible_moves(board, to_play)
+    |> perform_list_possible_moves(board, to_play)
+
+
+
+    Enum.all?(king_moves, fn move -> Enum.member?(threatened, move) end) and
+    length(all_friendly_pieces_moves) == 0
   end
 
-  def noPieceCanMove(placements, to_play) do
-    ## TODO - FILL OUT SO IT WORKS WITH SPECIFIC COLOR
-    ## WARNING GENERATED CODE
-    # list o location, placement
-
-
-    placements
-    |> fetch_locations(to_play)
-    |> Enum.all?(fn {loc, _placement} -> immobile(placements, loc)
-    end)
+  @doc """
+  Given placements and a color (to_play) returns a bool representing
+  Whether ANY piece in that color can play a move
+  """
+  def noPieceCanMove(board, to_play) do
+    board |> possible_moves(to_play) |> length() == 0
   end
 
   @doc """
@@ -890,43 +1418,119 @@ defmodule Board do
   end
 
   @doc """
-  returns a list of all moves that a specific placement can make (a piece and color at a certain location)
+  Given a board, a start_loc, end_loc, and a placement (should match the start_loc),
+  appraise the move. That is, try and make the move and see if it succeeds,
+  returns a result tuple, with {:ok, new_board} if it's ok, and {:error, message}
+  if it failed
   """
-  def possible_moves(board, {_file, _rank} = location) do
-    {piece_color, _pieceType} = _current_placement = get_at(board, location)
-
-    possible_moves(board, location, piece_color)
+  def appraise_move(board, start_loc, end_loc, {color, piece_type}) do
+    # probably should insert logic here to deal with promotion, but good for now
+    tuple = move(board, start_loc, end_loc, color, piece_type)
+    case tuple do
+      {:ok, _new_board} -> tuple
+      {:error, _message} -> tuple
+    end
   end
 
-  def possible_moves(board, loc, playerColor) do
-    #IO.puts("possible moves at #{inspect(loc)} and of color #{inspect(playerColor)}")
-    {pieceColor, pieceType} = _current_placement = get_at(board, loc)
+  def appraise_move(board, start_loc, end_loc, {color, piece_type}, promote_to) do
+    # probably should insert logic here to deal with promotion, but good for now
+    tuple = move(board, start_loc, end_loc, color, piece_type, promote_to)
+
+    case tuple do
+      {:ok, _new_board} -> tuple
+      {:error, _message} -> tuple
+    end
+  end
+
+  @doc """
+  returns a list of all moves that a specific placement can make (a piece and color at a certain location)
+  """
+  # def possible_moves(board, color) when color |> is_atom() and placements |> is_list() do
+  #   Board.fetch_locations(placements, color)
+  #   |> Enum.map(fn {loc, {^color, type} = placement} = x ->
+  #     Moves.unappraised_moves(color, type, loc)
+  #     |> Enum.map(fn
+  #       {move_type, {promote_to, end_loc}} when end_loc |> is_tuple() ->
+  #         {end_loc, appraise_move(board, loc, end_loc, placement, promote_to), promote_to}
+  #       {move_type, {promote_to, :ob}} ->
+  #         {{0,0}, {:error, :ob}}
+  #       {move_type, end_loc} when end_loc |> is_tuple() ->
+  #         {end_loc, appraise_move(board, loc, end_loc, placement)}
+  #       end)
+  #     |> Enum.filter(fn
+  #       {_end_loc, {:ok, _new_board}} -> true
+  #       {_end_loc, {:error, _message}} -> false
+  #       {_end_loc, {:ok, _new_board}, _promote_to} -> true
+  #       {_end_loc, {:error, _message}, _promote_to} -> false
+  #     end)
+  #     |> Enum.map(fn
+  #       {end_loc, {:ok, board}} -> {loc, end_loc}
+  #       {end_loc, {:ok, n_board}, promote_to} -> {loc, end_loc, promote_to}
+  #     end)
+  #   end)
+  #   |> List.flatten()
+  # end
+
+  def possible_moves(board, location) when board |> is_struct() and location |> is_tuple() and elem(location, 1) |> is_integer() do
+    placements = board.placements
+    {piece_color, _pieceType} = _current_placement = get_at(placements, location)
+
+    possible_moves(placements, location, piece_color)
+  end
+
+  def evaluate_each_unappraised(list_unappraised_moves, board, placement, loc, color) do
+    list_unappraised_moves
+    |> Enum.map(fn
+      {mv_ty_promote, {{^color, promote_to}, :ob}} when mv_ty_promote in [:capturepromote, :promote] ->
+        {{0,1}, {:error, :ob}}
+      {mv_ty_promote, {{^color, promote_to}, end_loc}} when mv_ty_promote in [:capturepromote, :promote] ->
+        {end_loc, appraise_move(board, loc, end_loc, placement, promote_to), promote_to}
+      # {_move_type, {promote_to, end_loc}} when end_loc |> is_tuple() and promote_to |> is_tuple() ->
+      #   {end_loc, appraise_move(board, loc, end_loc, placement, promote_to), promote_to}
+      {_move_type, {_promote_to, :ob}} ->
+        {{0,0}, {:error, :ob}}
+      {_move_type, {_e_col, e_row} = end_loc} when end_loc |> is_tuple() and e_row |> is_integer() ->
+        {end_loc, appraise_move(board, loc, end_loc, placement)}
+      any ->
+        IO.puts(inspect(any))
+        raise ArgumentError, message: inspect(any)
+      end)
+  end
+  def appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(board, loc, color, type) do
+    placement = {color, type}
+    Moves.unappraised_moves(color, type, loc)
+    |> evaluate_each_unappraised(board, placement, loc, color)
+    |> Enum.filter(fn
+      {_end_loc, {:ok, _new_board}} -> true
+      {_end_loc, {:error, _message}} -> false
+      {_end_loc, {:ok, _new_board}, _promote_to} -> true
+      {_end_loc, {:error, _message}, _promote_to} -> false
+    end)
+    |> Enum.map(fn
+      {end_loc, {:ok, _board}} -> {loc, end_loc}
+      {end_loc, {:ok, _n_board}, promote_to} -> {loc, end_loc, promote_to}
+    end)
+  end
+
+  def possible_moves(board, color) when color |> is_atom() and board |> is_struct() do
+    Board.fetch_locations(board.placements, color)
+    |> Enum.map(fn {loc, {^color, type} = _placement} ->
+      appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(board, loc, color, type)
+    end)
+    |> List.flatten()
+  end
+
+  def possible_moves(board, {_file, _rank} = loc, playerColor) when board |> is_struct()  and playerColor |> is_atom() do
+    placements = board.placements
+    {pieceColor, pieceType} = current_placement = get_at(placements, loc)
 
     if pieceColor != playerColor do
       :opponent_piece
+
       raise BoardError, message: "pieceColor #{inspect(pieceColor)} and piecetype #{pieceType} at #{inspect(loc)} are not #{playerColor}"
       # raise ArgumentError, message: "pieceColor does not match the piece at the location"
     else
-      Moves.unappraised_moves(pieceColor, pieceType, loc)
-
-      # TODO GOT SOME FILTERING TODO
-      # filter out moves that do not get you out of check if you are in check
-
-      # filter out castling when in check and when any of the spots the king will travel through are threatened by opponent
-
-      # filter out impales (enpassant) when
-
-      # add logic to filter out the moves blocked by a piece (opponent or friendly)
-
-      # filter out moves that are not possible because they are a take in a move-only movetype
-
-      # filter out moves are not possible because they are not a take in a take-only movetype
-
-      # filter out moves that would place you in check (by moving to spots threatened by opponent)
-
-      # filter out moves that would place you in check
-      #(by unblocking an opponent's piece that now threatens your king)
-
+      appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(board, loc, playerColor, pieceType)
     end
   end
 
@@ -953,23 +1557,24 @@ defmodule Board do
   end
 
   @doc """
-  Looks in the board and returns a list of tuples of {location, placement}
+  Looks in the placements and returns a list of tuples of {location, placement}
   for every piece on the placements (including :mt)
   """
-  def fetch_locations(board) do
+  def fetch_locations(placements) when placements |> is_list() do
     all_locations_list(:formal)
-    |> Enum.map(fn loc -> {loc, get_at(board, Location.dumbLocation(loc))} end)
+    |> Enum.map(fn loc -> {loc, get_at(placements, Location.dumbLocation(loc))} end)
   end
 
 
+
   @doc """
-  Looks in the board and returns a list of all the locations of the specified playerColor, or
+  Looks in the placements and returns a list of all the locations of the specified playerColor, or
   of the specified playerColor and pieceType
   in format List of tuples of {location, placement}
-  where placement is
+  where placement is {color, type}
   """
-  def fetch_locations(board, playerColor) do
-    only_player_color_nested = board
+  def fetch_locations(placements, playerColor) when placements |> is_list() do
+    only_player_color_nested = placements
     |> reduce_placements([],
     fn
       {^playerColor, type}, acc -> acc ++ [{playerColor, type}]
@@ -988,8 +1593,8 @@ defmodule Board do
     end)
   end
 
-  def fetch_locations(board, playerColor, pieceType) do
-    only_color_and_piecetype_nested = board
+  def fetch_locations(placements, playerColor, pieceType) when placements |> is_list() do
+    only_color_and_piecetype_nested = placements
     |> reduce_placements([], fn
       {^playerColor, ^pieceType}, acc -> acc ++ [{playerColor, pieceType}]
       {_otherColor, _type}, acc -> acc
@@ -1045,22 +1650,36 @@ defmodule Board do
     (that are not at those locations), returns false if the locations are not on
     the same rank, file, or diagonal
     """
-  def blocked(board, {atomic_start_file, start_rank}, {atomic_end_file, end_rank}) do
+  def blocked(placements, {atomic_start_file, start_rank} = s_loc, {atomic_end_file, end_rank} = e_loc) do
     start_file = column_to_int(atomic_start_file)
     end_file = column_to_int(atomic_end_file)
-      in_the_way = cond do
-        start_rank == end_rank ->
-          pieces_between(board, end_rank, {start_file, end_file})
-        start_file == end_file ->
-          pieces_between(board, {start_rank, end_rank}, end_file)
-        on_diagonal?(start_file, start_rank, end_file, end_rank) ->
-          pieces_between(board, {start_file, start_rank}, {end_file, end_rank})
-        true ->
-          :not_visible
-          #raise ArgumentError, message: "hmm #{inspect(:not_visible)}"
-      end
-      [] != in_the_way
+    in_the_way = cond do
+      start_rank == end_rank ->
+        pieces_between(placements, end_rank, {start_file, end_file})
+      start_file == end_file ->
+        pieces_between(placements, {start_rank, end_rank}, end_file)
+      on_diagonal?(start_file, start_rank, end_file, end_rank) ->
+        pieces_between(placements, {start_file, start_rank}, {end_file, end_rank})
+      true ->
+        :not_visible
+        #raise ArgumentError, message: "hmm #{inspect(:not_visible)}"
     end
+    # in the way will include the actual pieces? noooo
+    trimmed = case in_the_way do
+      list when list |> is_list() -> list |> removeLocations([s_loc, e_loc])
+      :not_visible -> :not_visible
+    end
+    [] != trimmed
+  end
+
+  def removeLocations(in_the_way_list_tuples, list_locations) do
+    in_the_way_list_tuples
+    |> Enum.reject(fn
+      {loc, placement} -> loc in list_locations
+      any -> false
+    end)
+  end
+
 
   @doc """
   returns whether the two locations are on the same diagonal (uses math slope knowledge)
@@ -1119,7 +1738,7 @@ defmodule Board do
 
     new_acc = case placement do
       :mt -> acc
-      {color, type} -> acc ++ [{{y, start_file}, {color, type}}]
+      {color, type} -> acc ++ [{{int_to_column(start_file), y}, {color, type}}]
     end
 
     new_file = start_file + 1
@@ -1185,7 +1804,7 @@ defmodule Board do
     new_rank = start_rank + 1
 
     case {new_file, new_rank} do
-      {^end_file, ^end_rank} -> new_acc
+      {^end_file, ^end_rank} -> new_acc # change this so it doesn't include the piece at the loc
       _ -> recUpRight(board, new_rank, new_file, end_rank, end_file, new_acc)
     end
   end
@@ -1203,7 +1822,8 @@ defmodule Board do
         upLeft(board, start_rank, start_file, end_rank, end_file)
       start_rank < end_rank and start_file < end_file -> # negative slope (up right)
         upRight(board, start_rank, start_file, end_rank, end_file)
-      true -> "one_or_more_is_equal"
+      true ->
+        "one_or_more_is_equal"
     end
   end
 
@@ -1227,6 +1847,111 @@ defmodule Board do
     end
   end
 
+  def filter_location_placement_tuples_for_color(list_loc_pla_tuples, color) do
+    list_loc_pla_tuples
+        # now we traverse it
+        |> Enum.map(fn
+          # the ^ symbol indicates it's pattern matching on existing color
+          {{_col, _row} = loc, {^color, p_type}} ->
+              # piece color is as specified
+              {loc, {color, p_type}}
+          {{_col, _row} = loc, {_other_color, _p_type}} ->
+            # any other color than the one specified
+            {loc, :opposing_piece}
+          {{_col, _row} = loc, :mt} ->
+            {loc, :mt}
+          end)
+          |> Enum.reject(fn
+            {_, :opposing_piece} -> true
+            {_, :mt} -> true
+            _ -> false
+          end)
+  end
+
+  def grab_possible_moves(list_loc_pla_tuples, board) do
+    list_loc_pla_tuples
+    |> Enum.map(fn
+      # the ^ symbol indicates it's pattern matching on existing color
+      {{_col, _row} = loc, {color, _p_type}} ->
+          # piece color is as specified
+          possible_moves(board, loc, color)
+      end)
+  end
+
+  def infer_move_type_from_board(list_o_list_o_possmoves, board) do
+    list_o_list_o_possmoves
+    ## so above we have a list tuples:
+    #     {starting_location, list_of_movetype_ending_location_tuples}
+    #     which look like [{move_type, ending_location},..]
+    #where plausible moves are moves that are not obviously ending up off the board
+    # or requiring a specific starting position (like sprinting, enpassant, castling, etc)
+    # now lets put that start_location in the actual tuple
+    |> Enum.map(fn plausible_loc_list when plausible_loc_list |> is_list() ->
+        Enum.map(plausible_loc_list,fn
+          {start_loc, end_loc, _promote_to} ->
+            {Moves.infer_move_type(board, start_loc, end_loc), start_loc, end_loc}
+          {start_loc, end_loc} ->
+            {Moves.infer_move_type(board, start_loc, end_loc), start_loc, end_loc}
+        end)
+    end)
+    |> List.flatten
+    ## so we put the start_loc in every interior tuple, outer tuple gotten rid of
+      # now we have a list of tuples in the form:
+      #     {move_type, start_loc, end_loc}
+  end
+
+  def throw_out_ob_and_remove_promote_type_and_filter_out_blocked(list_thruples_moves, placements) do
+    list_thruples_moves
+    |> Enum.map(fn
+      {_move_type, _start_loc, {_promote_to, :ob}} -> :ob
+      {move_type, start_loc, end_loc} ->
+      # at every plausible movetype with an end_location ...
+      # if the move is blocked, then we don't want to include it
+      # if the move is not blocked, then we want to include it
+
+        real_end_loc = case end_loc do
+          {col, row} when is_atom(col) -> {col, row}
+          {_promote_type, {col, row}} ->
+            {col, row}
+        end
+
+        block_bool = blocked(placements, start_loc, real_end_loc)
+
+        cond do
+          Moves.jumping(move_type) -> {move_type, start_loc, end_loc}
+          block_bool -> :blocked
+          not block_bool -> {move_type, start_loc, end_loc}
+        end
+    end)
+    # remove the :blocked
+    |> Enum.reject(fn
+      :blocked -> true
+      :ob -> true
+      _ -> false
+    end)
+  end
+
+  def remove_move_onlies(list_thruples) do
+    # Now the above has a list of {move_type, start_loc, end_loc} tuples
+    # we will remove the moves that are move_only (like sprinting, castling, etc)
+    list_thruples
+    |> Enum.reject(fn
+      {move_type, _start_loc, _end_loc} ->
+        Moves.moveOnly(move_type)
+      _ -> false
+      end)
+  end
+
+  def thruple_to_tuple_kill_movetype(list_thruples) do
+    list_thruples
+    ## Now we have all the logic we need, we'll get rid of the move_type to
+    ## get a list of {start_loc, end_loc} tuples, PERFECT
+    |> Enum.map(fn
+      {_move_type, start_loc, end_loc} ->
+        {start_loc, end_loc}
+      end)
+  end
+
   @doc """
   Produce a list of all locations that the color specifies threatens on the board
   I will need to reconcile whether or not this includes moves
@@ -1234,90 +1959,27 @@ defmodule Board do
   (unblocking a threat on the king). I think it should, because you can
   put an opposing king in check by blocking a threat on your own king.
   """
-  def threatens(board, color) do
+  def threatens(board, color) when board |> is_struct() and color |> is_atom() do
     placements = board.placements
 
-    # TODO: go through each type of piece and check
-    # what possible moves are, keep a MapSet of all
-    # locations that are threatened
-
-    # TODO: check to make sure fetch_locations(board, color)
-    #                            is not more appropriate here
     list_of_location_placement_tuples = Board.fetch_locations(placements)
-    # now we traverse it
-    |> Enum.map(fn
-      # the ^ symbol indicates it's pattern matching on existing color
-      {{_col, _row} = loc, {^color, _p_type}} ->
-          # piece color is as specified
-          {loc, possible_moves(placements, loc, color)}
-      {{_col, _row} = loc, {_other_color, _p_type}} ->
-        # any other color than the one specified
-        {loc, :opposing_piece}
-      {{_col, _row} = loc, :mt} ->
-        {loc, :mt}
-      end)
-      |> Enum.reject(fn
-        {_, :opposing_piece} -> true
-        {_, :mt} -> true
-        _ -> false
-      end)
-      ## so above we have a list tuples:
-      #     {starting_location, list_of_movetype_ending_location_tuples}
-      #     which look like [{move_type, ending_location},..]
-      #where plausible moves are moves that are not obviously ending up off the board
-      # or requiring a specific starting position (like sprinting, enpassant, castling, etc)
-      # now lets put that start_location in the actual tuple
-      |> Enum.map(fn
-        {start_loc, plausible_loc_list} ->
-          Enum.map(plausible_loc_list, fn
-            {move_type, end_loc} ->
-              {move_type, start_loc, end_loc}
-          end)
-         end)
-         |> List.flatten
-         ## so we put the start_loc in every interior tuple, outer tuple gotten rid of
-          # now we have a list of tuples in the form:
-          #     {move_type, start_loc, end_loc}
-      |> Enum.map(fn  {move_type, start_loc, end_loc} ->
-        # at every plausible movetype with an end_location ...
-      # if the move is blocked, then we don't want to include it
-      # if the move is not blocked, then we want to include it
-      block_bool = blocked(placements, start_loc, end_loc)
+    |> filter_location_placement_tuples_for_color(color)
+    |> grab_possible_moves(board)
+    |> infer_move_type_from_board(board)
+    |> throw_out_ob_and_remove_promote_type_and_filter_out_blocked(placements)
+    |> remove_move_onlies()
+    |> thruple_to_tuple_kill_movetype()
+    |> Enum.uniq()
 
-      cond do
-        Moves.jumping(move_type) -> {move_type, start_loc, end_loc}
-        block_bool -> :blocked
-        not block_bool -> {move_type, start_loc, end_loc}
-      end
-      end)
-      # remove the :blocked
-      |> Enum.reject(fn
-        :blocked -> true
-        _ -> false
-      end)
-      # Now the above has a list of {move_type, start_loc, end_loc} tuples
-      # we will remove the moves that are move_only (like sprinting, castling, etc)
-      |> Enum.reject(fn
-        {move_type, _start_loc, _end_loc} ->
-          Moves.moveOnly(move_type)
-        _ -> false
-        end)
-      ## Now we have all the logic we need, we'll get rid of the move_type to
-      ## get a list of {start_loc, end_loc} tuples, PERFECT
-      |> Enum.map(fn
-        {_move_type, start_loc, end_loc} ->
-          {start_loc, end_loc}
-        end)
-
-      list_of_location_placement_tuples
+    list_of_location_placement_tuples
   end
 
   @doc """
   Goes through the board placements and finds the king of the color specified, returning it's location
   Always a tuple.
   """
-  def findKing(board, color) do
-    for rank <- board, tile <- rank do
+  def findKing(placements, color) do
+    for rank <- placements, tile <- rank do
       case tile do
         {pieceColor, pieceType} ->
           if pieceColor == color and pieceType == :king do
@@ -1365,8 +2027,8 @@ defmodule Board do
   @doc """
   Given a board placements, reduces it to a list, with no location data
   """
-  def listify(board) do
-    board
+  def listify(placements) do
+    placements
     |> Enum.reduce([], fn x, accum -> accum ++ Enum.reduce(x, [], fn item, acc -> acc ++ [item] end) end)
   end
 
@@ -1374,8 +2036,8 @@ defmodule Board do
   Given a board, a piecetype and a color,
   reduces it to a list of only the color and piecetypes specified
   """
-  def grab(board, piecetype, color) do
-    board
+  def grab(placements, color, piecetype) do
+    placements
     |> listify()
     |> Enum.filter(fn
       {^color, ^piecetype} -> true
@@ -1387,8 +2049,8 @@ defmodule Board do
   Given a board, a piecetype and a color,
   reduces it to a list of only the piecetypes specified
   """
-  def grab(board, piecetype) do
-    board
+  def grab(placements, piecetype) do
+    placements
     |> listify()
     |> Enum.filter(fn
       {_col, ^piecetype} -> true
@@ -1400,8 +2062,8 @@ defmodule Board do
   Given a board and a color,
   reduces it to a list of only the pieces of that color
   """
-  def grabColor(board, color) do
-    board
+  def grabColor(placements, color) do
+    placements
     |> listify()
     |> Enum.filter(fn
       {^color, _piecetype} -> true
@@ -1422,48 +2084,49 @@ defmodule Board do
   - a king and two knights versus a lone king
   """
   def isInsufficientMaterial(board) do
+    placements = board.placements
     cond do
-      kingKnightKnight(board, :orange) and justKing(board, :blue) -> true
-      kingKnightKnight(board, :blue) and justKing(board, :orange) -> true
-      badMaterial(board, :orange) and badMaterial(board, :blue) -> true
+      kingKnightKnight(placements, :orange) and justKing(placements, :blue) -> true
+      kingKnightKnight(placements, :blue) and justKing(placements, :orange) -> true
+      badMaterial(placements, :orange) and badMaterial(placements, :blue) -> true
       true -> false
     end
   end
 
   @doc """
-  given a board and a color,
+  given placements and a color,
   returns whether that color only has the pieces, king and two knights
   """
-  def kingKnightKnight(board, color) do
-    knight = grab(board, color, :knight) |> length()
-    king = grab(board, color, :king) |> length()
-    total = grabColor(board, color) |> length()
+  def kingKnightKnight(placements, color) do
+    knight = grab(placements, color, :knight) |> length()
+    king = grab(placements, color, :king) |> length()
+    total = grabColor(placements, color) |> length()
 
     total == 3 and knight == 2 and king == 1
   end
 
   @doc """
-  given a board and a color,
+  given placements and a color,
   returns whether that color only has a king
   """
-  def justKing(board, color) do
-    king = grab(board, color, :king) |> length()
-    total = grabColor(board, color) |> length()
+  def justKing(placements, color) do
+    king = grab(placements, color, :king) |> length()
+    total = grabColor(placements, color) |> length()
 
     total == 1 and king == 1
   end
 
   @doc """
-  given a board and a color,
+  given placements and a color,
   returns whether that color has just a king or
   just a king and a minor piece (bishop or knight)
   """
-  def badMaterial(board, color) do
-    bishop = grab(board, color, :bishop) |> length()
-    knight = grab(board, color, :knight) |> length()
+  def badMaterial(placements, color) do
+    bishop = grab(placements, color, :bishop) |> length()
+    knight = grab(placements, color, :knight) |> length()
     minor_pieces = bishop + knight
-    king = grab(board, color, :king) |> length()
-    total = grabColor(board, color) |> length()
+    king = grab(placements, color, :king) |> length()
+    total = grabColor(placements, color) |> length()
 
     (total == 1 and king == 1) or (total == 2 and king == 1 and minor_pieces == 1)
   end
@@ -1473,7 +2136,7 @@ defmodule Board do
   board is a draw or not
   """
   def isDraw(board, to_play) do
-    isInsufficientMaterial(board) or isStalemate(board, to_play) or isThreeFoldRepitition(board, to_play) or isFiftyMoveRule(board)
+    isInsufficientMaterial(board) or isStalemate(board, to_play) or isThreeFoldRepitition(board, to_play) or isFiftyMoveRepitition(board, to_play)
   end
 
   def isThreeFoldRepitition(_board, _to_play) do
@@ -1481,10 +2144,6 @@ defmodule Board do
     false
   end
 
-  def isFiftyMoveRule(_board) do
-    #todo
-    false
-  end
 
   #########################################
   # CONVENIENCE FUNCTIONS

@@ -1,22 +1,56 @@
 defmodule MoveCollection do
   import Board
+  import Board.Utils
 
-  def kingBlockedByOwnPieces() do
-    startingPosition()
+  def kingBlockedByOwnPiecesRaw() do
+    Board.createBoard()
     |> move!({:d, 2}, {:d, 4}, :orange, :pawn)
     |> move!({:g, 8}, {:f, 6}, :blue, :knight)
     |> move!({:c, 2}, {:c, 4}, :orange, :pawn)
     |> move!({:e, 7}, {:e, 5}, :blue, :pawn)
     |> move!({:d, 4}, {:e, 5}, :orange, :pawn)
     |> move!({:f, 6}, {:g, 4}, :blue, :knight)
-    |> move!({:d, 1}, {:f, 3}, :orange, :knight)
+    |> move!({:g, 1}, {:f, 3}, :orange, :knight)
     |> move!({:b, 8}, {:c, 6}, :blue, :knight)
+
     |> move!({:c, 1}, {:f, 4}, :orange, :bishop)
     |> move!({:f, 8}, {:b, 4}, :blue, :bishop)
     |> move!({:b, 1}, {:d, 2}, :orange, :knight)
     |> move!({:d, 8}, {:e, 7}, :blue, :queen)
     |> move!({:a, 2}, {:a, 3}, :orange, :pawn)
     |> move!({:g, 4}, {:e, 5}, :blue, :knight)
+  end
+
+  def kingBlockedByOwnPieces() do
+    Board.createBoard()
+    |> move({:d, 2}, {:d, 4}, :orange, :pawn)
+    |> split_tuple()
+    |> move({:g, 8}, {:f, 6}, :blue, :knight)
+    |> split_tuple()
+    |> move({:c, 2}, {:c, 4}, :orange, :pawn)
+    |> split_tuple()
+    |> move({:e, 7}, {:e, 5}, :blue, :pawn)
+    |> split_tuple()
+    |> move({:d, 4}, {:e, 5}, :orange, :pawn)
+    |> split_tuple()
+    |> move({:f, 6}, {:g, 4}, :blue, :knight)
+    |> split_tuple()
+    |> move({:g, 1}, {:f, 3}, :orange, :knight)
+    |> split_tuple()
+    |> move({:b, 8}, {:c, 6}, :blue, :knight)
+    |> split_tuple()
+    |> move({:c, 1}, {:f, 4}, :orange, :bishop)
+    |> split_tuple()
+    |> move({:f, 8}, {:b, 4}, :blue, :bishop)
+    |> split_tuple()
+    |> move({:b, 1}, {:d, 2}, :orange, :knight)
+    |> split_tuple()
+    |> move({:d, 8}, {:e, 7}, :blue, :queen)
+    |> split_tuple()
+    |> move({:a, 2}, {:a, 3}, :orange, :pawn)
+    |> split_tuple()
+    |> move({:g, 4}, {:e, 5}, :blue, :knight)
+    |> split_tuple()
   end
 
   def foolsmate() do
@@ -203,7 +237,50 @@ defmodule MoveCollection do
   end
 
   def shorteststalemate() do
-    startingPosition()
+    Board.createBoard()
+    |> move({:c, 2}, {:c, 4}, :orange, :pawn)
+    |> split_tuple()
+    |> move({:h, 7}, {:h, 5}, :blue, :pawn)
+    |> split_tuple()
+    |> move({:h, 2}, {:h, 4}, :orange, :pawn)
+    |> split_tuple()
+    |> move({:a, 7}, {:a, 5}, :blue, :pawn)
+    |> split_tuple()
+    |> move({:d, 1}, {:a, 4}, :orange, :queen)
+    |> split_tuple()
+    |> move({:a, 8}, {:a, 6}, :blue, :rook)
+    |> split_tuple()
+    |> move({:a, 4}, {:a, 5}, :orange, :queen)
+    |> split_tuple()
+
+    |> move({:a, 6}, {:h, 6}, :blue, :rook)
+    |> split_tuple()
+    |> move({:a, 5}, {:c, 7}, :orange, :queen)
+    |> split_tuple()
+    |> move({:f, 7}, {:f, 6}, :blue, :pawn)
+    |> split_tuple()
+    |> move({:c, 7}, {:d, 7}, :orange, :queen)
+    |> split_tuple()
+    |> move({:e, 8}, {:f, 7}, :blue, :king)
+    |> split_tuple()
+    |> move({:d, 7}, {:b, 7}, :orange, :queen)
+    |> split_tuple()
+    |> move({:d, 8}, {:d, 3}, :blue, :queen)
+    |> split_tuple()
+    |> move({:b, 7}, {:b, 8}, :orange, :queen)
+    |> split_tuple()
+    |> move({:d, 3}, {:h, 7}, :blue, :queen)
+    |> split_tuple()
+    |> move({:b, 8}, {:c, 8}, :orange, :queen)
+    |> split_tuple()
+    |> move({:f, 7}, {:g, 6}, :blue, :king)
+    |> split_tuple()
+    |> move({:c, 8}, {:e, 6}, :orange, :queen)
+    |> split_tuple()
+  end
+
+  def shorteststalemateraw() do
+    Board.createBoard()
     |> move!({:c, 2}, {:c, 4}, :orange, :pawn)
     |> move!({:h, 7}, {:h, 5}, :blue, :pawn)
     |> move!({:h, 2}, {:h, 4}, :orange, :pawn)

@@ -1,5 +1,5 @@
 defmodule Player do
-  defstruct type: :human, color: :orange, tag: "Player"
+  defstruct type: :human, color: :orange, tag: "Player", lvl: 0
 
   def toggleControl(player) do
     case player.type do

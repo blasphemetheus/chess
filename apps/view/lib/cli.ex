@@ -75,6 +75,19 @@ defmodule View.CLI do
 
     displayGameBoard(contents_str)
   end
+
+  def showPlacementsAs(placements, :blue) do
+    contents_str = placements |> Board.reversePlacements() |> Board.printPlacements()
+
+    displayGameBoard(contents_str)
+  end
+
+  def showPlacementsAs(placements, :orange) do
+    contents_str = placements |> Board.printPlacements()
+
+    displayGameBoard(contents_str)
+  end
+
   ############################################################
 
 
@@ -89,32 +102,52 @@ defmodule View.CLI do
     displayMoveCounter(board.fullmoves, board.halfmove_clock)
   end
 
+  def displayBoard(board, color) do
+    displayOrder(board.order)
+    displayTurn(color)
+    displayPlacements(board.placements, color)
+    # displayPlacements(board.placements, color, board.impalable_square)
+    displayImpalable(board.impale_square)
+    displayCastleable({board.first_castleable, board.second_castleable})
+    displayMoveCounter(board.fullmove_number, board.halfmove_clock)
+  end
+
+  # display all data about the data in a human readable way
   def displayGame(game) do
     displayPlayers(game)
     displayBoard(game.placements, game.turn, game.first, game.second)
   end
 
+  # display the players of the game with all associated data
   def displayPlayers(game) do
-    IO.puts("#{inspect(game)}")
+    IO.puts("First Player: #{inspect(game)}")
+  end
+
+  def displayImpalable(:noimpale) do
+    IO.puts("No impalable squares.")
   end
 
   def displayImpalable(impale_square) do
-    IO.puts("The pawn at #{inspect(impale_square)} is impalable (en passant)")
+    IO.puts("IMPALABLE: pawn behind #{inspect(impale_square)} for en-passant")
   end
 
   def displayCastleable({first_c, second_c}) do
-    IO.puts("#{first_c} #{second_c}")
+    IO.puts("AVAILABLE CASTLES:  Orange - #{first_c}, Blue - #{second_c}")
   end
 
   def displayMoveCounter(fullmoves, halfmove_clock) do
-    IO.puts("#{fullmoves} #{halfmove_clock}")
+    IO.puts("TURN: #{fullmoves}, Moves since pawn move, capture or castle: #{halfmove_clock}")
+  end
+
+  def displayTurn(color) do
+    IO.puts("TO_PLAY:#{inspect(color)}")
   end
 
   def displayTurn(color, {first_p, second_p}) do
-    IO.puts("#{color}, #{first_p} #{second_p} ")
+    IO.puts("TO_PlAY: #{color}, PLAYERS: #{inspect(first_p)} #{inspect(second_p)} ")
   end
 
-  def displayOrder({first, second}), do: IO.puts("ORDER: #{inspect(first)}, then #{inspect(second)}")
+  def displayOrder([first, second]), do: IO.puts("ORDER: #{inspect(first)}, #{inspect(second)}")
 
   def displayPlacements(placements, color \\ :orange)
   def displayPlacements(placements, :orange) do
@@ -223,6 +256,8 @@ defmodule View.CLI do
   def displays(:metadata, tags, taken, time_elapsed, turns) do
     IO.puts(metadata(tags, taken, time_elapsed, turns))
   end
+
+  def displayError(:move_input_error, e), do: IO.puts("Got Error for inputted move, #{e}")
   def metadata({first, second}, {first_taken, second_taken}, time, turns)do
     "Players: #{first} VS #{second}\n" <> "Pieces taken: [#{first_taken}] VS [#{second_taken}]\n" <>
     "Time Elapsed: #{time}\n" <> "Turn: #{turns}\n"
@@ -244,6 +279,7 @@ defmodule View.CLI do
     board_contents
     |> String.graphemes()
     |> Enum.chunk_every(8)
+    |> Enum.map(&(&1 |> Enum.intersperse(" ")))
     |> Enum.map(&(&1 |> List.to_string()))
     |> Enum.each(fn x -> IO.puts(x) end)
   end
@@ -275,21 +311,4 @@ defmodule View.CLI do
     IO.puts("")
     raw |> String.upcase() |> String.trim()
   end
-
-  # TODO REMAKE THIS FUNCTIONALITY
-  # def move_validate(atom, atom_response) do
-  #   ## (asking again if bad input, and taking abbreviations, etc)
-  #   recur_bool = true
-  #   case move_validate(atom, atom_response) do
-  #     {:error, e} ->
-  #       case recur_bool do
-  #         true ->
-  #           IO.puts(e)
-  #           ask(:try_again)
-  #           #ask(atom, false)
-  #         false -> raise ArgumentError, message: e
-  #       end
-  #     {:ok, _} -> atom_response
-  #   end
-  # end
 end

@@ -60,12 +60,13 @@ For now a cli_view that allows a player to choose from:
 - vs -> a local game you can play over the keyboard with a friend (or yourself)
 - online -> 
 - cpu -> a local game you can play against the computer. There will be a number of different levels roughly sketched out as:
- 0. level 0 is random
- 1. random but will always take a piece if available
- 2. governed by a naive heuristics fn that picks randomly from center pawns in first move then minor pieces for a couple moves and castles then does randomly
- 3. will do mainline openings for a couple lines somehow
- 4. also naive
- 5. not offline anymore, responds to conditions on the board not to a preset plan
+ 0. level 0 is always the first generated move (deterministic)
+ 1. random from the available moves
+ 2. random from available moves, the first tier of those are moves that capture
+ 3. governed by a naive heuristics fn that picks randomly from center pawns in first move then minor pieces for a couple moves and castles then does randomly
+ 4. will do mainline openings for a couple lines somehow
+ 5. also naive
+ 6. not offline anymore, responds to conditions on the board not to a preset plan
  ... etc
 
  And then play a chess game, displaying an end screen with the winner.

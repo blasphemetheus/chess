@@ -11,7 +11,7 @@ defmodule Main do
   @default_games_per_matchup 2
   @default_amount_of_players 4
   @default_cpu_level 1
-  #@input_types [:auto, :input]
+  # @input_types [:auto, :input]
 
   @dope """
   :vs = [:human v :human]
@@ -25,76 +25,76 @@ defmodule Main do
   :netplay = [:human v :online]
   """
 
-  #def gchess(argv) do
-    #not
-    # taking outline from https://www.youtube.com/watch?v=ycpNi701aCs&list=PLqj39LCvnOWaxI87jVkxSdtjG8tlhl7U6&t=75s
-    #{glob, target_dir, format} = parse_options(argv)
-    #:ok = validate_options(glob, format)
-    #filenames = prepare_conversion(glob, target_dir)
-    #results = convert_images(filenames, target_dir, format)
-    #report_results(results, target_dir)
+  # def gchess(argv) do
+  # not
+  # taking outline from https://www.youtube.com/watch?v=ycpNi701aCs&list=PLqj39LCvnOWaxI87jVkxSdtjG8tlhl7U6&t=75s
+  # {glob, target_dir, format} = parse_options(argv)
+  # :ok = validate_options(glob, format)
+  # filenames = prepare_conversion(glob, target_dir)
+  # results = convert_images(filenames, target_dir, format)
+  # report_results(results, target_dir)
 
-    # we want this, but if we do this, each fn signature must match the
-    # output of the previous fn, which can be unwieldy with error handling
-    # So ... we need the `with` macro
-    #argv
-    #|> parse_options()
-    #|> validate_options()
-    #|> prepare_conversion()
-    #|> convert_images()
-    #|> report_results()
+  # we want this, but if we do this, each fn signature must match the
+  # output of the previous fn, which can be unwieldy with error handling
+  # So ... we need the `with` macro
+  # argv
+  # |> parse_options()
+  # |> validate_options()
+  # |> prepare_conversion()
+  # |> convert_images()
+  # |> report_results()
 
-    # these is the with construct, downside being the :error, message can be
-    # coming from a couple places, so not extremely verbose error msging
-    #with {glob, target_dir, format} <- parse_options(argv),
-    #  :ok <- validate_options(glob, format),
-    #  filenames <- prepare_conversion(glob, target_dir),
-    #  results <- convert_image(filenames, taget_dir, format) do
-    #    report_results(results, target_dir)
-    #else
-    #  {:error, message} -> report_error(message)
-    #end
+  # these is the with construct, downside being the :error, message can be
+  # coming from a couple places, so not extremely verbose error msging
+  # with {glob, target_dir, format} <- parse_options(argv),
+  #  :ok <- validate_options(glob, format),
+  #  filenames <- prepare_conversion(glob, target_dir),
+  #  results <- convert_image(filenames, taget_dir, format) do
+  #    report_results(results, target_dir)
+  # else
+  #  {:error, message} -> report_error(message)
+  # end
 
-    # token approach
-  #end
+  # token approach
+  # end
 
   # pipes : pipelines, high level flow, control the interfaces, dictate the rules
   # with : swiss army knife, nitty gritty low lvl, calling 3rd pary that doesn't fit
 
-  #defmodule Converter.Token do
-    #defstruct [:argv, :glob, :target_dir, :format, :filenames, :results]
-    # ...
-    #@default_format "png"
-    #def build(argv) when is_list(argv) do
-    #  %__MODULE__{argv: argv, format: @default_format}
-    #end
-    #@formats ~w(jpg png)
-    #def put_format(token, format) when format in @formats do
-    #  %__MODULE__{token | format: format}
-    #end
-    #def put_format(token, "jpeg"), do: put_format(token, "jpg")
-    # ...
-    #def put_options(token, glob, target_dir, format) do
-    #  token = put_format(token, format) # goes first cause might error
-    #  %__MODULE__{token | glob: glob, target_dir: target_dir}
-    #end
+  # defmodule Converter.Token do
+  # defstruct [:argv, :glob, :target_dir, :format, :filenames, :results]
+  # ...
+  # @default_format "png"
+  # def build(argv) when is_list(argv) do
+  #  %__MODULE__{argv: argv, format: @default_format}
+  # end
+  # @formats ~w(jpg png)
+  # def put_format(token, format) when format in @formats do
+  #  %__MODULE__{token | format: format}
+  # end
+  # def put_format(token, "jpeg"), do: put_format(token, "jpg")
+  # ...
+  # def put_options(token, glob, target_dir, format) do
+  #  token = put_format(token, format) # goes first cause might error
+  #  %__MODULE__{token | glob: glob, target_dir: target_dir}
+  # end
 
-    # design tokens around intended use
-    # design around reqs,
-    # create tokens using api, write values using api
-    # provide convenience fns for common ops,
-    # while writing, validate and normalize inputs
-  #end
+  # design tokens around intended use
+  # design around reqs,
+  # create tokens using api, write values using api
+  # provide convenience fns for common ops,
+  # while writing, validate and normalize inputs
+  # end
 
   # could do a plug pipelines, so using modules instead of fns
 
-  #def do_smth(data) do
+  # def do_smth(data) do
   #  with  value <- function1(data),
   #    list <- function2(data, value),
   #    map <- function3(list) do
   #      function4(data, map)
   #    end
-  #end
+  # end
 
   # say i have a compiled file that I run on the cli
   # with arguments, I want to be able to do a couple things with it
@@ -108,17 +108,18 @@ defmodule Main do
   # - observe a game with no ability to affect it (so subscribe to it)
   # - start a tournament (just of cpus) that you just run (tasks)
 
-
   @doc """
   Welcomes a user and asks for their input on what to do nextm
   like a simulated main menu
   """
-  def welcome(), do: main(:input)
+  def welcome(), do: main()
 
   @doc """
   Runs the default, auto game between two cpus with randomized moves and returns a winner
   """
   def cpu(), do: main(:auto, @default_tag, :game, :cpu)
+
+  def simulation(), do: main(:auto, @default_tag, :game, :computer, :computer)
 
   @doc """
   Lets a user play chess locally, user input accepted for both sides
@@ -138,7 +139,7 @@ defmodule Main do
   @doc """
   Runs a cpu tournament
   """
-  def tournament(), do: main(:auto, @default_tag, :tournament, :cpu)
+  def tournament(), do: main(:auto, @default_tag, :tournament, :computer)
 
   @doc """
   Kicks off the running of gchess play of any sort. If you just run main with no arguments, the CLI
@@ -160,27 +161,26 @@ defmodule Main do
     main(:input, tag_str, context, playType)
   end
 
-  def main(:auto, tag_str, :game, playtype, playtype_opp) do
-    raise ArgumentError, message: "multiple playtypes not supported yet"
-  end
-
   @doc """
   Starts a tournament of the playtype specified, with the input_type specified,
   with your tag as specified
   """
   def main(input_type, tag_str, :tournament, playType) do
-    amount_of_players = case input_type do
-      :input -> CLI_Intro.ask(:amount_of_players) |> String.to_integer
-      :auto -> @default_amount_of_players
-    end
+    amount_of_players =
+      case input_type do
+        :input -> CLI_Intro.ask(:amount_of_players) |> String.to_integer()
+        :auto -> @default_amount_of_players
+      end
 
-    games_per_matchup = case input_type do
-      :input -> CLI_Intro.ask(:games_per_matchup) |> String.to_integer
-      :auto -> @default_games_per_matchup
-    end
+    games_per_matchup =
+      case input_type do
+        :input -> CLI_Intro.ask(:games_per_matchup) |> String.to_integer()
+        :auto -> @default_games_per_matchup
+      end
+
     # returns a tournament winner
-    winner = TournamentOrganizer.runTournament(amount_of_players, playType, games_per_matchup)
-    IO.puts("Tournament Winner: #{winner}")
+    winner = TournamentOrganizer.runTournament(amount_of_players, games_per_matchup, playType)
+    IO.puts("Tournament Winner: #{inspect(winner)}")
   end
 
   @doc """
@@ -188,43 +188,65 @@ defmodule Main do
   with your tag as specified
   """
   def main(input_type, tag_str, :match, playType) do
-    games_per_matchup = case input_type do
-      :auto -> @default_games_per_matchup
-      :input -> games_per_matchup = CLI_Intro.ask(:games_per_matchup) |> String.to_integer
-    end
-    opp_tag_str = case input_type do
-      :auto -> @default_opponent
-      :input -> CLI_Intro.ask(:opponent)
-    end
+    games_per_matchup =
+      case input_type do
+        :auto -> @default_games_per_matchup
+        :input -> games_per_matchup = CLI_Intro.ask(:games_per_matchup) |> String.to_integer()
+      end
+
+    opp_tag_str =
+      case input_type do
+        :auto -> @default_opponent
+        :input -> CLI_Intro.ask(:opponent)
+      end
+
     # returns a list of game outcomes
-    list_of_outcomes = runMatchup([tag_str, opp_tag_str], playType, games_per_matchup)
+    list_of_outcomes = runMatchup([tag_str, opp_tag_str], games_per_matchup, playType)
     IO.puts("Match Result: #{list_of_outcomes}")
   end
-
 
   @doc """
   Starts a game of the playtype specified, with the input_type specified,
   with your tag as specified
   """
   def main(input_type, tag_str, :game, playType) do
-    opp_tag_str = case input_type do
-      :auto -> @default_opponent
-      :input -> CLI_Intro.ask(:opponent_tag)
-    end
+    opp_tag_str =
+      case input_type do
+        :auto -> @default_opponent
+        :input -> CLI_Intro.ask(:opponent_tag)
+      end
+
     # returns a game outcome
 
-    playTypeList = case playType do
-      :vs -> [:human, :human]
-      :cpu -> [:human, :computer]
-      :upc -> [:computer, :human]
-      :simulation -> [:computer, :computer]
-      :trolled -> [:online, :computer]
-      :trolling -> [:computer, :online]
-      :online -> [:online, :online]
-      :playnet -> [:online, :human]
-      :netplay -> [:human, :online]
-    end
+    playTypeList =
+      case playType do
+        :vs -> [:human, :human]
+        :cpu -> [:human, :computer]
+        :upc -> [:computer, :human]
+        :simulation -> [:computer, :computer]
+        :trolled -> [:online, :computer]
+        :trolling -> [:computer, :online]
+        :online -> [:online, :online]
+        :playnet -> [:online, :human]
+        :netplay -> [:human, :online]
+      end
+
     outcome = GameRunner.runGame([tag_str, opp_tag_str], playTypeList)
-    IO.puts("Game Outcome: #{outcome}")
+    IO.puts("Game Outcome: #{inspect(outcome)}")
+  end
+
+  def main(:auto, tag_str, :game, playType, playType2) do
+    list =
+      case Enum.random(0..2) do
+        0 -> [tag_str, @default_opponent]
+        1 -> [@default_opponent, tag_str]
+        2 -> ["jimbo", "jombo"]
+      end
+
+    GameRunner.runGame(list, [playType, playType2])
+  end
+
+  def main(:auto, tag_str, :game, playtype, playtype_opp) do
+    raise ArgumentError, message: "multiple playtypes not supported yet"
   end
 end

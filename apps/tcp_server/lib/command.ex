@@ -1,6 +1,7 @@
 defmodule TCPServer.Command do
   import(Board)
   require(KV)
+
   @doc ~S"""
   Parses the given `line` into a command
 
@@ -31,11 +32,20 @@ defmodule TCPServer.Command do
   """
   def parse(line) do
     case String.split(line) do
-      ["MAKE", game] -> {:ok, {:make, game}}
-      ["GRAB", game, board] -> {:ok, {:grab, game, board}}
-      ["STARTINGBOARD", game, initial_board, color_to_start] -> {:ok, {:start_board, game, initial_board, color_to_start}}
-      ["END", game, which_instance] -> {:ok, {:end, game, which_instance}}
-      _ -> {:error, :unknown_command}
+      ["MAKE", game] ->
+        {:ok, {:make, game}}
+
+      ["GRAB", game, board] ->
+        {:ok, {:grab, game, board}}
+
+      ["STARTINGBOARD", game, initial_board, color_to_start] ->
+        {:ok, {:start_board, game, initial_board, color_to_start}}
+
+      ["END", game, which_instance] ->
+        {:ok, {:end, game, which_instance}}
+
+      _ ->
+        {:error, :unknown_command}
     end
   end
 
@@ -45,7 +55,7 @@ defmodule TCPServer.Command do
   def run(command)
 
   def run({:make, "chess"}) do
-    board = Board.makeBoard(8,8)
+    board = Board.makeBoard(8, 8)
     KV.Registry.create(KV.Registry, "chess")
     {:ok, "OK\r\n"}
   end

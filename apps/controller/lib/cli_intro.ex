@@ -9,14 +9,14 @@ defmodule CLI_Intro do
 
   @asks %{
     tag: "\nHello!. What is your player tag?\n",
-    play_type: "Let's play chess.\n\rHow would you like to play it? pick one of (online, vs, cpu)\n",
+    play_type:
+      "Let's play chess.\n\rHow would you like to play it? pick one of (online, vs, cpu)\n",
     opponent_tag: "What is the name of your opponent?\n",
     cpu_level: "What level opponent would you like to play vs?\n",
     context: "What context would you like to play in? (tournament, match, game)\n",
     amount_of_players: "How many players are in the tournament? (1, 2, ... 1000)\n",
     games_per_matchup: "How many games per matchup? (1, 2, ... 8)\n"
   }
-
 
   @display_msgs %{
     tournament: "Context chosen: tournament.\n",
@@ -27,7 +27,6 @@ defmodule CLI_Intro do
     cpu: "You have chosen to play locally against the computer.\n",
     try_again: "Invalid input: Please try again.\n"
   }
-
 
   def address(tag, postscript \\ "\n") do
     case Enum.random(1..10) do
@@ -63,19 +62,18 @@ defmodule CLI_Intro do
     end
   end
 
-
   @doc """
   Uses maps declared in module to validate various inputs from the user, passing the response and atom to a function
   in the @validate_types map, returns an error tuple if not valid
   """
   def validate(atom, atom_response) when is_atom(atom) do
     valfn = types(atom)
+
     cond do
       valfn.(atom_response) -> {:ok, atom_response}
       true -> {:error, "Unrecognized #{convert(atom)}: #{atom_response}."}
     end
   end
-
 
   @doc """
   displayMsg is a standard way to display messages to the user via command line.
@@ -97,6 +95,7 @@ defmodule CLI_Intro do
   def ask(atom, recur_bool \\ true) when is_atom(atom) do
     atom_response = IO.gets(@asks[atom]) |> String.upcase() |> String.trim()
     IO.puts("")
+
     case validate(atom, atom_response) do
       {:error, e} ->
         case recur_bool do
@@ -104,9 +103,13 @@ defmodule CLI_Intro do
             IO.puts(e)
             displayMsg(:try_again)
             ask(atom, false)
-          false -> raise ArgumentError, message: e
+
+          false ->
+            raise ArgumentError, message: e
         end
-      {:ok, _} -> unshorten(atom_response)
+
+      {:ok, _} ->
+        unshorten(atom_response)
     end
   end
 
@@ -124,7 +127,9 @@ defmodule CLI_Intro do
   @doc """
   Convenience fn for converting strings to downcased atoms and atoms to upcased strings
   """
-  def convert(string) when is_binary(string), do: string |> String.downcase() |> String.to_existing_atom()
+  def convert(string) when is_binary(string),
+    do: string |> String.downcase() |> String.to_existing_atom()
+
   def convert(atom) when is_atom(atom), do: Atom.to_string(atom) |> String.upcase()
 
   @doc """
@@ -152,21 +157,25 @@ defmodule CLI_Intro do
 
   """
   def welcome() do
-    tag_str = ask(:tag) # input: me -> output: "ME"
+    # input: me -> output: "ME"
+    tag_str = ask(:tag)
 
-    address(tag_str, " ") # random greeting on it's own line.
-    context_str = ask(:context) # input: "t" -> output: "TOURNAMENT"
+    # random greeting on it's own line.
+    address(tag_str, " ")
+    # input: "t" -> output: "TOURNAMENT"
+    context_str = ask(:context)
     context = convert(context_str)
 
-    CLI_Intro.displayMsg(context, tag_str) # input: "TOURNAMENT" -> output: "Context chosen: tournament.\n"
+    # input: "TOURNAMENT" -> output: "Context chosen: tournament.\n"
+    CLI_Intro.displayMsg(context, tag_str)
 
     address(tag_str, " ")
-    play_type_str = ask(:play_type) # input: "o" -> output: "ONLINE"
+    # input: "o" -> output: "ONLINE"
+    play_type_str = ask(:play_type)
     play_type = convert(play_type_str)
 
     CLI_Intro.displayMsg(play_type, tag_str)
 
     {tag_str, context, play_type}
   end
-
 end

@@ -9,5 +9,4 @@ defmodule GameException do
   This exception declaration creates the default message I think
   """
   defexception message: "a GameException has occurred (something wonky with the game)"
-
 end

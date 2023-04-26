@@ -30,12 +30,12 @@ defmodule TCPServer do
     loop_acceptor(socket, 0)
   end
 
-  #defp loop_acceptor(socket) do
+  # defp loop_acceptor(socket) do
   #  {:ok, client} = :gen_tcp.accept(socket)
   #  {:ok, pid} = Task.Supervisor.start_child(TCPServer.TaskSupervisor, fn -> serve(client) end)
   #  :ok = :gen_tcp.controlling_process(client, pid)
   #  loop_acceptor(socket)
-  #end
+  # end
 
   defp loop_acceptor(socket, 1000) do
     Logger.info("Timeout: Closing socket on socket #{socket}")
@@ -46,25 +46,26 @@ defmodule TCPServer do
     {:ok, client} = :gen_tcp.accept(socket)
     {:ok, pid} = Task.Supervisor.start_child(TCPServer.TaskSupervisor, fn -> serve(client) end)
     :ok = :gen_tcp.controlling_process(client, pid)
-    loop_acceptor(socket, n+1)
+    loop_acceptor(socket, n + 1)
   end
 
   defp serve(socket) do
     msg =
-      with  {:ok, data} <- read_line(socket),
-            {:ok, command} <- TCPServer.Command.parse(data),
-            do: TCPServer.Command.run(command)
-      # case read_line(socket) do
-      #  {:ok, data} ->
-      #    case TCPServer.Command.parse(data) do
-      #      {:ok, command} ->
-      #        TCPServer.Command.run(command)
-      #      {:error, _} = err ->
-      #        err
-      #    end
-      ##    {:error, _} = err ->
-      #      err
-      #end
+      with {:ok, data} <- read_line(socket),
+           {:ok, command} <- TCPServer.Command.parse(data),
+           do: TCPServer.Command.run(command)
+
+    # case read_line(socket) do
+    #  {:ok, data} ->
+    #    case TCPServer.Command.parse(data) do
+    #      {:ok, command} ->
+    #        TCPServer.Command.run(command)
+    #      {:error, _} = err ->
+    #        err
+    #    end
+    ##    {:error, _} = err ->
+    #      err
+    # end
     write_line(socket, msg)
     serve(socket)
   end
@@ -88,15 +89,14 @@ defmodule TCPServer do
   end
 
   defp write_line(socket, {:error, error}) do
-    #unknown error; write to the client and exit
+    # unknown error; write to the client and exit
     :gen_tcp.send(socket, "ERROR\r\n")
     exit(error)
   end
 
-    # client api custom
-    def play() do
-      IO.puts("someone tried to play over TCP but this isn't implemented yet")
-      {:error, "Online Play not implemented yet"}
-    end
-
+  # client api custom
+  def play() do
+    IO.puts("someone tried to play over TCP but this isn't implemented yet")
+    {:error, "Online Play not implemented yet"}
+  end
 end

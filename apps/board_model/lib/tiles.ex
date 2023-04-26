@@ -12,7 +12,7 @@ defmodule Tile do
   #PieceColors can be orange or blue, but this will be expanded.
   # There are only 2 + 6 + 6 (so 14 difference possible tile states for graphics purposes)
   """
-  def renderTile(:orange, piece) do
+  def renderTile(:blue, piece) do
     case piece do
       :mt -> "◻"
       :king -> "♔"
@@ -25,7 +25,7 @@ defmodule Tile do
     end
   end
 
-  def renderTile(:blue, piece) do
+  def renderTile(:orange, piece) do
     case piece do
       :mt -> "◼"
       :king -> "♚"
@@ -45,8 +45,8 @@ defmodule Tile do
 
   def renderTile(tileColor) do
     case tileColor do
-      :orange -> "◻"
-      :blue -> "◼"
+      :blue -> "◻"
+      :orange -> "◼"
     end
   end
 

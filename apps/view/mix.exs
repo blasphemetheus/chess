@@ -5,7 +5,7 @@ defmodule CLIView.MixProject do
     [
       app: :view,
       version: "0.1.0",
-      elixir: "~> 1.13",
+      #elixir: "~> 1.13",
       start_permanent: Mix.env() == :dev,
       deps: deps()
     ]

@@ -11,6 +11,9 @@ defmodule Board.Utils do
     nested_dumb_placements |> Board.map_to_each(&(&1 |> Location.formalLocation()))
   end
 
+  def instil(str), do: %Board{placements: str |> Parser.parseBoardFromString()}
+
+
   @doc """
   How I'm transporting constants across modules
   iex> Board.Utils.get_constant(:pawn_moves, Move)
@@ -19,5 +22,10 @@ defmodule Board.Utils do
   def get_constant(constant_atom, module) do
     [const] = module.__info__(:attributes)[constant_atom]
     const
+  end
+
+  def split_tuple({:ok, struct}), do: struct
+  def split_tuple({:error, message}) do
+    raise ArgumentError, message: message
   end
 end

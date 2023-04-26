@@ -4,38 +4,38 @@ defmodule TileTest do
   import Tile
   describe "Tile.renderTile(_,_)" do
     test "empty tiles render" do
-      assert renderTile(:orange, :empty) == "◻"
-      assert renderTile(:blue, :empty) == "◼"
+      assert renderTile(:blue, :mt) == "◻"
+      assert renderTile(:orange, :mt) == "◼"
     end
 
     test "King tiles render" do
-      assert renderTile(:orange, :king) == "♔"
-      assert renderTile(:blue, :king) == "♚"
+      assert renderTile(:blue, :king) == "♔"
+      assert renderTile(:orange, :king) == "♚"
     end
 
     test "Queen tiles render" do
-      assert renderTile(:orange, :queen) == "♕"
-      assert renderTile(:blue, :queen) == "♛"
+      assert renderTile(:blue, :queen) == "♕"
+      assert renderTile(:orange, :queen) == "♛"
     end
 
     test "rook tiles render" do
-      assert renderTile(:orange, :rook) == "♖"
-      assert renderTile(:blue, :rook) == "♜"
+      assert renderTile(:blue, :rook) == "♖"
+      assert renderTile(:orange, :rook) == "♜"
     end
 
     test "bishop tiles render" do
-      assert renderTile(:orange, :bishop) == "♗"
-      assert renderTile(:blue, :bishop) == "♝"
+      assert renderTile(:blue, :bishop) == "♗"
+      assert renderTile(:orange, :bishop) == "♝"
     end
 
     test "knight tiles render" do
-      assert renderTile(:orange, :knight) == "♘"
-      assert renderTile(:blue, :knight) == "♞"
+      assert renderTile(:blue, :knight) == "♘"
+      assert renderTile(:orange, :knight) == "♞"
     end
 
     test "pawn tiles render" do
-      assert renderTile(:orange, :pawn) == "♙"
-      assert renderTile(:blue, :pawn) == "♟︎"
+      assert renderTile(:blue, :pawn) == "♙"
+      assert renderTile(:orange, :pawn) == "♟︎"
     end
 
     test "invalid piece color obj, raises error" do

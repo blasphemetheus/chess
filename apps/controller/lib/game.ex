@@ -8,8 +8,14 @@ defmodule GameRunner do
   @end_reasons [:checkmate, :stalemate, :resignation, :timeout, :draw, :disconnection, :other]
   @play_types [:vs, :online, :cpu_vs_cpu, :human_vs_cpu, :cpu_vs_human]
 
-  defstruct board: %Board{}, turn: :orange, first: %Player{color: :orange}, second: %Player{color: :blue}, status: :built, history: [], resolution: nil, reason: nil
-
+  defstruct board: %Board{},
+            turn: :orange,
+            first: %Player{color: :orange},
+            second: %Player{color: :blue},
+            status: :built,
+            history: [],
+            resolution: nil,
+            reason: nil
 
   def assignLocalOrRemote(player) do
     cond do
@@ -19,24 +25,26 @@ defmodule GameRunner do
     end
   end
 
-
-  # TODO IMPORTED
-    @doc """
+  @doc """
   Given a tag and an opponent tag, ,
   """
-  def playLocal(tag \\ "BRAG", opponent \\"GRED") do
+  def playLocal(tag \\ "BRAG", opponent \\ "GRED") do
     View.displays(:local, tag, opponent)
+
     Board.startingPosition()
-    |> showGameStatus({tag, opponent}, {[],[]}, 0, 0)
+    |> showGameStatus({tag, opponent}, {[], []}, 0, 0)
     |> playTurn(tag, "first")
-    |> showGameStatus({tag, opponent}, {[],[]}, 0, 0)
+    |> showGameStatus({tag, opponent}, {[], []}, 0, 0)
     |> playTurn(opponent, "second")
-    |> showGameStatus({tag, opponent}, {[],[]}, 0, 1)
+    |> showGameStatus({tag, opponent}, {[], []}, 0, 1)
   end
 
   # asks the local user indicated for a move, the io.get prompts etc
   def playTurn(board, localUserTag, color) do
-    IO.puts("It is now the turn of #{localUserTag}, please enter your move in the following format (<location> <location> <piececolor> <piecetype>):\n")
+    IO.puts(
+      "It is now the turn of #{localUserTag}, please enter your move in the following format (<location> <location> <piececolor> <piecetype>):\n"
+    )
+
     input = IO.gets("")
     i = String.trim(input)
     {:ok, {s_loc, e_loc, playerColor, pieceType}} = parseMove(i)
@@ -47,6 +55,9 @@ defmodule GameRunner do
     end
   end
 
+  def randomLevel() do
+    Enum.random(0..1)
+  end
 
   # returns an outcome in the format [{player1, player2}, resolution]
   #   where if player1 wins, resolution is :win, if player2 wins, resolution is :loss,
@@ -73,12 +84,16 @@ defmodule GameRunner do
   the human gives via cli or via mouseclicks or button-presses depending on the view
   Online will just have to wait.
   """
+  def runGame([player1, player2], playType) when playType |> is_atom(),
+    do: runGame([player1, player2], [playType, playType])
+
   def runGame([player1, player2] = _both_players, [first_pt, second_pt] = _playTypeList) do
     %GameRunner{
       board: Board.createBoard(),
       turn: :orange,
-      first: %Player{type: first_pt, color: :orange, tag: player1},
-      second: %Player{type: second_pt, color: :blue, tag: player2},
+      # randomLevel()
+      first: %Player{type: first_pt, color: :orange, tag: player1, lvl: 1},
+      second: %Player{type: second_pt, color: :blue, tag: player2, lvl: 1},
       status: :in_progress,
       history: [],
       resolution: nil,
@@ -95,28 +110,81 @@ defmodule GameRunner do
     # asking the board something it's already had the opportunity to provide?
     |> findEndingReason()
     |> convertToOutcome()
+
     # %Outcome{players: [game.first, game.second], resolution: findResolution(game.board), reason: findEndingReason(game.board)}
   end
+
   # Outcome%{players: [player1, player2], resolution: :loss, reason: :checkmate}
   # Outcome%{players: [player1, player2], resolution: :drawn, reason: :stalemate}
   # Outcome%{players: [player1, player2], resolution: :win, reason: :resignation}
 
   def findResolution(game) do
     cond do
-      isDrawn(game.board, game.turn) -> %GameRunner{game | resolution: :drawn}
-      isWon(game.board, game.turn) -> %GameRunner{game | resolution: :loss}
-      isLost(game.board, game.turn) -> %GameRunner{game | resolution: :win}
-      true -> raise GameException, message: "Game is not a draw, win or loss, cannot find resolution #{inspect(game)}}"
+      isLost(game.board, game.turn) ->
+        %GameRunner{game | resolution: :win}
+
+      isWon(game.board, game.turn) ->
+        %GameRunner{game | resolution: :loss}
+
+      isDrawn(game.board, game.turn) ->
+        %GameRunner{game | resolution: :drawn}
+
+      true ->
+        raise GameException,
+          message: "Game is not a draw, win or loss, cannot find resolution #{inspect(game)}}"
     end
   end
 
   def findEndingReason(game) do
-    case game.resolution do
-      :drawn -> %GameRunner{game | reason: :draw}
-      :loss -> %GameRunner{game | reason: :checkmate}
-      :win -> %GameRunner{game | reason: :checkmate}
-      _ -> raise GameException, message: "Game is not a draw, win or loss, cannot find ending reason #{inspect(game)}"
+    reason =
+      case game.resolution do
+        :drawn ->
+          cond do
+            Board.isStalemate(game.board, game.turn) ->
+              :stalemate
+
+            Board.isInsufficientMaterial(game.board) ->
+              :insufficient_material
+
+            Board.isFiftyMoveRepitition(game.board, game.turn) ->
+              :fifty_move_repitition
+
+            true ->
+              :agreed
+          end
+
+        :loss ->
+          cond do
+            Board.isCheckmate(game.board, game.turn) ->
+              :checkmate
+
+            true ->
+              :resignation
+          end
+
+        :win ->
+          cond do
+            Board.isCheckmate(game.board, game.turn) ->
+              :checkmate
+
+            true ->
+              :resignation
+          end
+
+        _ ->
+          :other
+      end
+
+    case reason do
+      :other ->
+        raise GameException,
+          message: "Game is not a draw, win or loss, cannot find ending reason #{inspect(game)}"
+
+      any ->
+        true
     end
+
+    %GameRunner{game | reason: reason}
   end
 
   def convertToOutcome(game) do
@@ -124,15 +192,15 @@ defmodule GameRunner do
   end
 
   def isDrawn(board, color) do
-    Board.isOver(board, color)
+    Board.isDraw(board, color)
   end
 
   def isWon(board, color) do
-    Board.isOver(board, color)
+    Board.isCheckmate(board, Board.otherColor(color))
   end
 
   def isLost(board, color) do
-    Board.isOver(board, color)
+    Board.isCheckmate(board, color)
   end
 
   @doc """
@@ -154,15 +222,53 @@ defmodule GameRunner do
   OK, but if the game can still be played, play a turn
   """
   def takeTurns(game) do
-    View.CLI.showGameBoardAs(game.board, game.turn)
-    if Board.isOver(game.board, game.turn) do
-      %{game | status: :ended} # game is over, so we can stop taking turns
-      raise GameException, message: "Game is over, cannot take turns"
+    case game.first.type do
+      :computer -> View.CLI.showGameBoardAs(game.board, game.first.color)
+      _other -> View.CLI.showGameBoardAs(game.board, game.turn)
+    end
+
+    IO.puts("")
+
+    if Board.isOver(game.board, game.turn) or
+         GameRunner.isOver(game.board, game.turn, game.history) do
+      # game is over, so we can stop taking turns
+      %{game | status: :ended}
     else
       case game.turn do
         :orange -> playTurn(game, game.first)
         :blue -> playTurn(game, game.second)
       end
+    end
+  end
+
+  @doc """
+  given a board and history, return
+  """
+  def isOver(board, turn, history) do
+    isThreeFoldRepitition(board, turn, history)
+  end
+
+  def isThreeFoldRepitition(board, to_play, history) do
+    placements = board.placements
+    first_castleable = board.first_castleable
+    second_castleable = board.second_castleable
+    position = {to_play, first_castleable, second_castleable, placements}
+
+    historyContainsTwoEqualPositions(history, position)
+  end
+
+  def historyContainsTwoEqualPositions(history_list, position_tuple) do
+    case Enum.member?(history_list, position_tuple) do
+      true ->
+        new_h = List.delete(history_list, position_tuple)
+
+        case Enum.member?(new_h, position_tuple) do
+          true -> true
+          false -> false
+        end
+
+      false ->
+        false
     end
   end
 
@@ -173,10 +279,37 @@ defmodule GameRunner do
   """
   def playTurn(game, player) do
     case player.type do
-      :human -> playHumanTurn(game, player)
-      :cpu -> playCPUTurn(game)
+      :vs -> playHumanTurn(game, player)
+      :computer -> playCPUTurn(game, player.lvl)
+      :cpu -> playCPUTurn(game, player.lvl)
+
       _ -> raise GameException, message: "Invalid player type #{inspect(player)}"
     end
+  end
+
+  @doc """
+  given a board and turn to help parse, asks the user for input and returns a move answer
+  that parses correctly, giving them two tries and then erroring out
+  """
+  def askAndCorrectlyParse(board, turn) do
+    move1_raw = View.CLI.ask(:game_turn)
+    # parse the move
+    {:ok, parsed} =
+      case Parser.parseMoveCompare(move1_raw, board, turn) do
+        {:ok, parsed1} ->
+          {:ok, parsed1}
+
+        {:error, e} ->
+          View.CLI.displayError(:move_input_error, e)
+          move2_raw = View.CLI.ask(:game_turn)
+
+          case Parser.parseMoveCompare(move2_raw, board, turn) do
+            {:ok, parsed2} -> {:ok, parsed2}
+            {:error, e} -> raise ArgumentError, message: "entered incorrect input #{e}"
+          end
+      end
+
+    parsed
   end
 
   @doc """
@@ -187,41 +320,33 @@ defmodule GameRunner do
   """
   def playHumanTurn(game, player) do
     turn = game.turn
-    #View.CLI.displays(:game_board, game.board |> Board.printBoard(), turn)
+    # View.CLI.displays(:game_board, game.board |> Board.printBoard(), turn)
     View.CLI.displays(:turn_intro, turn, player)
     # play a turn
-    move1_raw = View.CLI.ask(:game_turn)
-
-    # parse the move
-    {:ok, parsed1} = case Parser.parseMove(move1_raw) do
-      {:ok, parsed1} -> {:ok, parsed1}
-      {:error, e} -> raise ArgumentError, message: "#{inspect(e)} Move inputted parsed Incorrectly: #{inspect(move1_raw)}"
-    end
-
-    {start_loc, end_loc, type_at_loc} = parsed1
+    {start_loc, end_loc, type_at_loc, promote_to} =  askAndCorrectlyParse(game.board, game.turn)
 
     # validate the move
-    valid = Referee.validateMove(game.board, start_loc, end_loc, turn, type_at_loc)
+    valid = Referee.validateMove(game.board, start_loc, end_loc, turn, type_at_loc, promote_to)
     # if valid, make the move
     if valid do
-      #new_board = Board.makeMove(game.board, move1)
-      new_board = Board.move!(game.board, start_loc, end_loc, turn, type_at_loc)
+      # new_board = Board.makeMove(game.board, move1)
+      {:ok, new_board} = Board.move(game.board, start_loc, end_loc, turn, type_at_loc, promote_to)
       takeTurns(%{game | board: new_board, turn: nextTurn(game.turn)})
     else
-      # if invalid, prompt the player again
-      move2 = IO.gets("Enter a move: ")
-      # validate the move
-      valid_two = Referee.validateMove(game.board, move2)
+      {start_loc2, end_loc2, type_at_loc2, promote_to} = askAndCorrectlyParse(game.board, game.turn)
+
+      valid_two = Referee.validateMove(game.board, start_loc2, end_loc2, turn, type_at_loc2, promote_to)
 
       # if invalid again, the player resigns
       if valid_two do
-        #new_board = Board.makeMove(game.board, move2)
-        new_board = Board.move(game.board, start_loc, end_loc, turn, type_at_loc)
+        # new_board = Board.makeMove(game.board, move2)
+        {:ok, new_board} = Board.move(game.board, start_loc2, end_loc2, turn, type_at_loc2, promote_to)
         takeTurns(%{game | board: new_board, turn: nextTurn(game.turn)})
       else
-        raise GameException, message: "Player resigned via bad input: #{inspect(move1_raw)} and #{inspect(move2)}}"
+        raise GameException, message: "Player resigned via bad input"
       end
     end
+
     # prompt the player for a move
     # validate the move
     # if valid, make the move
@@ -232,20 +357,28 @@ defmodule GameRunner do
     # if the player times out, end the game as a timeout loss
   end
 
-  def playCPUTurn(game) do
+  def playCPUTurn(game, 0) do
     turn = game.turn
 
-    player = case turn do
-      :orange -> game.first
-      :blue -> game.second
-    end
+    player =
+      case turn do
+        :orange -> game.first
+        :blue -> game.second
+      end
 
-    selected_move = possible_moves(game.board, turn)
-    |> Enum.random()
+    possible = possible_moves(game.board, turn)
 
-    new_board = Board.makeMove(game.board, selected_move)
+    # {start_loc, end_loc} = selected_move = possible |> Enum.random()
+    {start_loc, end_loc, promote_to} =
+      case possible |> List.first() do
+        {start_loc, end_loc} -> {start_loc, end_loc, :nopromote}
+        {_start_loc, _end_loc, _promote_to} = x -> x
+      end
+
+    {^turn, piece_type} = Board.get_at(game.board.placements, start_loc)
+    {:ok, new_board} = Board.move(game.board, start_loc, end_loc, turn, piece_type, promote_to)
     takeTurns(%{game | board: new_board, turn: nextTurn(turn)})
-
+    # for some reason start_loc can end up being the atom :board, troubleshoot
     # generate a move
     # validate the move
     # if valid, make the move
@@ -254,6 +387,29 @@ defmodule GameRunner do
 
     # if the player resigns, end the game
     # if the player times out, end the game as a timeout loss
+  end
+
+  def playCPUTurn(game, 1) do
+    turn = game.turn
+
+    player =
+      case turn do
+        :orange -> game.first
+        :blue -> game.second
+      end
+
+    possible = possible_moves(game.board, turn)
+
+    {start_loc, end_loc, promote_to} =
+      case possible |> Enum.random() do
+        {start_loc, end_loc} -> {start_loc, end_loc, :nopromote}
+        {_start_loc, _end_loc, _promote_to} = x -> x
+      end
+
+    {^turn, piece_type} = Board.get_at(game.board.placements, start_loc)
+
+    {:ok, new_board} = Board.move(game.board, start_loc, end_loc, turn, piece_type, promote_to)
+    takeTurns(%{game | board: new_board, turn: nextTurn(turn)})
   end
 
   def playTurnOnline(game) do

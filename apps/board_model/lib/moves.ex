@@ -23,9 +23,9 @@ defmodule Moves do
   @knight_moves [ :gallop, :trot, :rear, :turnabout] ## unique about these is the jumping behavior
   @rook_moves [ :advance, :retreat, :flank]
   @bishop_moves [ :veer, :sidle]
-  @queen_moves [:flank, :veer, :sidle]
+  @queen_moves [:flank, :veer, :sidle, :advance, :retreat]
   #@queen_moves [ :advance, :retreat, :flank, :veer, :sidle]
-  @king_moves [ :forwardstep, :backstep, :sidestep, :duck, :roll, :castle] # all of these but castle are non-n,
+  @king_moves [ :forwardstep, :backstep, :sidestep, :duck, :roll, :shortcastle, :longcastle] # all of these but castle are non-n,
   #just one space moved, castle is unique as two spaces and directional
   @n_moves [ :advance, :retreat, :flank, :veer, :sidle]
   @directional_moves [ :sidestep, :flank, :veer, :sidle, :gallop, :trot, :rear, :turnabout, :capture, :impaleEnPassanter, :duck, :roll, :castle, :capturepromote]
@@ -55,15 +55,33 @@ defmodule Moves do
   defguard ob_file(file) when file in @out_of_bounds_atoms
   defguard out_of_bounds_cols(col) when col not in @in_bounds_atoms
 
-
+  @doc """
+  Given a start loc, an end loc, and a board, infers the movetype
+  """
+  def infer_move_type(board, start_loc, _end_loc) do
+    #moving_piece = Board.get_at(board, start_loc)
+    case Board.get_at(board.placements, start_loc) do
+      :mt -> :invalid_piece
+      {_color, piece_type} ->
+        #movetypes_possible = piece(piece_type)
+        case piece_type do
+          :knight -> :jumping
+          :rook -> :not_jumping
+          :bishop -> :not_jumping
+          :queen -> :not_jumping
+          :king -> :not_jumping
+          :pawn -> :not_jumping
+        end
+    end
+  end
   @doc """
   Given a start location, and end location and a pieceType, determines what the movetype is
   """
-  def retrieveMoveType(start_loc, end_loc, pieceType, pieceColor) when start_loc == end_loc do
+  def retrieveMoveType(start_loc, end_loc, _pieceType, _pieceColor) when start_loc == end_loc do
     :invalid
   end
 
-  def retrieveMoveType({s_col, s_row} = start_loc, {e_col, e_row} = end_loc, :pawn, :orange) do
+  def retrieveMoveType({s_col, s_row} = _start_loc, {e_col, e_row} = _end_loc, :pawn, :orange) do
     cond do
       s_row == 1 -> :invalid
       s_row == 7 and e_row == 8 and e_col == s_col -> :promote
@@ -75,7 +93,7 @@ defmodule Moves do
     end
   end
 
-  def retrieveMoveType({s_col, s_row} = start_loc, {e_col, e_row} = end_loc, :pawn, :blue) do
+  def retrieveMoveType({s_col, s_row} = _start_loc, {e_col, e_row} = _end_loc, :pawn, :blue) do
     cond do
       s_row == 8 -> :invalid
       s_row == 2 and e_row == 1 and e_col == s_col -> :promote
@@ -87,25 +105,30 @@ defmodule Moves do
     end
   end
 
-  def retrieveMoveType({s_col, s_row} = start_loc, {e_col, e_row} = end_loc, :king, :orange) do
+  def retrieveMoveType({s_col, s_row} = _start_loc, {e_col, e_row} = _end_loc, :king, :orange) do
     cond do
-      s_row == 1 and s_col == :e and e_row == 1 and s_col == :g -> :shortcastle # castle right
-      s_row == 1 and s_col == :e and e_row == 1 and s_col == :c -> :longcastle # castle left
+      s_row == 1 and s_col == :e and e_row == 1 and e_col == :g -> :shortcastle # castle right
+      s_row == 1 and s_col == :e and e_row == 1 and e_col == :c -> :longcastle # castle left
+      Location.nextTo(s_col, e_col) and s_row == e_row -> :majestep
+      Location.nextTo(s_row, e_row) and s_col == e_col -> :majestep
       Location.nextTo(s_col, e_col) and Location.nextTo(s_row, e_row) -> :majestep
       true -> :invalid ## beyond range of 1 step
     end
   end
 
-  def retrieveMoveType({s_col, s_row} = start_loc, {e_col, e_row} = end_loc, :king, :blue) do
+  def retrieveMoveType({s_col, s_row} = _start_loc, {e_col, e_row} = _end_loc, :king, :blue) do
     cond do
-      s_row == 8 and s_col == :e and e_row == 8 and s_col == :g -> :shortcastle # castle left
-      s_row == 1 and s_col == :e and e_row == 1 and s_col == :c -> :longcastle # castle right
-      Location.nextTo(s_col, e_col) and Location.nextTo(s_row, e_row) -> :majestep
+      s_row == 8 and s_col == :e and e_row == 8 and e_col == :g -> :shortcastle # castle left
+      s_row == 1 and s_col == :e and e_row == 1 and e_col == :c -> :longcastle # castle right
+      Location.nextTo(s_col, e_col) and s_row == e_row -> :majestep
+      Location.nextTo(s_row, e_row) and s_col == e_col -> :majestep
+      Location.nextTo(s_row, e_row) and Location.nextTo(s_col, e_col) -> :majestep
+
       true -> :invalid ## beyond range of 1 step
     end
   end
 
-  def retrieveMoveType({s_col, s_row} = start_loc, {e_col, e_row} = end_loc, :knight, color) do
+  def retrieveMoveType({s_col, s_row} = _start_loc, {e_col, e_row} = _end_loc, :knight, _color) do
     s_col_i = s_col |> Board.column_to_int()
     e_col_i = e_col |> Board.column_to_int()
     cond do
@@ -144,6 +167,7 @@ defmodule Moves do
     end
   end
 
+  def jumping(:jumping), do: true
   def jumping(atom), do: atom in @jumping_moves
   def moveOnly(atom), do: atom in @only_possible_if_not_taking
 
@@ -189,17 +213,17 @@ defmodule Moves do
   # def rankUp({col, rank}, :blue, rankUpType), do: {col, rank - 1}
 
   # KNIGHT MOVES
-  def gallop(loc, color, direction), do: advance(loc, 1, color) |> veer(color, direction, 1)
+  def gallop(loc, color, direction), do: advance(loc, color, 1) |> veer(color, direction, 1)
 
-  def trot(loc, color, direction), do: flank(loc, direction, 1, color) |> veer(color, direction, 1)
+  def trot(loc, color, direction), do: flank(loc, color, direction, 1) |> veer(color, direction, 1)
 
-  def rear(loc, color, direction), do: flank(loc, direction, 1, color) |> sidle(color, direction, 1)
+  def rear(loc, color, direction), do: flank(loc, color, direction, 1) |> sidle(color, direction, 1)
 
-  def turnabout(loc, color, direction), do: retreat(loc, 1, color) |> sidle(color, direction, 1)
+  def turnabout(loc, color, direction), do: retreat(loc, color,1) |> sidle(color, direction, 1)
 
   # ROOK MOVES
-  def advance({col, rank}, :orange, n) when (n + rank) <= 8, do: {col, rank + n}
-  def advance({col, rank}, :blue, n) when (rank - n) >= 1, do: {col, rank - n}
+  def advance({col, rank}, :orange, n) when (n + rank) < 9, do: {col, rank + n}
+  def advance({col, rank}, :blue, n) when (rank - n) > 0, do: {col, rank - n}
   def advance(_loc, _color, _n), do: :ob
 
   def retreat({col, rank}, :orange, n) when (rank - n) >= 1, do: {col, rank - n}
@@ -214,7 +238,6 @@ defmodule Moves do
   def flank({col, rank}, :orange, :left, n), do: formalColumnAddition(col, -n) |> flank_helper(rank)
   def flank({col, rank}, :blue, :left, n), do: formalColumnAddition(col, n) |> flank_helper(rank)
 
-  ## TODO FIX BUG THAT REORDERS DIR AND COLOR AND N, prob in unappraised moves the map logics
   def flank(loc, dir, n, color), do: flank(loc, color, dir, n)
 
   def flank_helper(ending_col, rank) when in_bounds_cols(ending_col), do: {ending_col, rank}
@@ -261,7 +284,13 @@ defmodule Moves do
   def backstep(loc, color), do: retreat(loc, color, 1)
   def duck(loc, color, direction), do: veer(loc, color, direction, 1)
   def roll(loc, color, direction), do: sidle(loc, color, direction, 1)
-  def castle(loc, color, direction), do: flank(loc, color, direction, 2)
+  def shortcastle({_e, _1} = loc, :orange), do: flank(loc, :orange, :right, 2)
+  def shortcastle({_e, _8} = loc, :blue), do: flank(loc, :blue, :left, 2)
+  def shortcastle(_loc, _any), do: :invalid
+
+  def longcastle({_e, _1} = loc, :orange), do: flank(loc, :orange, :left, 2)
+  def longcastle({_e, _8} = loc, :blue), do: flank(loc, :blue, :right, 2)
+  def longcastle(_loc, _color), do: :invalid
 
   # so all moves are defined in absence of their mover, possible places to move are generated,
   # then the boardsize is imposed, so moves that are off the board are filtered out,
@@ -294,7 +323,6 @@ defmodule Moves do
   """
   def unappraised_moves(pieceColor, pieceType, location) do
     #{pieceColor, :pawn, location, pawn}
-
     piece(pieceType)
     # so just a tame list [:sprint, :impaleEnPassanter, :advance, :flank]
     |> Enum.map(fn movetype ->
