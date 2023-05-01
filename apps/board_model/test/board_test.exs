@@ -334,7 +334,7 @@ iex(49)>
     |> evaluate_each_unappraised(promote_only, {:blue, :pawn}, {:e, 2}, :blue)
     assert eval_each |> is_list()
 
-    assert appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(promote_only, {:e, 2}, :blue, :pawn) == [{{:e, 2}, {:e, 1}, :knight},{{:e, 2}, {:e, 1}, :rook}, {{:e, 2}, {:e, 1}, :bishop}, {{:e, 2}, {:e, 1}, :queen}]
+    assert appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(promote_only, {:e, 2}, :blue, :pawn) == [{{:e, 2}, {:e, 1}, :knight}, {{:e, 2}, {:e, 1}, :rook}, {{:e, 2}, {:e, 1}, :bishop}, {{:e, 2}, {:e, 1}, :queen}]
 
     assert promote_only |> Board.possible_moves(:blue) == [{{:e, 2}, {:e, 1}, :knight}, {{:e, 2}, {:e, 1}, :rook}, {{:e, 2}, {:e, 1}, :bishop}, {{:e, 2}, {:e, 1}, :queen}]
     assert promote_only |> Board.noPieceCanMove(:blue) == false
@@ -1547,7 +1547,7 @@ end
       assert placePiece(a3x3, {:a, 1}, :blue, :rook) == [
                [:mt, :mt, :mt],
                [:mt, :mt, :mt],
-               [{:blue,:rook}, :mt, :mt]
+               [{:blue, :rook}, :mt, :mt]
              ]
     end
 
@@ -1555,7 +1555,7 @@ end
       a3x3 = [[:mt, :mt, :mt], [:mt, :mt, :mt], [:mt, :mt, :mt]]
 
       assert placePiece(a3x3, {:c, 3}, :orange, :king) == [
-               [:mt, :mt, {:orange,:king}],
+               [:mt, :mt, {:orange, :king}],
                [:mt, :mt, :mt],
                [:mt, :mt, :mt]
              ]
@@ -1566,7 +1566,7 @@ end
 
       assert placePiece(a3x3, {:a, 2}, :orange, :pawn) == [
                [:mt, :mt, :mt],
-               [{:orange,:pawn}, :mt, :mt],
+               [{:orange, :pawn}, :mt, :mt],
                [:mt, :mt, :mt]
              ]
     end
@@ -1577,7 +1577,7 @@ end
         placePiece(a3x3, {:a, 1}, :orange, :pawn) == [
                [:mt, :mt, :mt],
                [:mt, :mt, :mt],
-               [{:orange,:pawn}, :mt, :mt]
+               [{:orange, :pawn}, :mt, :mt]
              ]
             end
     end
@@ -1602,10 +1602,10 @@ end
 
     test "regression test for problem with adding pieces in row, then a pawn in a different row" do
       orange_pawns_constructed = [[:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
-      [{:blue, :pawn}, :mt, :mt, :mt, :mt, :mt, :mt, :mt],[:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
-      [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],[:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
+      [{:blue, :pawn}, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
+      [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
       [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
-      [{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn}],
+      [{:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}],
       [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt]]
 
       blue_pieces_constructed = [[{:blue, :rook}, {:blue, :knight}, {:blue, :bishop}, {:blue, :queen}, {:blue, :king}, {:blue, :bishop}, {:blue, :knight}, {:blue, :rook}],
@@ -1626,7 +1626,7 @@ end
         [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
         [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt]]
 
-      just_orange_pawns_placed = make2DList(8,8)
+      just_orange_pawns_placed = make2DList(8, 8)
       |> placePiece({:a, 2}, :orange, :pawn)
       |> placePiece({:b, 2}, :orange, :pawn)
       |> placePiece({:c, 2}, :orange, :pawn)
@@ -1636,7 +1636,7 @@ end
       |> placePiece({:g, 2}, :orange, :pawn)
       |> placePiece({:h, 2}, :orange, :pawn)
 
-      just_blue_pieces_placed = make2DList(8,8)
+      just_blue_pieces_placed = make2DList(8, 8)
       |> placePiece({:a, 8}, :blue, :rook)
       |> placePiece({:b, 8}, :blue, :knight)
       |> placePiece({:c, 8}, :blue, :bishop)
@@ -1648,10 +1648,10 @@ end
       |> placePiece({:a, 7}, :blue, :pawn)
 
       just_orange_pawns_constructed = [[:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
-      [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],[:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
-      [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],[:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
+      [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
+      [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
       [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
-      [{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn}],
+      [{:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}],
       [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt]]
 
       assert just_orange_pawns_constructed == just_orange_pawns_placed
@@ -1672,21 +1672,21 @@ end
 
   describe "Board.inRankUpZone(di)" do
     test "basic 3x3 board has rank up zone orange at top (so row 3) and rank up zone blue at bottom (so row 1)" do
-      assert inRankUpZone({3, 3}, {3,1}, :orange) == false
-      assert inRankUpZone({3,3}, {3,3}, :orange) == true
-      assert inRankUpZone({3, 3}, {3,1}, :blue) == true
-      assert inRankUpZone({3,3}, {3,3}, :blue) == false
-      assert inRankUpZone({3, 3}, {3,2}, :blue) == false
-      assert inRankUpZone({3,3}, {3,2}, :orange) == false
+      assert inRankUpZone({3, 3}, {3, 1}, :orange) == false
+      assert inRankUpZone({3, 3}, {3, 3}, :orange) == true
+      assert inRankUpZone({3, 3}, {3, 1}, :blue) == true
+      assert inRankUpZone({3, 3}, {3, 3}, :blue) == false
+      assert inRankUpZone({3, 3}, {3, 2}, :blue) == false
+      assert inRankUpZone({3, 3}, {3, 2}, :orange) == false
     end
 
     test "8x8 board has orange at top (rank 8), blue at bottom (rank/row 1)" do
-      assert inRankUpZone({8, 8}, {6,1}, :orange) == false
-      assert inRankUpZone({7,8}, {4,8}, :orange) == true
-      assert inRankUpZone({6, 8}, {5,1}, :blue) == true
-      assert inRankUpZone({5,8}, {4,8}, :blue) == false
-      assert inRankUpZone({4, 8}, {3,6}, :blue) == false
-      assert inRankUpZone({3,8}, {3,2}, :orange) == false
+      assert inRankUpZone({8, 8}, {6, 1}, :orange) == false
+      assert inRankUpZone({7, 8}, {4, 8}, :orange) == true
+      assert inRankUpZone({6, 8}, {5, 1}, :blue) == true
+      assert inRankUpZone({5, 8}, {4, 8}, :blue) == false
+      assert inRankUpZone({4, 8}, {3, 6}, :blue) == false
+      assert inRankUpZone({3, 8}, {3, 2}, :orange) == false
     end
   end
 
@@ -1708,17 +1708,17 @@ end
 
   describe "fLocationIsEmpty(board, location) tests" do
     test "impossible boards" do
-      assert fLocationIsEmpty([[:mt]], {:a,1}) == true
-      assert fLocationIsEmpty([[:mt], [:mt]], {:a,2}) == true
-      assert fLocationIsEmpty([[:mt, :mt], [:mt, :mt]], {:b,2}) == true
-      assert fLocationIsEmpty([[:red, :mt], [:red, :mt]], {:b,2}) == true
-      assert fLocationIsEmpty([[:red, :red], [:red, :mt]], {:b,2}) == false
-      assert fLocationIsEmpty([[:red, :red], [:red, :mt]], {:b,1}) == true
+      assert fLocationIsEmpty([[:mt]], {:a, 1}) == true
+      assert fLocationIsEmpty([[:mt], [:mt]], {:a, 2}) == true
+      assert fLocationIsEmpty([[:mt, :mt], [:mt, :mt]], {:b, 2}) == true
+      assert fLocationIsEmpty([[:red, :mt], [:red, :mt]], {:b, 2}) == true
+      assert fLocationIsEmpty([[:red, :red], [:red, :mt]], {:b, 2}) == false
+      assert fLocationIsEmpty([[:red, :red], [:red, :mt]], {:b, 1}) == true
     end
 
     test "real boards" do
-      a3x3 = make2DList(3,3)
-      #a8x8 = make2DList(8,8)
+      a3x3 = make2DList(3, 3)
+      #a8x8 = make2DList(8, 8)
 
       assert fLocationIsEmpty(a3x3, {:b, 2}) == true
       assert fLocationIsEmpty([[:mt, :mt, :mt], [:mt, :notempty, :mt], [:mt, :mt, :mt]], {:b, 2}) == false
@@ -1776,11 +1776,11 @@ end
       assert isReplacingTile([{:red, {:a, 1}}, {:green, {:c, 4}}, {:blue, {:c, 1}}], {:a, 1}) == true
       assert isReplacingTile([{:red, {:a, 1}}, {:green, {:c, 4}}, {:blue, {:c, 1}}], {:c, 1}) == true
 
-      assert isReplacingTile([{:red, {:a, 1}}, {:green, {:c, 4}}, {:blue, {:c, 1}}, {:orange, {:h, 8}}], {:g,4}) == false
-      assert isReplacingTile([{:red, {:a, 1}}, {:green, {:c, 4}}, {:blue, {:c, 1}}, {:orange, {:h, 8}}], {:c,4}) == true
-      assert isReplacingTile([{:red, {:a, 1}}, {:green, {:c, 4}}, {:blue, {:c, 1}}, {:orange, {:h, 8}}], {:c,1}) == true
-      assert isReplacingTile([{:red, {:a, 1}}, {:green, {:c, 4}}, {:blue, {:c, 1}}, {:orange, {:h, 8}}], {:h,8}) == true
-      assert isReplacingTile([{:red, {:a, 1}}, {:green, {:c, 4}}, {:blue, {:c, 1}}, {:orange, {:h, 8}}], {:h,7}) == false
+      assert isReplacingTile([{:red, {:a, 1}}, {:green, {:c, 4}}, {:blue, {:c, 1}}, {:orange, {:h, 8}}], {:g, 4}) == false
+      assert isReplacingTile([{:red, {:a, 1}}, {:green, {:c, 4}}, {:blue, {:c, 1}}, {:orange, {:h, 8}}], {:c, 4}) == true
+      assert isReplacingTile([{:red, {:a, 1}}, {:green, {:c, 4}}, {:blue, {:c, 1}}, {:orange, {:h, 8}}], {:c, 1}) == true
+      assert isReplacingTile([{:red, {:a, 1}}, {:green, {:c, 4}}, {:blue, {:c, 1}}, {:orange, {:h, 8}}], {:h, 8}) == true
+      assert isReplacingTile([{:red, {:a, 1}}, {:green, {:c, 4}}, {:blue, {:c, 1}}, {:orange, {:h, 8}}], {:h, 7}) == false
     end
   end
 
@@ -1789,17 +1789,17 @@ end
   describe "Board.startingPosition" do
     test "basic starting position" do
       starting_board = [[{:blue, :rook}, {:blue, :knight}, {:blue, :bishop}, {:blue, :queen}, {:blue, :king}, {:blue, :bishop}, {:blue, :knight}, {:blue, :rook}],
-      [{:blue, :pawn},{:blue, :pawn},{:blue, :pawn},{:blue, :pawn},{:blue, :pawn},{:blue, :pawn},{:blue, :pawn},{:blue, :pawn}],
+      [{:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}],
       [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
       [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
       [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
       [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
-      [{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn},{:orange, :pawn}],
+      [{:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}],
       [{:orange, :rook}, {:orange, :knight}, {:orange, :bishop}, {:orange, :queen}, {:orange, :king}, {:orange, :bishop}, {:orange, :knight}, {:orange, :rook}]]
 
       assert List.myers_difference(startingPosition(), starting_board) == [eq: starting_board]
-      assert boardSize(startingPosition()) == {8,8}
-      assert boardSize(starting_board) == {8,8}
+      assert boardSize(startingPosition()) == {8, 8}
+      assert boardSize(starting_board) == {8, 8}
       assert startingPosition() == starting_board
     end
 
@@ -1879,7 +1879,7 @@ end
 
     test "a series of moves passed into each other, lets say the scandinavian opening where queen moves to a5" do
 
-      scandinavian = %Board{ placements: [
+      scandinavian = %Board{placements: [
         [{:blue, :rook}, {:blue, :knight}, {:blue, :bishop}, :mt, {:blue, :king}, {:blue, :bishop}, {:blue, :knight}, {:blue, :rook}],
         [{:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, :mt, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}],
         [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
@@ -1954,7 +1954,7 @@ end
   describe "listPlacements (board)" do
     test "startingposition" do
       start = Board.createBoard()
-      assert listPlacements(start.placements) == [["♜","♞","♝","♛","♚","♝","♞","♜"],["♟︎","♟︎","♟︎","♟︎","♟︎","♟︎","♟︎","♟︎"],["◻","◻","◻","◻","◻","◻","◻","◻"],["◻","◻","◻","◻","◻","◻","◻","◻"],["◻","◻","◻","◻","◻","◻","◻","◻"],["◻","◻","◻","◻","◻","◻","◻","◻"],["♙","♙","♙","♙","♙","♙","♙","♙"],["♖","♘","♗","♕","♔","♗","♘","♖"]]
+      assert listPlacements(start.placements) == [["♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"], ["♟︎", "♟︎", "♟︎", "♟︎", "♟︎", "♟︎", "♟︎", "♟︎"], ["◻", "◻", "◻", "◻", "◻", "◻", "◻", "◻"], ["◻", "◻", "◻", "◻", "◻", "◻", "◻", "◻"], ["◻", "◻", "◻", "◻", "◻", "◻", "◻", "◻"], ["◻", "◻", "◻", "◻", "◻", "◻", "◻", "◻"], ["♙", "♙", "♙", "♙", "♙", "♙", "♙", "♙"], ["♖", "♘", "♗", "♕", "♔", "♗", "♘", "♖"]]
     end
   end
 end

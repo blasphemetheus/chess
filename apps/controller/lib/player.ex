@@ -1,4 +1,7 @@
 defmodule Player do
+  @moduledoc """
+  All about Players
+  """
   defstruct type: :human, color: :orange, tag: "Player", lvl: 0
 
   def toggleControl(player) do

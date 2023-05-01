@@ -1,4 +1,7 @@
 defmodule View.CLI do
+  @moduledoc """
+  This module deals with the CLI view
+  """
   #@pipe Application.compile_env(:my_app, View.CLI, []) |> Keyword.get(:pipe, IO)
   # the above is for using application configuration to pass around modules
   # then in testing, use a test module, and otherwise use the real one
@@ -19,12 +22,17 @@ defmodule View.CLI do
         "start C:\\\\tools\\Cmder\\Cmder.exe" |> String.to_charlist() |> :os.cmd()
         #System.cmd("start" ["%USERPROFILE%\\Documents\\cmder\\Cmder.exe"], into: IO.stream())
         #IO.puts("test2")
+        {:ok, :opened}
       {:unix, :darwin} ->
         IO.puts("MACOS DEVICE DETECTED")
         # STUB
+        {:error, :os_darwin}
+
       {:unix, _} ->
         IO.puts("LINUX DEVICE DETECTED")
         # STUB
+        # TODO: implement open window
+        {:ok, :opened}
     end
 
     System.cmd(cmd, args, options)

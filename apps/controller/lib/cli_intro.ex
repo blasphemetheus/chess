@@ -1,4 +1,4 @@
-defmodule CLI_Intro do
+defmodule CLIIntro do
   @moduledoc """
   Documentation for `CLI_Intro`. If not passed in as arguments to the main fn, the necessary info
   is gathered from the user via IO.gets and IO.puts to start chess in a context (tournament, match, game) and
@@ -52,13 +52,13 @@ defmodule CLI_Intro do
 
   def types(atom) do
     case atom do
-      :tag -> &CLI_Intro.tagval/1
-      :opponent_tag -> &CLI_Intro.tagval/1
-      :context -> &CLI_Intro.contextval/1
-      :play_type -> &CLI_Intro.playtypeval/1
-      :cpu_level -> &CLI_Intro.cpulevelval/1
-      :amount_of_players -> &CLI_Intro.amountplayersval/1
-      :games_per_matchup -> &CLI_Intro.gamespermatchupval/1
+      :tag -> &CLIIntro.tagval/1
+      :opponent_tag -> &CLIIntro.tagval/1
+      :context -> &CLIIntro.contextval/1
+      :play_type -> &CLIIntro.playtypeval/1
+      :cpu_level -> &CLIIntro.cpulevelval/1
+      :amount_of_players -> &CLIIntro.amountplayersval/1
+      :games_per_matchup -> &CLIIntro.gamespermatchupval/1
     end
   end
 
@@ -69,9 +69,10 @@ defmodule CLI_Intro do
   def validate(atom, atom_response) when is_atom(atom) do
     valfn = types(atom)
 
-    cond do
-      valfn.(atom_response) -> {:ok, atom_response}
-      true -> {:error, "Unrecognized #{convert(atom)}: #{atom_response}."}
+    if valfn.(atom_response) do
+      {:ok, atom_response}
+    else
+      {:error, "Unrecognized #{convert(atom)}: #{atom_response}."}
     end
   end
 
@@ -167,14 +168,14 @@ defmodule CLI_Intro do
     context = convert(context_str)
 
     # input: "TOURNAMENT" -> output: "Context chosen: tournament.\n"
-    CLI_Intro.displayMsg(context, tag_str)
+    CLIIntro.displayMsg(context, tag_str)
 
     address(tag_str, " ")
     # input: "o" -> output: "ONLINE"
     play_type_str = ask(:play_type)
     play_type = convert(play_type_str)
 
-    CLI_Intro.displayMsg(play_type, tag_str)
+    CLIIntro.displayMsg(play_type, tag_str)
 
     {tag_str, context, play_type}
   end

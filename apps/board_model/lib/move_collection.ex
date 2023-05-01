@@ -1,4 +1,7 @@
 defmodule MoveCollection do
+  @moduledoc """
+  All about a series or collection of moves (so a certain opening)
+  """
   import Board
   import Board.Utils
 
@@ -56,7 +59,7 @@ defmodule MoveCollection do
   def foolsmate() do
     startingPosition()
     |> move!({:f, 2}, {:f, 3}, :orange, :pawn)
-    |> move!({:e, 7},{:e, 6}, :blue, :pawn)
+    |> move!({:e, 7}, {:e, 6}, :blue, :pawn)
     |> move!({:g, 2}, {:g, 4}, :orange, :pawn)
     |> move!({:d, 8}, {:h, 4}, :blue, :queen)
   end
@@ -64,7 +67,7 @@ defmodule MoveCollection do
   def revfoolsmate() do
     startingPosition()
     |> move!({:e, 2}, {:e, 4}, :orange, :pawn)
-    |> move!({:f, 7},{:f, 6}, :blue, :pawn)
+    |> move!({:f, 7}, {:f, 6}, :blue, :pawn)
     |> move!({:d, 2}, {:d, 4}, :orange, :pawn)
     |> move!({:g, 7}, {:g, 5}, :blue, :pawn)
     |> move!({:d, 8}, {:h, 5}, :orange, :queen)
@@ -129,14 +132,14 @@ defmodule MoveCollection do
     |> move!({:d, 7}, {:d, 5}, :blue, :pawn)
     |> move!({:b, 1}, {:c, 3}, :orange, :knight)
     |> move!({:d, 5}, {:e, 4}, :blue, :pawn)
-    |> move!({:c, 3}, {:e, 4},:orange, :knight)
+    |> move!({:c, 3}, {:e, 4}, :orange, :knight)
     |> move!({:b, 8}, {:d, 7}, :blue, :knight)
     |> move!({:d, 1}, {:e, 2}, :orange, :queen)
     |> move!({:g, 8}, {:f, 6}, :blue, :knight)
     |> move!({:e, 4}, {:d, 6}, :orange, :knight)
   end
 
-  def italiansmotheredmate() do
+  def italiansmotheredmate do
     italiangame()
     |> move!({:c, 6}, {:d, 4}, :blue, :knight)
     |> move!({:f, 3}, {:e, 5}, :orange, :knight)

@@ -1,4 +1,4 @@
-defmodule GameException do
+defmodule GameError do
   @moduledoc """
   This module defines the GameException exception.
   This exception represents a problem in the game portion of the code, not the stuff

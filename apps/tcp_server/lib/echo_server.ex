@@ -1,4 +1,7 @@
 defmodule EchoServer do
+  @moduledoc """
+  Tutorial EchoServer
+  """
   require Logger
   # tcp servers:
   # - listen to a port until port is available the server gets hold of the socket

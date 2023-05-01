@@ -1,4 +1,7 @@
 defmodule KV.Supervisor do
+  @moduledoc """
+  All about the Supervisor from Tutorial
+  """
   use Supervisor
 
   def start_link(opts) do

@@ -1,21 +1,7 @@
-# Referee
+# Controller
 
-**TODO: Add description**
+So this is the portion of the umbrella application that sort of directs the others. Included is the cli_intro, GameRunner, GameException, Main, Outcome, Parser, Player, Referee, TournamentOrganizer and TournamentError.
 
-## Installation
+# Test
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `referee` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:referee, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/referee>.
-
+Currently there is no completed test for the Controller. That's a TODO

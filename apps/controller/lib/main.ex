@@ -1,6 +1,10 @@
 defmodule Main do
-  import Board
-  import View.CLI
+  @moduledoc """
+  The Driver Module
+  """
+  #import Board
+  #import View.CLI
+  #import CLIIntro
   import TournamentOrganizer
   alias TournamentOrganizer, as: TO
 
@@ -10,20 +14,20 @@ defmodule Main do
   @default_opponent "_opponent_"
   @default_games_per_matchup 2
   @default_amount_of_players 4
-  @default_cpu_level 1
+  #@default_cpu_level 1
   # @input_types [:auto, :input]
 
-  @dope """
-  :vs = [:human v :human]
-  :cpu = [:human v :computer]
-  :pcu = [:computer v :human]
-  :simulation = [:computer v :computer]
-  :trolled = [:online v :computer]
-  :trolling = [:computer v :online]
-  :online = [:online v :online]
-  :playnet = [:online v :human]
-  :netplay = [:human v :online]
-  """
+  # @dope """
+  # :vs = [:human v :human]
+  # :cpu = [:human v :computer]
+  # :pcu = [:computer v :human]
+  # :simulation = [:computer v :computer]
+  # :trolled = [:online v :computer]
+  # :trolling = [:computer v :online]
+  # :online = [:online v :online]
+  # :playnet = [:online v :human]
+  # :netplay = [:human v :online]
+  # """
 
   # def gchess(argv) do
   # not
@@ -156,7 +160,7 @@ defmodule Main do
   def main(:auto, context, playtype), do: main(:auto, @default_tag, context, playtype)
 
   def main() do
-    {tag_str, context, playType} = CLI_Intro.welcome()
+    {tag_str, context, playType} = CLIIntro.welcome()
 
     main(:input, tag_str, context, playType)
   end
@@ -165,21 +169,21 @@ defmodule Main do
   Starts a tournament of the playtype specified, with the input_type specified,
   with your tag as specified
   """
-  def main(input_type, tag_str, :tournament, playType) do
+  def main(input_type, _tag_str, :tournament, playType) do
     amount_of_players =
       case input_type do
-        :input -> CLI_Intro.ask(:amount_of_players) |> String.to_integer()
+        :input -> CLIIntro.ask(:amount_of_players) |> String.to_integer()
         :auto -> @default_amount_of_players
       end
 
     games_per_matchup =
       case input_type do
-        :input -> CLI_Intro.ask(:games_per_matchup) |> String.to_integer()
+        :input -> CLIIntro.ask(:games_per_matchup) |> String.to_integer()
         :auto -> @default_games_per_matchup
       end
 
     # returns a tournament winner
-    winner = TournamentOrganizer.runTournament(amount_of_players, games_per_matchup, playType)
+    winner = TO.runTournament(amount_of_players, games_per_matchup, playType)
     IO.puts("Tournament Winner: #{inspect(winner)}")
   end
 
@@ -191,13 +195,13 @@ defmodule Main do
     games_per_matchup =
       case input_type do
         :auto -> @default_games_per_matchup
-        :input -> games_per_matchup = CLI_Intro.ask(:games_per_matchup) |> String.to_integer()
+        :input -> CLIIntro.ask(:games_per_matchup) |> String.to_integer()
       end
 
     opp_tag_str =
       case input_type do
         :auto -> @default_opponent
-        :input -> CLI_Intro.ask(:opponent)
+        :input -> CLIIntro.ask(:opponent) |> String.to_integer()
       end
 
     # returns a list of game outcomes
@@ -213,7 +217,7 @@ defmodule Main do
     opp_tag_str =
       case input_type do
         :auto -> @default_opponent
-        :input -> CLI_Intro.ask(:opponent_tag)
+        :input -> CLIIntro.ask(:opponent_tag)
       end
 
     # returns a game outcome
@@ -244,9 +248,5 @@ defmodule Main do
       end
 
     GameRunner.runGame(list, [playType, playType2])
-  end
-
-  def main(:auto, tag_str, :game, playtype, playtype_opp) do
-    raise ArgumentError, message: "multiple playtypes not supported yet"
   end
 end

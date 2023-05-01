@@ -1,4 +1,7 @@
 defmodule KV.Bucket do
+  @moduledoc """
+  Tutorial Bucket
+  """
   use Agent, restart: :temporary
 
   @doc """

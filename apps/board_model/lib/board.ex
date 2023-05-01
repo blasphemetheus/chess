@@ -371,10 +371,10 @@ defmodule Board do
   end
 
   def impalingCaptureInFrontOfEnemyPawn(movetype, impalable_loc, placements, end_loc, playerColor) do
-    cond do
-      impalable_loc == end_loc and movetype == :capture ->
-        in_front_of_enemy_pawn(placements, end_loc, playerColor)
-      true -> true
+    if impalable_loc == end_loc and movetype == :capture do
+      in_front_of_enemy_pawn(placements, end_loc, playerColor)
+    else
+      true
     end
   end
 
@@ -466,8 +466,8 @@ defmodule Board do
     peer_one_in_every_direction(location, color, placements) ++
     peer_horse_moves(location, color, placements) ++
     [scan(:right, location, color, placements, line), scan(:left, location, color, placements, line),
-    scan(:up, location, color,placements, line), scan(:down, location, color, placements, line),
-    scan(:sidleright, location, color, placements, bishop_queen), scan(:veerright,location, color, placements, bishop_queen),
+    scan(:up, location, color, placements, line), scan(:down, location, color, placements, line),
+    scan(:sidleright, location, color, placements, bishop_queen), scan(:veerright, location, color, placements, bishop_queen),
     scan(:sidleleft, location, color, placements, bishop_queen), scan(:veerleft, location, color, placements, bishop_queen)]
     |> Enum.reject(fn
       [] -> true
@@ -915,11 +915,18 @@ defmodule Board do
   def diagonalMove({s_col, s_row}, {e_col, e_row}) when s_col |> is_atom and e_col |> is_atom do
     diagonalMove({s_col |> column_to_int(), s_row}, {e_col |> column_to_int(), e_row})
   end
+
+  def diagonalMove({s_col, s_row}, {e_col, e_row}) do
+    abs(s_row - e_row) == 1 and abs(s_col - e_col) == 1
+  end
+
   def verticalMove({s_col, s_row}, {e_col, e_row}) when s_col |> is_atom and e_col |> is_atom do
     verticalMove({s_col |> column_to_int(), s_row}, {e_col |> column_to_int(), e_row})
   end
-  def diagonalMove({s_col, s_row}, {e_col, e_row}), do: abs(s_row - e_row) == 1 and abs(s_col - e_col) == 1
-  def verticalMove({s_col, s_row}, {e_col, e_row}), do: s_col == e_col and abs(s_row - e_row) == 1 or abs(s_row - e_row) == 2
+
+  def verticalMove({s_col, s_row}, {e_col, e_row}) do
+    s_col == e_col and abs(s_row - e_row) == 1 or abs(s_row - e_row) == 2
+  end
 
   def normal_validation(board, start_loc, end_loc, pieceType, playerColor, moving_piece, end_loc_placement) do
     if end_loc_placement != :mt do
@@ -933,35 +940,6 @@ defmodule Board do
     end
   end
 
-  @spec commence_move(
-          atom
-          | %{
-              :first_castleable => any,
-              :impale_square => any,
-              :order => [...],
-              :placements => any,
-              :second_castleable => any,
-              optional(any) => any
-            },
-          any,
-          any,
-          any,
-          any,
-          any,
-          any,
-          any
-        ) ::
-          {:error, <<_::64, _::_*8>>}
-          | {:ok,
-             %{
-               :first_castleable => any,
-               :halfmove_clock => number,
-               :impale_square => :noimpale | {any, any},
-               :order => [...],
-               :placements => list,
-               :second_castleable => any,
-               optional(any) => any
-             }}
   def commence_move(board, start_loc, end_loc, playerColor, pieceType, promote_type, _moving_piece, end_loc_placement) do
     placements = board.placements
     castleable_directions = grabCastleable(playerColor, board.first_castleable, board.second_castleable, board.order)
@@ -995,7 +973,7 @@ defmodule Board do
               # adjust impale_square
               impale_eval = case moveType do
                 :sprint -> %{board | impale_square: behind(end_loc, playerColor)}
-                any -> %{board | impale_square: :noimpale}
+                _any -> %{board | impale_square: :noimpale}
               end
 
               # adjust castleable for the right playerColor
@@ -1016,12 +994,10 @@ defmodule Board do
 
               # adjust half-move clock,
               #    reset if capture or pawn move, or castle move, otherwise increment one
-              halfmove_clock_eval = cond do
-                isCastle(moveType) or pieceType == :pawn or isCapture(placements, end_loc) ->
-                  %{castle_eval | halfmove_clock: 0}
-                true ->
-                  new_halfmove_clock = castle_eval.halfmove_clock + 1
-                  %{castle_eval | halfmove_clock: new_halfmove_clock}
+              halfmove_clock_eval = if isCastle(moveType) or pieceType == :pawn or isCapture(placements, end_loc) do
+                %{castle_eval | halfmove_clock: 0}
+              else
+                %{castle_eval | halfmove_clock: castle_eval.halfmove_clock + 1}
               end
 
               # adjust fullmove number,
@@ -1361,12 +1337,6 @@ defmodule Board do
         end)
       {piece_type, []} when piece_type |> is_atom() ->
         []
-
-      # {start_loc, end_loc} when end_loc |> is_tuple() ->
-      #   #TODO: figure out why this clause is necessary, shouldn't be
-      #   move(board, start_loc, end_loc, to_play, "cool", :nopromote)
-      # {start_loc, {^to_play, piece_type,}, end_loc} ->
-      #   move(board, start_loc, end_loc, to_play, piece_type, :nopromote)
     end)
     |> List.flatten()
   end
@@ -1398,7 +1368,7 @@ defmodule Board do
 
 
     Enum.all?(king_moves, fn move -> Enum.member?(threatened, move) end) and
-    length(all_friendly_pieces_moves) == 0
+    all_friendly_pieces_moves == []
   end
 
   @doc """
@@ -1481,14 +1451,14 @@ defmodule Board do
   def evaluate_each_unappraised(list_unappraised_moves, board, placement, loc, color) do
     list_unappraised_moves
     |> Enum.map(fn
-      {mv_ty_promote, {{^color, promote_to}, :ob}} when mv_ty_promote in [:capturepromote, :promote] ->
-        {{0,1}, {:error, :ob}}
+      {mv_ty_promote, {{^color, _promote_to}, :ob}} when mv_ty_promote in [:capturepromote, :promote] ->
+        {{0, 1}, {:error, :ob}}
       {mv_ty_promote, {{^color, promote_to}, end_loc}} when mv_ty_promote in [:capturepromote, :promote] ->
         {end_loc, appraise_move(board, loc, end_loc, placement, promote_to), promote_to}
       # {_move_type, {promote_to, end_loc}} when end_loc |> is_tuple() and promote_to |> is_tuple() ->
       #   {end_loc, appraise_move(board, loc, end_loc, placement, promote_to), promote_to}
       {_move_type, {_promote_to, :ob}} ->
-        {{0,0}, {:error, :ob}}
+        {{0, 0}, {:error, :ob}}
       {_move_type, {_e_col, e_row} = end_loc} when end_loc |> is_tuple() and e_row |> is_integer() ->
         {end_loc, appraise_move(board, loc, end_loc, placement)}
       any ->
@@ -1793,7 +1763,7 @@ defmodule Board do
   end
 
   def recUpRight(board, start_rank, start_file, end_rank, end_file, acc) do
-    placement = get_at(board, {int_to_column(start_file),start_rank})
+    placement = get_at(board, {int_to_column(start_file), start_rank})
 
     new_acc = case placement do
       :mt -> acc
@@ -1887,7 +1857,7 @@ defmodule Board do
     # or requiring a specific starting position (like sprinting, enpassant, castling, etc)
     # now lets put that start_location in the actual tuple
     |> Enum.map(fn plausible_loc_list when plausible_loc_list |> is_list() ->
-        Enum.map(plausible_loc_list,fn
+        Enum.map(plausible_loc_list, fn
           {start_loc, end_loc, _promote_to} ->
             {Moves.infer_move_type(board, start_loc, end_loc), start_loc, end_loc}
           {start_loc, end_loc} ->
@@ -2000,10 +1970,12 @@ defmodule Board do
     |> Enum.map(fn
       {{^color, :king}, loc} -> loc
       end)
-    |> Enum.reduce(fn x, acc -> {x,acc} end)
+    |> Enum.reduce(fn x, acc -> {x, acc} end)
   end
 
-  def raiseErrorIfEmpty(list, color) when length(list) == 0, do: raise BoardError, message: "there is no king of the specified color #{inspect(color)}"
+  def raiseErrorIfEmpty([], color) do
+    raise BoardError, message: "there is no king of the specified color #{inspect(color)}"
+  end
   def raiseErrorIfEmpty(list, _), do: list
 
   @doc """
@@ -2154,7 +2126,7 @@ defmodule Board do
   then all starting pieces on the board
   """
   def startingPosition() do
-    make2DList(8,8)
+    make2DList(8, 8)
     # orange pawns
     |> placePiece({:a, 2}, :orange, :pawn)
     |> placePiece({:b, 2}, :orange, :pawn)

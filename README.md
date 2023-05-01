@@ -21,6 +21,7 @@ This is an elixir umbrella application, with each subcomponent of the applicatio
 - [git_cheat_sheet](link=https://github.com/JinnaBalu/GitCheatSheet/blob/master/use-cases/git-push-with-ssh.md)
 - [Software Dev 2019 Fall NU with Mathias](https://felleisen.org/matthias/4500-f19/assignments.html)
 
+
 ## Architecture
 There are a number of subcomponents:
 
@@ -111,7 +112,7 @@ You can test a specific test or describe block by noting the file and path and j
 
 `mix test apps/board_model/test/board.test.exs:98` to pick a test at a line number.
 
-The class this project is based off of (memories of) is a software development course that required delivering periodic tests to run off of other classmates' environments. So there is some unnecessary testing complexity, but just ignore it, it won't hurt you.
+The class this project is jumping out of is a software development course that required delivering periodic tests to run off of other classmates' environments.
 
 `xtest` is an early version of it. There will be more.
 
@@ -185,3 +186,6 @@ Available to play at sites like lichess.org or chess.com etc, this is a very pop
 I want to be able to made reasonable modifications to the rules for the purposes of a genomics-related game I hope to tie this module into where you can play as someone using software to browse the human genome and as you progress through learning about it, you establish goals and motivations for your research and discoveries that effect the game. It's all revealed later on as a representation of chess though, where you have exactly as many options as there are possible moves in a game of chess, with each possibility. All the usual openings are enforced in the first phase of the game (like a learn how the actual game is to play, before you are shown the chess engine behind it, where you're just learning about genomics for a couple hours. Then you learn about chess because it is fun.) I also want the player to be able to reference the yfull mtdna and y-dna tree and input their own haplogroup info or choose randomly and have this eventually effect the options within the game, but I have no idea on the details of that. It won't be accurate to the world in any way, just thought could be fun.
 
 Moving through the game will be moving through the chromosomes (28 of them) and I want the first playthrough to provide a bunch of knowledge and resources to learn about genomics and the human genome and the different processes happening. Players will also be able to leave feedback at any point in the game (requests for new features or incorrect/out of date science or suggestions for more explanations etc). The point of the game is fun, but the byproduct, the lore of the game is actual science is the intent, or at least popular science summaries of current understandings of how the human genome works. REAL BIG TBD HERE, need Chess to be done first :).
+
+# Cool stuff
+- [Nerves embedded/IoT](https://nerves-project.org/)

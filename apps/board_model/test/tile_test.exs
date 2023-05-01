@@ -93,7 +93,7 @@ defmodule TileTest do
 
     test "invalid fn call, empty, raise error" do
       assert_raise ArgumentError, "invalid color", fn ->
-        renderTile(1,2)
+        renderTile(1, 2)
       end
     end
   end

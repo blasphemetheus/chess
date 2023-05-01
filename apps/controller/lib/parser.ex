@@ -1,4 +1,7 @@
 defmodule Parser do
+  @moduledoc """
+  Parser for any of the things
+  """
   @doc """
   Parses the raw move WITH KNOWLEDGE of the board, so
   is able to accept raw locations, checking if they belong to the color of the person
@@ -210,9 +213,9 @@ defmodule Parser do
     parse(rest, [codepoint | acc])
   end
 
-  def parse(string, acc) do
-    next = String.next_grapheme(string)
-    bin_size = String.next_grapheme_size(string)
+  def parse(string, _acc) do
+    _next = String.next_grapheme(string)
+    #bin_size = String.next_grapheme_size(string)
     IO.puts("________")
   end
 

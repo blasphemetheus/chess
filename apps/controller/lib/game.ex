@@ -1,12 +1,15 @@
 defmodule GameRunner do
-  import GameException
+  @moduledoc """
+  All about the GameRunner
+  """
+  #import GameError
   import Board
-  import Player
+  #import Player
   import View.CLI
 
-  @resolutions [:win, :loss, :drawn, :bye]
-  @end_reasons [:checkmate, :stalemate, :resignation, :timeout, :draw, :disconnection, :other]
-  @play_types [:vs, :online, :cpu_vs_cpu, :human_vs_cpu, :cpu_vs_human]
+  #@resolutions [:win, :loss, :drawn, :bye]
+  #@end_reasons [:checkmate, :stalemate, :resignation, :timeout, :draw, :disconnection, :other]
+  #@play_types [:vs, :online, :cpu_vs_cpu, :human_vs_cpu, :cpu_vs_human]
 
   defstruct board: %Board{},
             turn: :orange,
@@ -29,7 +32,7 @@ defmodule GameRunner do
   Given a tag and an opponent tag, ,
   """
   def playLocal(tag \\ "BRAG", opponent \\ "GRED") do
-    View.displays(:local, tag, opponent)
+    View.CLI.displays(:local, tag, opponent)
 
     Board.startingPosition()
     |> showGameStatus({tag, opponent}, {[], []}, 0, 0)
@@ -49,8 +52,8 @@ defmodule GameRunner do
     i = String.trim(input)
     {:ok, {s_loc, e_loc, playerColor, pieceType}} = parseMove(i)
 
-    case color do
-      ^playerColor -> board |> move(s_loc, e_loc, playerColor, pieceType)
+    case playerColor do
+      ^color -> board |> move(s_loc, e_loc, playerColor, pieceType)
       _any -> raise ArgumentError, message: "tried to move another's piece"
     end
   end
@@ -130,7 +133,7 @@ defmodule GameRunner do
         %GameRunner{game | resolution: :drawn}
 
       true ->
-        raise GameException,
+        raise GameError,
           message: "Game is not a draw, win or loss, cannot find resolution #{inspect(game)}}"
     end
   end
@@ -154,21 +157,17 @@ defmodule GameRunner do
           end
 
         :loss ->
-          cond do
-            Board.isCheckmate(game.board, game.turn) ->
-              :checkmate
-
-            true ->
-              :resignation
+          if Board.isCheckmate(game.board, game.turn) do
+            :checkmate
+          else
+            :resignation
           end
 
         :win ->
-          cond do
-            Board.isCheckmate(game.board, game.turn) ->
-              :checkmate
-
-            true ->
-              :resignation
+          if Board.isCheckmate(game.board, game.turn) do
+            :checkmate
+          else
+            :resignation
           end
 
         _ ->
@@ -177,10 +176,10 @@ defmodule GameRunner do
 
     case reason do
       :other ->
-        raise GameException,
+        raise GameError,
           message: "Game is not a draw, win or loss, cannot find ending reason #{inspect(game)}"
 
-      any ->
+      _any ->
         true
     end
 
@@ -280,10 +279,11 @@ defmodule GameRunner do
   def playTurn(game, player) do
     case player.type do
       :vs -> playHumanTurn(game, player)
+      :human -> playHumanTurn(game, player)
       :computer -> playCPUTurn(game, player.lvl)
       :cpu -> playCPUTurn(game, player.lvl)
 
-      _ -> raise GameException, message: "Invalid player type #{inspect(player)}"
+      _ -> raise GameError, message: "Invalid player type #{inspect(player)}"
     end
   end
 
@@ -343,7 +343,7 @@ defmodule GameRunner do
         {:ok, new_board} = Board.move(game.board, start_loc2, end_loc2, turn, type_at_loc2, promote_to)
         takeTurns(%{game | board: new_board, turn: nextTurn(game.turn)})
       else
-        raise GameException, message: "Player resigned via bad input"
+        raise GameError, message: "Player resigned via bad input"
       end
     end
 
@@ -359,12 +359,6 @@ defmodule GameRunner do
 
   def playCPUTurn(game, 0) do
     turn = game.turn
-
-    player =
-      case turn do
-        :orange -> game.first
-        :blue -> game.second
-      end
 
     possible = possible_moves(game.board, turn)
 
@@ -392,12 +386,6 @@ defmodule GameRunner do
   def playCPUTurn(game, 1) do
     turn = game.turn
 
-    player =
-      case turn do
-        :orange -> game.first
-        :blue -> game.second
-      end
-
     possible = possible_moves(game.board, turn)
 
     {start_loc, end_loc, promote_to} =
@@ -412,7 +400,7 @@ defmodule GameRunner do
     takeTurns(%{game | board: new_board, turn: nextTurn(turn)})
   end
 
-  def playTurnOnline(game) do
+  def playTurnOnline(_game) do
     # prompt the player for a move
     # validate the move
     # if valid, make the move
@@ -426,7 +414,7 @@ defmodule GameRunner do
     # if the player is disconnected, end the game
   end
 
-  def playTurnOnline(game, turn, player) do
+  def playTurnOnline(_game, _turn, _player) do
     # prompt the player for a move
     # validate the move
     # if valid, make the move
@@ -438,6 +426,7 @@ defmodule GameRunner do
     # if the player disconnects, end the game
     # if the player is disconnected, end the game
     # if the player is disconnected, end the game
+    {:error, :unsupported}
   end
 
   def nextTurn(:blue), do: :orange

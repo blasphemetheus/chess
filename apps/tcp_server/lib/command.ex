@@ -1,6 +1,10 @@
 defmodule TCPServer.Command do
-  import(Board)
+  @moduledoc """
+  Tutorial Command
+  """
+  #import(Board)
   require(KV)
+  require KV.Registry
 
   @doc ~S"""
   Parses the given `line` into a command
@@ -55,7 +59,7 @@ defmodule TCPServer.Command do
   def run(command)
 
   def run({:make, "chess"}) do
-    board = Board.makeBoard(8, 8)
+    _board = Board.make2DList(8, 8)
     KV.Registry.create(KV.Registry, "chess")
     {:ok, "OK\r\n"}
   end
@@ -64,15 +68,15 @@ defmodule TCPServer.Command do
     "can't make #{other} sir, stick to chess"
   end
 
+  def run({:grab, "chess", "board"}) do
+    {:ok, "WHAT's Good Homie"}
+  end
+
   def run({:grab, bucket, key}) do
     lookup(bucket, fn pid ->
       value = KV.Bucket.get(pid, key)
       {:ok, "#{value}\r\nOK\r\n"}
     end)
-  end
-
-  def run({:grab, "chess", "board"}) do
-    {:ok, "WHAT's Good Homie"}
   end
 
   def run({:start_board, bucket, key, value}) do

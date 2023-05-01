@@ -1,4 +1,7 @@
 defmodule KV do
+  @moduledoc """
+  Tutorial KV
+  """
   use Application
 
   @impl true

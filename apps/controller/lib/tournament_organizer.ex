@@ -1,4 +1,7 @@
 defmodule TournamentOrganizer do
+  @moduledoc """
+  Tutorial TournamentOrganizer
+  """
   import Outcome
   require TournamentError
   require GameRunner
@@ -8,7 +11,7 @@ defmodule TournamentOrganizer do
   # 100 seconds
   @default_total_timeout 100_000
   # 20 seconds
-  @default_player_timeout 20000
+  @default_player_timeout 20_000
   @default_player_names MapSet.new([
                           "Kim",
                           "Joe",
@@ -123,6 +126,7 @@ defmodule TournamentOrganizer do
   end
 
   def doRounds(accepted_players, playType, games_per_matchup \\ 2, round_records \\ [])
+
   def doRounds([], _playType, _games_per_matchup, _round_records) do
     raise TournamentError, message: "Round attempted on zero players, there is no possible winner"
   end
@@ -195,16 +199,14 @@ defmodule TournamentOrganizer do
         [player1, player2]
 
       _ ->
-        dbg()
-
         raise ArgumentError,
           message: "Outcome of: #{inspect(outcome)} was not a win, loss, bye or draw, confusion"
     end
   end
 
-  defp addScores([p1_score, p2_score], :win), do: [p1_score + 1, p2_score]
-  defp addScores([p1_score, p2_score], :loss), do: [p1_score, p2_score + 1]
-  defp addScores([p1_score, p2_score], :drawn), do: [p1_score + 0.5, p2_score + 0.5]
+  defp add_scores([p1_score, p2_score], :win), do: [p1_score + 1, p2_score]
+  defp add_scores([p1_score, p2_score], :loss), do: [p1_score, p2_score + 1]
+  defp add_scores([p1_score, p2_score], :drawn), do: [p1_score + 0.5, p2_score + 0.5]
 
   # the matchup is between one player and themself, so they get a bye Outcome
   def runMatchup([player] = players, games_per_matchup, playType, _, _) do
@@ -235,9 +237,9 @@ defmodule TournamentOrganizer do
 
     IO.puts("Game Outcome: #{inspect(gameOutcome)}")
     # pull out the outcome fields
-    %Outcome{players: ps, resolution: res, reason: reas} = gameOutcome
+    %Outcome{players: _ps, resolution: res, reason: reas} = gameOutcome
     # add scores and check for completion
-    [p1_score, p2_score] = new_matchup_score = addScores(matchup_score, res)
+    [p1_score, p2_score] = new_matchup_score = add_scores(matchup_score, res)
     needed_to_resolve_matchup = games_per_matchup / 2
     best_score = max(p1_score, p2_score)
 

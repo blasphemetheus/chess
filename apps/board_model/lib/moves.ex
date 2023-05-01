@@ -19,18 +19,18 @@ defmodule Moves do
 
   @only_possible_if_not_taking [:sprint, :march, :promote, :castle]
   @only_possible_if_taking [:capture, :impaleEnPassanter, :capturepromote]
-  @pawn_moves [ :sprint, :march, :capture, :impaleEnPassanter, :promote, :capturepromote]
-  @knight_moves [ :gallop, :trot, :rear, :turnabout] ## unique about these is the jumping behavior
-  @rook_moves [ :advance, :retreat, :flank]
-  @bishop_moves [ :veer, :sidle]
+  @pawn_moves [:sprint, :march, :capture, :impaleEnPassanter, :promote, :capturepromote]
+  @knight_moves [:gallop, :trot, :rear, :turnabout] ## unique about these is the jumping behavior
+  @rook_moves [:advance, :retreat, :flank]
+  @bishop_moves [:veer, :sidle]
   @queen_moves [:flank, :veer, :sidle, :advance, :retreat]
   #@queen_moves [ :advance, :retreat, :flank, :veer, :sidle]
-  @king_moves [ :forwardstep, :backstep, :sidestep, :duck, :roll, :shortcastle, :longcastle] # all of these but castle are non-n,
+  @king_moves [:forwardstep, :backstep, :sidestep, :duck, :roll, :shortcastle, :longcastle] # all of these but castle are non-n,
   #just one space moved, castle is unique as two spaces and directional
-  @n_moves [ :advance, :retreat, :flank, :veer, :sidle]
-  @directional_moves [ :sidestep, :flank, :veer, :sidle, :gallop, :trot, :rear, :turnabout, :capture, :impaleEnPassanter, :duck, :roll, :castle, :capturepromote]
+  @n_moves [:advance, :retreat, :flank, :veer, :sidle]
+  @directional_moves [:sidestep, :flank, :veer, :sidle, :gallop, :trot, :rear, :turnabout, :capture, :impaleEnPassanter, :duck, :roll, :castle, :capturepromote]
   @jumping_moves @knight_moves
-  @rankup_moves [ :promote, :capturepromote]
+  @rankup_moves [:promote, :capturepromote]
   @in_bounds_atoms [:a, :b, :c, :d, :e, :f, :g, :h]
   @out_of_bounds_atoms [:i, :j, :k, :l, :m, :n, :o, :p, :"`", :"\_", :"^", :"]", :"\\", :"[", :Z, :Y]
   # n = 97           for x <- 1..8, do: <<n - x>>
@@ -138,17 +138,19 @@ defmodule Moves do
     end
   end
 
-  def retrieveMoveType({s_col, s_row} = start_loc, {e_col, e_row} = end_loc, :bishop, color) do
+  def retrieveMoveType({s_col, s_row} = _start_loc, {e_col, e_row} = _end_loc, :bishop, _color) do
     s_col_i = s_col |> Board.column_to_int()
     e_col_i = e_col |> Board.column_to_int()
     on_diagonal = abs(e_col_i - s_col_i) == abs(e_row - s_row)
-    cond do
-      on_diagonal -> :diagonal
-      true -> :invalid # not on the diagonals reachable by the start_location
+    if on_diagonal do
+      :diagonal
+    else
+      :invalid
+      # not on the diagonals reachable by the start_location
     end
   end
 
-  def retrieveMoveType({s_col, s_row} = start_loc, {e_col, e_row} = end_loc, :rook, color) do
+  def retrieveMoveType({s_col, s_row} = _start_loc, {e_col, e_row} = _end_loc, :rook, _color) do
     cond do
       s_col == e_col -> :vertical
       s_row == e_row -> :horizontal
@@ -156,9 +158,9 @@ defmodule Moves do
     end
   end
 
-  def retrieveMoveType({s_col, s_row} = start_loc, {e_col, e_row} = end_loc, :queen, color) do
+  def retrieveMoveType({s_col, s_row} = _start_loc, {e_col, e_row} = _end_loc, :queen, _color) do
     s_col_i = s_col |> Board.column_to_int()
-    e_col_i = e_col |> Board.column_to_int()
+    _e_col_i = e_col |> Board.column_to_int()
     cond do
       s_col == e_col -> :vertical
       s_row == e_row -> :horizontal
@@ -219,7 +221,7 @@ defmodule Moves do
 
   def rear(loc, color, direction), do: flank(loc, color, direction, 1) |> sidle(color, direction, 1)
 
-  def turnabout(loc, color, direction), do: retreat(loc, color,1) |> sidle(color, direction, 1)
+  def turnabout(loc, color, direction), do: retreat(loc, color, 1) |> sidle(color, direction, 1)
 
   # ROOK MOVES
   def advance({col, rank}, :orange, n) when (n + rank) < 9, do: {col, rank + n}
@@ -326,22 +328,25 @@ defmodule Moves do
     piece(pieceType)
     # so just a tame list [:sprint, :impaleEnPassanter, :advance, :flank]
     |> Enum.map(fn movetype ->
-      cond do
-      movetype in @rankup_moves -> [{movetype, :knight}, {movetype, :rook}, {movetype, :bishop}, {movetype, :queen}]
-      true -> movetype
+      if movetype in @rankup_moves do
+        [{movetype, :knight}, {movetype, :rook}, {movetype, :bishop}, {movetype, :queen}]
+      else
+        movetype
       end
   end)
   |> List.flatten()
     |> Enum.map(fn
       movetype when is_atom(movetype)->
-        cond do
-          movetype in @directional_moves -> [{movetype, :left}, {movetype, :right}]
-          true -> movetype
+        if movetype in @directional_moves do
+          [{movetype, :left}, {movetype, :right}]
+        else
+          movetype
         end
       {movetype, promote_type} = same ->
-        cond do
-          movetype in @directional_moves -> [{movetype, promote_type, :left}, {movetype, promote_type, :right}]
-          true -> same
+        if movetype in @directional_moves do
+          [{movetype, promote_type, :left}, {movetype, promote_type, :right}]
+        else
+          same
         end
     end)
     # we just added movetype tuples [:sprint, {:impaleEnPassanter, :left}, {:impaleEnPassanter, :right}, :advance, {:flank, :left}, {:flank, :right}]
@@ -349,9 +354,10 @@ defmodule Moves do
     |> Enum.map(fn
       {move, atom} when move in @n_moves -> [{move, atom, 1}, {move, atom, 2}, {move, atom, 3}, {move, atom, 4}, {move, atom, 5}, {move, atom, 6}, {move, atom, 7}]
       move ->
-        cond do
-          move in @n_moves -> [{move, 1}, {move, 2}, {move, 3}, {move, 4}, {move, 5}, {move, 6}, {move, 7}]
-          true -> move
+        if move in @n_moves do
+          [{move, 1}, {move, 2}, {move, 3}, {move, 4}, {move, 5}, {move, 6}, {move, 7}]
+        else
+          move
         end
     end)
     # now added n tuples [:sprint, {:impaleEnPassanter, :left}, {:impaleEnPassanter, :right},

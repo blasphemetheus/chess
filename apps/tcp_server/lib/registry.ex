@@ -1,4 +1,7 @@
-defmodule MyRegistry do
+defmodule KV.Registry do
+  @moduledoc """
+  Tutorial MyRegistry genserver, etc
+  """
   use GenServer
 
   # Client API - will add
@@ -10,6 +13,7 @@ defmodule MyRegistry do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
 
+  @spec lookup(atom | pid | {atom, any} | {:via, atom, any}, any) :: any
   @doc """
   Looks up the bucket pid for name stored in server
   Returns {:ok, pid} if the bucket exists, :error otherwise

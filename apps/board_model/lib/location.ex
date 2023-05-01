@@ -16,10 +16,14 @@
 # accepts a dumb location or a clean location and spits out a dumb location
 # will accept a tuple or two arguments representing a row and column
 defmodule Location do
+  @moduledoc """
+  All about Locations
+  """
+
   # (dumb locations are not intuitive,
   #         {:a, 1} does NOT translate to {0, 0} as it turns out)
   #         (it translates to {0, 7} because of the way the board is stored)
-  
+
   # transpose and switch the row and columns
   def dumbLocation({formal_col, formal_row}) when formal_col in [:a, :b, :c, :d, :e, :f, :g, :h] and is_integer(formal_row) do
     {dumbRow(formal_row), dumbColumn(formal_col)}
