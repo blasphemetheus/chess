@@ -17,8 +17,8 @@ permissions:
 jobs:
   build_ubuntu:
 
-    name: Build and test on latest Ubuntu
-    runs-on: ubuntu-latest
+    name: Build and test on Ubuntu 20 lts
+    runs-on: ubuntu20
 
     steps:
     - uses: actions/checkout@v3
