@@ -293,7 +293,6 @@ defmodule GameRunner do
       :human -> playHumanTurn(game, player)
       :computer -> playCPUTurn(game, player.lvl)
       :cpu -> playCPUTurn(game, player.lvl)
-
       _ -> raise GameError, message: "Invalid player type #{inspect(player)}"
     end
     |> appendToHistory(game)
@@ -379,7 +378,7 @@ defmodule GameRunner do
   def playCPUTurn(game, 0) do
     turn = game.turn
 
-    possible = possible_moves(game.board, turn)
+    possible = possible_moves_of_color(game.board, turn)
 
     # {start_loc, end_loc} = selected_move = possible |> Enum.random()
     {start_loc, end_loc, promote_to} =
@@ -405,7 +404,7 @@ defmodule GameRunner do
   def playCPUTurn(game, 1) do
     turn = game.turn
 
-    possible = possible_moves(game.board, turn)
+    possible = possible_moves_of_color(game.board, turn)
 
     {start_loc, end_loc, promote_to} =
       case possible |> Enum.random() do

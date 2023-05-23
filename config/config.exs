@@ -17,7 +17,7 @@ config :genomeur, :viewport,
   name: :main_viewport,
   size: {950, 1600},
   theme: :dark,
-  default_scene: Genomeur.Scene.Chess,
+  default_scene: Genomeur.Component.ChessPosition,
   drivers: [
     [
       module: Scenic.Driver.Local,

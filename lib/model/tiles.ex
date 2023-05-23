@@ -38,8 +38,8 @@ defmodule Tile do
     end
   end
 
-  def renderTile(color, piece) when is_atom(color) and is_atom(piece) do
-    raise ArgumentError, message: "invalid color"
+  def renderTile(color, piece) do
+    raise ArgumentError, message: "invalid render tile color, got #{inspect color} and #{inspect piece}"
   end
 
 

@@ -348,43 +348,43 @@ defmodule Genomeur.Scene.Chess do
 
   @first_pieces [
     # pawns
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @a2),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @b2),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @c2),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @d2),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @e2),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @f2),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @g2),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @h2),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @a2),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @b2),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @c2),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @d2),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @e2),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @f2),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @g2),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :first_color, t: @h2),
     # backrank pieces
-    text_spec(ScenicUtils.renderFont(:filled, :rook, :chess_font), id: :first_color, t: @a1),
-    text_spec(ScenicUtils.renderFont(:filled, :knight, :chess_font), id: :first_color, t: @b1),
-    text_spec(ScenicUtils.renderFont(:filled, :bishop, :chess_font), id: :first_color, t: @c1),
-    text_spec(ScenicUtils.renderFont(:filled, :queen, :chess_font), id: :first_color, t: @d1),
-    text_spec(ScenicUtils.renderFont(:filled, :king, :chess_font), id: :first_color, t: @e1),
-    text_spec(ScenicUtils.renderFont(:filled, :bishop, :chess_font), id: :first_color, t: @f1),
-    text_spec(ScenicUtils.renderFont(:filled, :knight, :chess_font), id: :first_color, t: @g1),
-    text_spec(ScenicUtils.renderFont(:filled, :rook, :chess_font), id: :first_color, t: @h1)
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :rook, :chess_font), id: :first_color, t: @a1),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :knight, :chess_font), id: :first_color, t: @b1),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :bishop, :chess_font), id: :first_color, t: @c1),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :queen, :chess_font), id: :first_color, t: @d1),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :king, :chess_font), id: :first_color, t: @e1),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :bishop, :chess_font), id: :first_color, t: @f1),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :knight, :chess_font), id: :first_color, t: @g1),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :rook, :chess_font), id: :first_color, t: @h1)
   ]
 
   @second_pieces [
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @a7),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @b7),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @c7),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @d7),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @e7),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @f7),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @g7),
-    text_spec(ScenicUtils.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @h7),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @a7),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @b7),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @c7),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @d7),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @e7),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @f7),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @g7),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :pawn, :chess_font), id: :second_color, t: @h7),
     # backrank pieces
-    text_spec(ScenicUtils.renderFont(:filled, :rook, :chess_font), id: :second_color, t: @a8),
-    text_spec(ScenicUtils.renderFont(:filled, :knight, :chess_font), id: :second_color, t: @b8),
-    text_spec(ScenicUtils.renderFont(:filled, :bishop, :chess_font), id: :second_color, t: @c8),
-    text_spec(ScenicUtils.renderFont(:filled, :queen, :chess_font), id: :second_color, t: @d8),
-    text_spec(ScenicUtils.renderFont(:filled, :king, :chess_font), id: :second_color, t: @e8),
-    text_spec(ScenicUtils.renderFont(:filled, :bishop, :chess_font), id: :second_color, t: @f8),
-    text_spec(ScenicUtils.renderFont(:filled, :knight, :chess_font), id: :second_color, t: @g8),
-    text_spec(ScenicUtils.renderFont(:filled, :rook, :chess_font), id: :second_color, t: @h8)
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :rook, :chess_font), id: :second_color, t: @a8),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :knight, :chess_font), id: :second_color, t: @b8),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :bishop, :chess_font), id: :second_color, t: @c8),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :queen, :chess_font), id: :second_color, t: @d8),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :king, :chess_font), id: :second_color, t: @e8),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :bishop, :chess_font), id: :second_color, t: @f8),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :knight, :chess_font), id: :second_color, t: @g8),
+    text_spec(Genomeur.Component.ChessPosition.renderFont(:filled, :rook, :chess_font), id: :second_color, t: @h8)
   ]
 
   @pieces [
@@ -547,20 +547,37 @@ defmodule Genomeur.Scene.Chess do
     {:halt, scene}
   end
 
-    # any event update event_text
-    def handle_event(event, _, %{assigns: %{graph: graph}} = scene) do
-      graph = Graph.modify(graph, :event_text, &text(&1, (Enum.random(0..200) |> Integer.to_string()) <> "#{inspect(event)}"))
+  # any event update event_text
+  def handle_event(event, _, %{assigns: %{graph: graph}} = scene) do
+    graph = Graph.modify(graph, :event_text, &text(&1, (Enum.random(0..200) |> Integer.to_string()) <> "#{inspect(event)}"))
 
-      scene = push_graph(scene, graph)
+    scene =
+      scene
+      |> assign(graph: graph)
+      |> push_graph(graph)
 
-      {:noreply, scene}
-    end
+    {:noreply, scene}
+  end
 
-  # display the received message
-  def handle_event(event, _, scene) do
-    graph = Graph.modify(graph(), :event_text2, &text(&1, "oo: " <> inspect(event)))
+  # # display the received message # TODO graph() or @graph or graph
+  # def handle_event(event, _, scene) do
+  #   graph = Graph.modify(graph(), :event_text2, &text(&1, "oo: " <> inspect(event)))
 
-    scene = push_graph(scene, graph)
+  #   scene =
+  #     scene
+  #     |> assign(graph: graph)
+  #     |> push_graph(graph)
+
+  #   {:noreply, scene}
+  # end
+
+  def handle_event({:value_changed, :moving_toggle, true} = event, _pid, %{assigns: %{graph: graph}} = scene) do
+    graph = Graph.modify(graph, :moving_tag, &text(&1, (Enum.random(0..200) |> Integer.to_string()) <> "#{inspect(event)}"))
+
+    scene =
+      scene
+      |> assign(graph: graph)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -608,5 +625,4 @@ defmodule Genomeur.Scene.Chess do
     IO.puts("GameRunner: #{inspect(thing)}")
     {:halt, thing}
   end
-
 end

@@ -39,6 +39,388 @@ defmodule BoardTest do
 # ♝ ◻ ◼ ◻ ◼ ♟︎ ◼ ♞
 # ◻ ◼ ◻ ◼ ◻ ◼ ♜ ◼
 
+describe " debug based on scenic GUI findings" do
+  test "castle not showing up in possible moves" do
+    game = %GameRunner{
+      board: %Board{
+        placements: [
+          [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
+          [
+            {:blue, :pawn},
+            {:orange, :queen},
+            {:blue, :pawn},
+            :mt,
+            :mt,
+            :mt,
+            {:blue, :pawn},
+            :mt
+          ],
+          [:mt, {:blue, :bishop}, :mt, :mt, :mt, {:blue, :king}, :mt, :mt],
+          [:mt, :mt, :mt, :mt, :mt, :mt, :mt, {:blue, :pawn}],
+          [
+            :mt,
+            {:orange, :pawn},
+            :mt,
+            {:orange, :pawn},
+            :mt,
+            :mt,
+            :mt,
+            {:blue, :knight}
+          ],
+          [:mt, :mt, {:orange, :pawn}, :mt, :mt, :mt, :mt, :mt],
+          [
+            {:orange, :pawn},
+            :mt,
+            :mt,
+            :mt,
+            :mt,
+            {:orange, :pawn},
+            {:orange, :pawn},
+            {:orange, :pawn}
+          ],
+          [
+            {:orange, :rook},
+            {:orange, :knight},
+            {:orange, :bishop},
+            :mt,
+            {:orange, :king},
+            :mt,
+            :mt,
+            {:orange, :rook}
+          ]
+        ],
+        order: [:orange, :blue],
+        impale_square: :noimpale,
+        first_castleable: :both,
+        second_castleable: :neither,
+        halfmove_clock: 1,
+        fullmove_number: 22
+      },
+      turn: :orange,
+      first: %Player{type: :computer, color: :orange, tag: "me", lvl: 1},
+      second: %Player{type: :computer, color: :blue, tag: "you", lvl: 1},
+      status: :in_progress,
+      history: [],
+      resolution: nil,
+      reason: nil
+    }
+    {res, _board} = move(game.board, {:e, 1}, {:g, 1}, :orange, :king, :nopromote)
+    assert res == :ok
+  end
+  test "king can't castle despite being able to castle?" do
+    castle_game = %GameRunner{
+      board: %Board{
+        placements: [
+          [:mt, :mt, :mt, :mt, :mt, :mt, :mt, {:blue, :rook}],
+          [
+            {:blue, :pawn},
+            :mt,
+            :mt,
+            :mt,
+            :mt,
+            {:blue, :pawn},
+            {:blue, :pawn},
+            {:blue, :pawn}
+          ],
+          [:mt, :mt, :mt, :mt, {:blue, :pawn}, :mt, :mt, :mt],
+          [{:orange, :pawn}, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
+          [:mt, {:blue, :king}, :mt, :mt, :mt, :mt, :mt, :mt],
+          [:mt, :mt, :mt, :mt, :mt, :mt, {:orange, :pawn}, {:orange, :bishop}],
+          [
+            :mt,
+            {:blue, :rook},
+            :mt,
+            {:orange, :pawn},
+            :mt,
+            {:orange, :pawn},
+            :mt,
+            {:orange, :pawn}
+          ],
+          [
+            {:orange, :rook},
+            :mt,
+            :mt,
+            :mt,
+            {:orange, :king},
+            :mt,
+            :mt,
+            {:orange, :rook}
+          ]
+        ],
+        order: [:orange, :blue],
+        impale_square: :noimpale,
+        first_castleable: :both,
+        second_castleable: :neither,
+        halfmove_clock: 0,
+        fullmove_number: 24
+      },
+      turn: :orange,
+      first: %Player{type: :computer, color: :orange, tag: "me", lvl: 1},
+      second: %Player{type: :computer, color: :blue, tag: "you", lvl: 1},
+      status: :in_progress,
+      history: [],
+      resolution: nil,
+      reason: nil
+    }
+
+    assert :ob == Moves.roll({:a, 5}, :orange, :left)
+    assert {:b, 4} == Moves.roll({:a, 5}, :orange, :right)
+    assert :ob == Moves.duck({:a, 5}, :orange, :left)
+    assert {:b, 6} == Moves.duck({:a, 5}, :orange, :right)
+    assert [{:b, 4}] == reject_ob([:ob, {:b, 4}])
+    assert {:blue, :king} == Board.get_at(castle_game.board.placements, {:b, 4})
+    assert [{{:b, 4}, {:blue, :king}}] == process([{:b, 4}], fn {_loc, {_piececolor, :queen}} -> true
+    {_loc, {_piececolor, :pawn}} -> false
+    {_loc, {_piececolor, :knight}} -> false
+    {_loc, {_piececolor, :king}} -> true
+    {_loc, {_piececolor, :bishop}} -> true
+    {_loc, {_piececolor, :rook}} -> false
+  end, castle_game.board.placements)
+
+    assert [{{:b, 4}, {:blue, :king}}] == peer_one_in_every_direction({:a, 5}, :orange, castle_game.board.placements)
+
+
+    assert attackers_of(castle_game.board, {:a, 1}) == []
+    assert attackers_of(castle_game.board, {:b, 2}) == []
+    assert attackers_of(castle_game.board, {:a, 5}) == [{{:b, 4}, {:blue, :king}}, {{:a, 1}, {:orange, :rook}}]
+    assert attackers_of(castle_game.board, {:a, 7}) == []
+    assert attackers_of(castle_game.board, {:a, 1}) == []
+    assert attackers_of(castle_game.board, {:b, 4}) == [{{:b, 2}, {:blue, :rook}}]
+
+
+    assert {:e, 1} == findKing(castle_game.board.placements, :orange)
+    assert {{:h, 3}, {:orange, :bishop}} == scan(:veerright, {:f, 1}, :orange, castle_game.board.placements, fn
+      {_loc, {_piececolor, :queen}} -> true
+      {_loc, {_piececolor, :pawn}} -> false
+      {_loc, {_piececolor, :knight}} -> false
+      {_loc, {_piececolor, :king}} -> false
+      {_loc, {_piececolor, :bishop}} -> true
+      {_loc, {_piececolor, :rook}} -> false
+    end)
+
+    attackers_o_king = [
+      {{:d, 2}, {:orange, :pawn}},
+      {{:f, 2}, {:orange, :pawn}},
+      {{:h, 1}, {:orange, :rook}},
+      {{:a, 1}, {:orange, :rook}},
+    ]
+    assert attackers_o_king == attackers_of(castle_game.board, {:e, 1})
+
+    assert [] |> length == 0
+    assert [] == reject_same_color(attackers_o_king, :orange)
+    # assert [] == attackers_o_king |> Enum.filter(fn {_loc, {color, _ptype}} -> otherColor(color) == :orange end)
+
+    assert false == kingThreatened(castle_game.board, :orange)
+    assert true == kingCheckDoesntDisruptCastle(:shortcastle, castle_game.board, :orange)
+    {res, _board} = move(castle_game.board, {:e, 1}, {:g, 1}, :orange, :king)
+    assert res == :ok
+    {res2, _board} = appraise_move(castle_game.board, {:e, 1}, {:g, 1}, {:orange, :king})
+    assert res2 == :ok
+    # each_unappraised = evaluate_each_unappraised([{{:e, 1}, {:g, 1}}], castle_game.board, {:orange, :king}, {:e, 1}, :orange)
+    # my_answer = {{:g, 1}, {:ok, %Board{}}}
+    assert shortcastle: {:g, 1} in Moves.unappraised_moves(:orange, :king, {:e, 1})
+    assert {{:e, 1}, {:g, 1}} in appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(castle_game.board, {:e, 1}, :orange, :king)
+
+    pos_moves_king_loc = Board.possible_moves(castle_game.board, {:e, 1})
+
+    assert {{:e, 1},{:g, 1}} in pos_moves_king_loc
+  end
+  test "promotion does not show up on the GUI, why?" do
+    game = %GameRunner{
+      board: %Board{
+        placements: [
+          [
+            {:blue, :rook},
+            {:blue, :knight},
+            :mt,
+            {:blue, :queen},
+            {:blue, :king},
+            {:blue, :bishop},
+            {:blue, :knight},
+            {:blue, :rook}
+          ],
+          [
+            {:blue, :pawn},
+            :mt,
+            {:orange, :pawn},
+            {:blue, :bishop},
+            :mt,
+            {:blue, :pawn},
+            {:blue, :pawn},
+            {:blue, :pawn}
+          ],
+          [:mt, :mt, :mt, :mt, {:blue, :pawn}, :mt, :mt, :mt],
+          [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
+          [:mt, {:orange, :pawn}, :mt, {:orange, :pawn}, :mt, :mt, :mt, :mt],
+          [{:orange, :bishop}, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
+          [
+            {:orange, :pawn},
+            :mt,
+            {:blue, :pawn},
+            :mt,
+            :mt,
+            {:orange, :pawn},
+            {:orange, :pawn},
+            {:orange, :pawn}
+          ],
+          [
+            {:orange, :rook},
+            {:orange, :knight},
+            :mt,
+            {:orange, :queen},
+            {:orange, :king},
+            {:orange, :bishop},
+            {:orange, :knight},
+            {:orange, :rook}
+          ]
+        ],
+        order: [:orange, :blue],
+        impale_square: :noimpale,
+        first_castleable: :both,
+        second_castleable: :both,
+        halfmove_clock: 2,
+        fullmove_number: 9
+      },
+      turn: :orange,
+      first: %Player{type: :computer, color: :orange, tag: "me", lvl: 1},
+      second: %Player{type: :computer, color: :blue, tag: "you", lvl: 1},
+      status: :in_progress,
+      history: [],
+      resolution: nil,
+      reason: nil
+    }
+
+    pos_moves_loc = Board.possible_moves(game.board, {:c, 7})
+    pos_moves_loc_color = Board.possible_moves(game.board, {:c, 7}, :orange)
+    pos_moves_color = Board.possible_moves_of_color(game.board, :orange)
+    promote_march = {{:c, 7}, {:c, 8}, :knight}
+    promote_capture = {{:c, 7}, {:d, 8}, :queen}
+
+    assert promote_march in Board.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(game.board, {:c, 7}, :orange, :pawn)
+    assert promote_march in pos_moves_loc_color
+    assert promote_march in pos_moves_loc
+    assert promote_march in pos_moves_color
+
+    assert promote_capture in Board.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(game.board, {:c, 7}, :orange, :pawn)
+    assert promote_capture in pos_moves_loc_color
+    assert promote_capture in pos_moves_loc
+    assert promote_capture in pos_moves_color
+
+    assert true == Board.move_requires_promotion?(:orange, :pawn, {:b, 8})
+
+    assert Genomeur.Component.ChessPosition.at_least_one_promote_valid(game.board, {:c, 7}, {:c, 8}, :orange, :pawn)
+    assert [:bishop, :knight, :rook, :queen] == Genomeur.Component.ChessPosition.evaluate_each_promote_option_for_move(game.board, {:c, 7}, {:c, 8}, :orange, :pawn)
+  end
+  test "en passant aka impalement shows up in possible moves" do
+    game = %GameRunner{
+      board: %Board{
+        placements: [
+          [
+            blue: :rook,
+            blue: :knight,
+            blue: :bishop,
+            blue: :queen,
+            blue: :king,
+            blue: :bishop,
+            blue: :knight,
+            blue: :rook
+          ],
+          [
+            {:blue, :pawn},
+            {:blue, :pawn},
+            {:blue, :pawn},
+            :mt,
+            :mt,
+            {:blue, :pawn},
+            {:blue, :pawn},
+            {:blue, :pawn}
+          ],
+          [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
+          [
+            :mt,
+            :mt,
+            :mt,
+            {:blue, :pawn},
+            {:blue, :pawn},
+            {:orange, :pawn},
+            :mt,
+            :mt
+          ],
+          [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
+          [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
+          [
+            {:orange, :pawn},
+            {:orange, :pawn},
+            {:orange, :pawn},
+            {:orange, :pawn},
+            {:orange, :pawn},
+            :mt,
+            {:orange, :pawn},
+            {:orange, :pawn}
+          ],
+          [
+            orange: :rook,
+            orange: :knight,
+            orange: :bishop,
+            orange: :queen,
+            orange: :king,
+            orange: :bishop,
+            orange: :knight,
+            orange: :rook
+          ]
+        ],
+        order: [:orange, :blue],
+        impale_square: {:e, 6},
+        first_castleable: :both,
+        second_castleable: :both,
+        halfmove_clock: 0,
+        fullmove_number: 3
+      },
+      turn: :orange,
+      first: %Player{type: :computer, color: :orange, tag: "me", lvl: 1},
+      second: %Player{type: :computer, color: :blue, tag: "you", lvl: 1},
+      status: :in_progress,
+      history: [],
+      resolution: nil,
+      reason: nil
+    }
+
+    #march_or_impale_left
+    pos_moves_loc = Board.possible_moves(game.board, {:f, 5})
+    pos_moves_loc_color = Board.possible_moves(game.board, {:f, 5}, :orange)
+    pos_moves_color = Board.possible_moves_of_color(game.board, :orange)
+    en_passant_move = {{:f, 5}, {:e, 6}}
+    _march_move = {{:f, 5}, {:f, 6}}
+
+    assert {:ok,
+      %Board{placements: game.board.placements |> Board.remove_at({:f, 5}) |> Board.placePiece({:f, 6}, :orange, :pawn),
+      impale_square: :noimpale, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 3
+      }} == appraise_move(game.board, {:f, 5}, {:f, 6}, {:orange, :pawn})
+
+    assert true == diagonalMove({:f, 5}, {:e, 6})
+    assert {:blue, :pawn} == behind_at(game.board.placements, {:e, 6}, :orange)
+    assert true == in_front_of_enemy_pawn(game.board.placements, {:e, 6}, :orange)
+
+    # assert "hi" == pawn_move_take_validation(game.board, {:f, 5}, {:e, 6}, :orange, {:orange, :pawn}, :mt, :nopromote)
+    # assert "yes" == move(game.board, {:f, 5}, {:e, 6}, :orange, :pawn, :nopromote)
+    assert {:ok,
+    %Board{placements: game.board.placements |> Board.remove_at({:f, 5}) |> Board.remove_at({:e, 5}) |> Board.placePiece({:e, 6}, :orange, :pawn),
+    impale_square: :noimpale, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 3
+    }} == appraise_move(game.board, {:f, 5}, {:e, 6}, {:orange, :pawn})
+    # assert {:ok,
+    #   %Board{placements: game.board.placements |> Board.remove_at({:f, 5}) |> Board.remove_at({:e, 6}) |> Board.placePiece({:e, 6}, :orange, :pawn),
+    #   impale_square: :noimpale, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 3
+    #   }} == appraise_move(game.board, {:f, 5}, {:e, 6}, {:orange, :pawn})
+    assert {:capture, {:e, 6}} in Moves.unappraised_moves(:orange, :pawn, {:f, 5})
+
+    # assert 6 == evaluate_each_unappraised([{:capture, {:e, 6}}], game.board, {:orange, :pawn}, {:f, 5}, :orange)
+    assert en_passant_move in Board.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(game.board, {:f, 5}, :orange, :pawn)
+    assert en_passant_move in pos_moves_loc_color
+    assert en_passant_move in pos_moves_loc
+    assert en_passant_move in pos_moves_color
+  end
+end
+
 describe " debug endgame stalemate in place of checkmate" do
 
   test "breaks on promotecapture" do
@@ -185,6 +567,11 @@ describe " debug endgame stalemate in place of checkmate" do
 ◻ ◼ ◻ ◼ ◻ ◼ ◻ ♔
 """
     pawns_mobile = %Board{placements: pawns_mobile_str |> Parser.parseBoardFromString()}
+    assert {:blue, :pawn} == get_at(pawns_mobile.placements, {:a, 6})
+    assert Board.kingThreatened(pawns_mobile, :blue) == false
+
+
+    assert possible_moves(pawns_mobile, {:h, 1}) == []
     assert Board.kingImmobile(pawns_mobile, :blue) == true
     a_6 = Moves.unappraised_moves(:blue, :pawn, {:a, 6})
     assert a_6 == [{:march, {:a, 5}}, {:capture, {:b, 5}}]
@@ -210,7 +597,7 @@ describe " debug endgame stalemate in place of checkmate" do
     #assert Board.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(pawns_mobile, {:h, 2}, :blue, :pawn) == [{{:h, 2}, {:h, 3}}]
     #assert Board.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(pawns_mobile, {:a, 6}, :blue, :pawn) == [{{:a, 6}, {:a, 7}}]
 
-    assert Board.possible_moves(pawns_mobile, :blue) == []
+    assert Board.possible_moves_of_color(pawns_mobile, :blue) == []
     assert Board.noPieceCanMove(pawns_mobile, :blue) == true
     assert Board.isStalemate(pawns_mobile, :blue) == true
   end
@@ -305,7 +692,7 @@ iex(49)>
 
 
 
-    assert Board.possible_moves(pawn_checkmate, :blue) == [{{:d, 8}, {:d, 7}}]
+    assert Board.possible_moves_of_color(pawn_checkmate, :blue) == [{{:d, 8}, {:d, 7}}]
     assert Board.isCheckmate(pawn_checkmate, :blue) == false
   end
   test "ensure pawns can promote, no stalemate if it's only option" do
@@ -339,7 +726,7 @@ iex(49)>
 
     assert appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(promote_only, {:e, 2}, :blue, :pawn) == [{{:e, 2}, {:e, 1}, :knight}, {{:e, 2}, {:e, 1}, :rook}, {{:e, 2}, {:e, 1}, :bishop}, {{:e, 2}, {:e, 1}, :queen}]
 
-    assert promote_only |> Board.possible_moves(:blue) == [{{:e, 2}, {:e, 1}, :knight}, {{:e, 2}, {:e, 1}, :rook}, {{:e, 2}, {:e, 1}, :bishop}, {{:e, 2}, {:e, 1}, :queen}]
+    assert promote_only |> Board.possible_moves_of_color(:blue) == [{{:e, 2}, {:e, 1}, :knight}, {{:e, 2}, {:e, 1}, :rook}, {{:e, 2}, {:e, 1}, :bishop}, {{:e, 2}, {:e, 1}, :queen}]
     assert promote_only |> Board.noPieceCanMove(:blue) == false
     assert promote_only |> Board.isStalemate(:blue) == false
 
@@ -1243,9 +1630,7 @@ end
       assert res == :ok
       {res2, _msg2} = move(blocked, {:e, 8}, {:f, 8}, :blue, :king, :nopromote)
       assert res2 == :ok
-
-
-      assert my_possible_king_moves_blue == [{{:e, 8}, {:f, 8}}, {{:e, 8}, {:d, 8}}]
+      assert my_possible_king_moves_blue == [{{:e, 8}, {:f, 8}}, {{:e, 8}, {:d, 8}}, {{:e, 8}, {:g, 8}}]
       assert Board.kingImmobile(blocked, :blue) == false
       assert Board.kingImmobile(blocked, :orange) == true
 
