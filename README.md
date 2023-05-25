@@ -1,6 +1,6 @@
 # GChess
 Distributed Implementation of Chess.
-[![License](https://img.shields.io/badge/license-GPLv3-blue)](https://github.com/blasphemetheus/gchess/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-GPLv3-blue)](https://github.com/blasphemetheus/gchess/blob/main/LICENSE) [![Elixir CI](https://github.com/blasphemetheus/gchess/actions/workflows/elixir.yml/badge.svg)](https://github.com/blasphemetheus/gchess/actions/workflows/elixir.yml)
 
 Play Chess over the network (eventually).
 
