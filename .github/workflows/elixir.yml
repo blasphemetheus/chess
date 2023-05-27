@@ -33,32 +33,38 @@ jobs:
         path: deps
         key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
         restore-keys: ${{ runner.os }}-mix-
+    - name: Install Scenic dependencies
+      run: sudo apt-get update && sudo apt-get install pkgconf libglfw3 libglfw3-dev libglew2.2 libglew-dev
     - name: Install dependencies
       run: mix deps.get
     - name: Run tests
       run: mix test
       
-  build_windows:
-    name: Build and test on Windows 19
-    runs-on: windows-latest
+#   build_windows:
+#     name: Build and test on Windows 19
+#     runs-on: windows-latest
 
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Elixir
-      uses: erlef/setup-beam@988e02bfe678367a02564f65ca2e37726dc0268f
-      with:
-        elixir-version: '1.14.0' # Define the elixir version [required]
-        otp-version: '25.3' # Define the OTP version [required]
-    - name: Restore dependencies cache
-      uses: actions/cache@v3
-      with:
-        path: deps
-        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
-        restore-keys: ${{ runner.os }}-mix-
-    - name: Install dependencies
-      run: mix deps.get
-    - name: Run tests
-      run: mix test
+#     steps:
+#     - uses: actions/checkout@v3
+#     - name: Set up Elixir
+#       uses: erlef/setup-beam@988e02bfe678367a02564f65ca2e37726dc0268f
+#       with:
+#         elixir-version: '1.14.0' # Define the elixir version [required]
+#         otp-version: '25.3' # Define the OTP version [required]
+#     - name: Restore dependencies cache
+#       uses: actions/cache@v3
+#       with:
+#         path: deps
+#         key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+#         restore-keys: ${{ runner.os }}-mix-
+#     - name: Install Scenic dependencies
+#       run: install Vis Studio with Desktop dev with C++ binary, download GLFW and GLEW binaries manually
+#     - name: Install dependencies
+#       run: mix deps.get
+#     - name: Run tests
+#       run: mix test
+      
+      
 #   build_macos:
 
 #     name: Build and test on latest Mac OS (apple)
