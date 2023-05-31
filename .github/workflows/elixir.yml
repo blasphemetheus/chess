@@ -36,8 +36,6 @@ jobs:
           restore-keys: ${{ runner.os }}-mix-
       - name: Install Scenic dependencies
         run: sudo apt-get update && sudo apt-get install pkgconf libglfw3 libglfw3-dev libglew2.2 libglew-dev
-      - name: Install Tommyds for tommy_hashlin and tommy free
-        run: sudo apt-get install tommyds
       - run: mix deps.get
       - run: mix test
 
