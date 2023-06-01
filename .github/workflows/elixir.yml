@@ -34,12 +34,14 @@ jobs:
           path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-mix-
-      - name: print out version information ||| A
-        run: |
-          elixir -v
-          erl -v
-          mix deps | grep scenic
-          uname -r
+      - name: elixir version
+        run: elixir -v
+      - name: erlang version
+        run: erl -v
+      - name: scenic version
+        run: mix deps | grep scenic
+      - name: system info
+        run: uname -r
 
       - name: Install Scenic dependencies
         run: sudo apt-get update && sudo apt-get install pkg-config pkgconf libglfw3 libglfw3-dev libglew2.2 libglew-dev
