@@ -42,9 +42,14 @@ jobs:
         run: mix deps | grep scenic
       - name: system info
         run: uname -r
-
+      - name: more specific system
+        run: cat /etc/os-release
+      - name: system continued
+        run: lsb_release -a
+      - name: system final
+        run: hostnamectl
       - name: Install Scenic dependencies
-        run: sudo apt-get update && sudo apt-get install pkg-config pkgconf libglfw3 libglfw3-dev libglew2.2 libglew-dev
+        run: sudo apt-get update && sudo apt-get install pkg-config libglfw3 libglfw3-dev libglew2.2 libglew-dev
       - run: mix deps.get
       - run: mix test
 
