@@ -37,6 +37,7 @@ jobs:
       - name: print out version information ||| A
         run: "elixir -v && erl -v && mix deps | grep scenic && uname -r"
       - name: print out version information ||| B
+        uses: erlef/setup-beam@v1
         with:
           cmd: |
             elixir -v
@@ -45,6 +46,7 @@ jobs:
             uname -r
         
       - name: print out version information ||| C
+        uses: erlef/setup-beam@v1
         with:
           cmd: >-
             elixir -v
