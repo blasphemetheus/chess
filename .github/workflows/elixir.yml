@@ -35,27 +35,14 @@ jobs:
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-mix-
       - name: print out version information ||| A
-        run: "elixir -v && erl -v && mix deps | grep scenic && uname -r"
-      - name: print out version information ||| B
-        uses: erlef/setup-beam@v1
-        with:
-          cmd: |
-            elixir -v
-            erl -v
-            mix deps | grep scenic
-            uname -r
-        
-      - name: print out version information ||| C
-        uses: erlef/setup-beam@v1
-        with:
-          cmd: >-
-            elixir -v
-            erl -v
-            mix deps | grep scenic
-            uname -r
-        
+        run: |
+          elixir -v
+          erl -v
+          mix deps | grep scenic
+          uname -r
+
       - name: Install Scenic dependencies
-        run: sudo apt-get update && sudo apt-get install pkgconf libglfw3 libglfw3-dev libglew2.2 libglew-dev
+        run: sudo apt-get update && sudo apt-get install pkg-config pkgconf libglfw3 libglfw3-dev libglew2.2 libglew-dev
       - run: mix deps.get
       - run: mix test
 
