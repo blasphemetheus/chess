@@ -49,14 +49,14 @@ jobs:
       - name: update dependencies
         run: sudo apt-get update
       - name: Install Scenic Dependencies
-        run: sudo apt-get install libtommath1 pkgconf libglfw3 libglfw3-dev libglew2.2 libglew-dev
+        run: sudo apt-get install libglew2.2_2.2.0-4_arm64 libglew2.2_2.2.0-4 libtommath1 pkgconf libglfw3 libglfw3-dev libglew2.2 libglew-dev
       - run: mix deps.get
       - run: mix test
 
 
   build_ubuntu:
     name: Build and test on Ubuntu 20 lts
-    runs-on: ubuntu-latest
+    runs-on: ubuntu20
     steps:
     - uses: actions/checkout@v3
     - name: Set up Elixir
