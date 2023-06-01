@@ -40,43 +40,42 @@ jobs:
         run: erl -v
       - name: scenic version
         run: mix deps | grep scenic
-      - name: system info
-        run: uname -r
-      - name: more specific system
+      - name: os-release file (system)
         run: cat /etc/os-release
-      - name: system continued
+      - name: all release info (system)
         run: lsb_release -a
-      - name: system final
+      - name: host name control (system)
         run: hostnamectl
-      - name: Install Scenic dependencies
-        run: sudo apt-get update && sudo apt-get install pkg-config libglfw3 libglfw3-dev libglew2.2 libglew-dev
+      - name: update dependencies
+        run: sudo apt-get update
+      - name: Install Scenic Dependencies
+        run: sudo apt-get install libtommath1 pkgconf libglfw3 libglfw3-dev libglew2.2 libglew-dev
       - run: mix deps.get
       - run: mix test
 
-#   build_ubuntu:
 
-#     name: Build and test on Ubuntu 20 lts
-#     runs-on: ubuntu-22.04
-
-#     steps:
-#     - uses: actions/checkout@v3
-#     - name: Set up Elixir
-#       uses: erlef/setup-beam@988e02bfe678367a02564f65ca2e37726dc0268f
-#       with:
-#         elixir-version: '1.14.0' # Define the elixir version [required]
-#         otp-version: '25.3' # Define the OTP version [required]
-#     - name: Restore dependencies cache
-#       uses: actions/cache@v3
-#       with:
-#         path: deps
-#         key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
-#         restore-keys: ${{ runner.os }}-mix-
-#     - name: Install Scenic dependencies
-#       run: sudo apt-get update && sudo apt-get install pkgconf libglfw3 libglfw3-dev libglew2.2 libglew-dev
-#     - name: Install dependencies
-#       run: mix deps.get
-#     - name: Run tests
-#       run: mix test
+  build_ubuntu:
+    name: Build and test on Ubuntu 20 lts
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Elixir
+      uses: erlef/setup-beam@988e02bfe678367a02564f65ca2e37726dc0268f
+      with:
+        elixir-version: '1.14.0' # Define the elixir version [required]
+        otp-version: '25.3' # Define the OTP version [required]
+    - name: Restore dependencies cache
+      uses: actions/cache@v3
+      with:
+        path: deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-mix-
+    - name: Install Scenic dependencies
+      run: sudo apt-get update && sudo apt-get install pkgconf libglfw3 libglfw3-dev libglew2.2 libglew-dev
+    - name: Install dependencies
+      run: mix deps.get
+    - name: Run tests
+      run: mix test
       
 #   build_windows:
 #     name: Build and test on Windows 19
