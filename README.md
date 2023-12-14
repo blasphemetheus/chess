@@ -2,9 +2,7 @@
 Distributed Implementation of Chess.
 [![License](https://img.shields.io/badge/license-GPLv3-blue)](https://github.com/blasphemetheus/gchess/blob/main/LICENSE) [![Elixir CI](https://github.com/blasphemetheus/gchess/actions/workflows/elixir.yml/badge.svg)](https://github.com/blasphemetheus/gchess/actions/workflows/elixir.yml)
 
-Play Chess in elixir. (eventually ... over the network).
-
-A CLI with Graphical User Interface via Scenic or Phoenix (optional views).
+Play Chess in elixir. Works in a CLI tool, with optional view of C-based GUI (alpine/manjaro supported because dependencies come pre-wrangled) via Scenic. Also in a Phoenix-based web-app coming soon.
 
 A way to learn more about the Elixir ecosystem by making remaking chess and the ur game.
 
@@ -13,9 +11,10 @@ There is a Command Line Interface (CLI) view. Using that view, a snapshot of the
 There is a Scenic View, which requires scenic and it's various dependencies to run. But if you get that all figured out ([this page has some helpful steps](https://medium.com/@giandr/elixir-scenic-snake-game-b8616b1d7ee0#%22Setting%20up%22), or [this page](https://github.com/ScenicFramework/scenic_new#install-prerequisites)).
 
 ## Dev Environment
+(actually I killed my manjaro setup accidentally and didn't reimage it for a while, so I'm starting again with Alpine on a vm, so if I break things I'm more likely to fix it and move on :) )
 I develop on Manjaro linux using sway and in that environment, it's easy to download dependencies (rolling releases, bleeding edge updates, yada yada. It's convenient. You can sue me for being a penguin guy). I got it working on Windows and tried for a while on raspberry pi's debian but it's not simple. The free github workflow for elixir CI testing doesn't support MacOS (under Actions on Github). So when I get that working I'll have a decent excuse not to support Apple products :). Relies on the glfw or glew C libraries which you need to find the right development libraries for that matches your Elixir and Erlang versions. asdf is the best way to manage your elixir and erlang versions. Rule of thumb, if you can get the complicated Scenic example one running, this should run too.
 
-Oh yeah, and if you have a moral standard against using AI tools, I tried to use Github Copilot early on to speed the development of the representation of the board and man that did not speed things along in the medium term at all, it just made a bunch of stubs I had to rewrite later with what I actually wanted. GPT 4 is a good resource for planning out projects though, and if you're comfortable consulting an 'oracle' for 'advice' that might be straight from reddit or from a high as balls hallucinating neural network with no shortterm memory or mechanism to care about the encoded human communications it spits out, then I recommend it! You can get a general overview and drill down into the specifics with follow up questions and I find that very valuable to build a conceptual understanding of a topic that is new. I wouldn't copy and paste it's output unless you're trying to easily build sick midjourney prompts tho.
+Oh, I used the generative AI tools a bit at first to see if they were helpful. CoPilot mostly just gave me boilerplate to rewrite later so I stopped using that after a week.
 
 ### Useful links:
 - [elixir website](https://elixir-lang.org/)
