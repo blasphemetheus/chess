@@ -11,6 +11,10 @@ defmodule GameRunner do
   #@end_reasons [:checkmate, :stalemate, :resignation, :timeout, :draw, :disconnection, :other]
   #@play_types [:vs, :online, :cpu_vs_cpu, :human_vs_cpu, :cpu_vs_human]
 
+  @doc """
+  a Board is a struct which holds turn (atom), first (player struct), second (likewise, opposite color though),
+  status (built is default), history (a list), resolution (atom), reason (atom)
+  """
   defstruct board: %Board{},
             turn: :orange,
             first: %Player{color: :orange},
@@ -20,6 +24,9 @@ defmodule GameRunner do
             resolution: nil,
             reason: nil
 
+  @doc """
+  given a string, returns the correct atom based on whether local or remote is in the string, or raises an error
+  """
   def assignLocalOrRemote(player) do
     cond do
       String.contains?(player, "local") -> :local
@@ -29,7 +36,8 @@ defmodule GameRunner do
   end
 
   @doc """
-  Given a tag and an opponent tag, ,
+  Given a tag and an opponent tag, tells view to display as a local game and starts Board from starting position,
+  showing the game status in between
   """
   def playLocal(tag \\ "BRAG", opponent \\ "GRED") do
     View.CLI.displays(:local, tag, opponent)
@@ -42,7 +50,9 @@ defmodule GameRunner do
     |> showGameStatus({tag, opponent}, {[], []}, 0, 1)
   end
 
-  # asks the local user indicated for a move, the io.get prompts etc
+  @doc """
+  asks the local user indicated for a move, the io.get prompts etc
+  """
   def playTurn(board, localUserTag, color) do
     IO.puts(
       "It is now the turn of #{localUserTag}, please enter your move in the following format (<location> <location> <piececolor> <piecetype>):\n"
@@ -58,10 +68,18 @@ defmodule GameRunner do
     end
   end
 
+  @doc """
+  returns an integer: choosing randomly between either 0 or 1
+  # the idea is to allow levels of sophistication, so this might best be
+  # represented by atoms summing up the behavior in the future
+  """
   def randomLevel() do
     Enum.random(0..1)
   end
 
+  @doc """
+  Returns a GameRunner struct of a default configuration given the playertypes and tags
+  """
   def createGame(first_playertype, second_playertype, tag, opp_tag) do
     %GameRunner{
       board: Board.createBoard(),
@@ -74,11 +92,13 @@ defmodule GameRunner do
       reason: nil
     }
   end
+
   # returns an outcome in the format [{player1, player2}, resolution]
   #   where if player1 wins, resolution is :win, if player2 wins, resolution is :loss,
   #   if drawn, resolution is :drawn
   # possible @resolutions: [win, loss, drawn]
   # possible playTypes: [human, cpu, online, human_vs_cpu]
+
   @doc """
   Starts a game given a list of two player_tags and a playType (:vs, :online, :cpu).
   :vs = [:human v :human]
@@ -98,15 +118,18 @@ defmodule GameRunner do
   CPUs generate their moves in the moment, while humans make the computer prompt for input, which
   the human gives via cli or via mouseclicks or button-presses depending on the view
   Online will just have to wait.
+
+  Returns an outcome (a struct I suppose giving the info in the game)
   """
   def runGame([player1, player2], playType) when playType |> is_atom(),
     do: runGame([player1, player2], [playType, playType])
 
   def runGame([player1, player2] = _both_players, [first_pt, second_pt] = _playTypeList) do
+    # "lvl: randomLevel()" should be subbed in for "lvl: 1" if that is the desired behavior
+    # That is, the level of of the player of the first and second should be defined here, then given to the GameRunner
     %GameRunner{
       board: Board.createBoard(),
       turn: :orange,
-      # randomLevel()
       first: %Player{type: first_pt, color: :orange, tag: player1, lvl: 1},
       second: %Player{type: second_pt, color: :blue, tag: player2, lvl: 1},
       status: :in_progress,
@@ -133,15 +156,18 @@ defmodule GameRunner do
   # Outcome%{players: [player1, player2], resolution: :drawn, reason: :stalemate}
   # Outcome%{players: [player1, player2], resolution: :win, reason: :resignation}
 
+  @doc """
+  Given a GameRunner, passes off finding a resolution to GameRunner, raising an error if not won, lost or drawn
+  """
   def findResolution(game) do
     cond do
-      isLost(game.board, game.turn) ->
+      GameRunner.isLost(game, game.turn) ->
         %GameRunner{game | resolution: :win}
 
-      isWon(game.board, game.turn) ->
+      GameRunner.isWon(game, game.turn) ->
         %GameRunner{game | resolution: :loss}
 
-      isDrawn(game.board, game.turn) ->
+      GameRunner.isDrawn(game, game.turn) ->
         %GameRunner{game | resolution: :drawn}
 
       true ->
@@ -150,10 +176,15 @@ defmodule GameRunner do
     end
   end
 
+  @doc """
+  Given a GameRunner, based on the state of the board and the resolution recorded, returns GameRunner with the ending reason set,
+  and if the ending reason is not a stalemate, insufficient material, fifty move rep,  agreed, checkmate, or resignation,
+  raise an error
+  """
   def findEndingReason(game) do
     reason =
-      case game.resolution do
-        :drawn ->
+      cond do
+        game.resolution == :drawn ->
           cond do
             Board.isStalemate(game.board, game.turn) ->
               :stalemate
@@ -168,21 +199,14 @@ defmodule GameRunner do
               :agreed
           end
 
-        :loss ->
+        game.resolution == :loss or game.resolution == :win ->
           if Board.isCheckmate(game.board, game.turn) do
             :checkmate
           else
             :resignation
           end
 
-        :win ->
-          if Board.isCheckmate(game.board, game.turn) do
-            :checkmate
-          else
-            :resignation
-          end
-
-        _ ->
+        true ->
           :other
       end
 
@@ -198,20 +222,32 @@ defmodule GameRunner do
     %GameRunner{game | reason: reason}
   end
 
+  @doc """
+  Given a GameRunner, return an Outcome struct (includes players, resolution and reason, nothing else)
+  """
   def convertToOutcome(game) do
     %Outcome{players: [game.first, game.second], resolution: game.resolution, reason: game.reason}
   end
 
-  def isDrawn(board, color) do
-    Board.isDraw(board, color)
+  @doc """
+  Given a GameRunner and color, return whether the board in the game is drawn (calls Board function)
+  """
+  def isDrawn(game, color) do
+    Board.isDraw(game.board, color)
   end
 
-  def isWon(board, color) do
-    Board.isCheckmate(board, Board.otherColor(color))
+  @doc """
+  Given a GameRunner and color, return whether the board in the game is won by that color
+  """
+  def isWon(game, color) do
+    Board.isCheckmate(game.board, Board.otherColor(color))
   end
 
-  def isLost(board, color) do
-    Board.isCheckmate(board, color)
+  @doc """
+  Given a GameRunner and color, return whether the board in the game is lost by that color
+  """
+  def isLost(game, color) do
+    Board.isCheckmate(game.board, color)
   end
 
   @doc """
@@ -224,13 +260,15 @@ defmodule GameRunner do
   end
 
   @doc """
-  Initiates the turn-taking phase of the game. The main loop!
+  Too large of a function !! TODO
+
+  Given a GameRunner, initiates the turn-taking phase of the game. The main loop!
   Whomever's turn it is, that player will be prompted (by their color)
   to make a move. First there will be a check to see if the game is over.
   It shouldn't be, but say someone gave you a position and asked to evaluate it
   You'd have to be able to identify whether it's playable or not.
   If it's over we should raise an error or a fuss somehow. Let's do that now.
-  OK, but if the game can still be played, play a turn
+  OK, but if the game can still be played, play a turn.
   """
   def takeTurns(game) do
     case game.first.type do
@@ -251,13 +289,16 @@ defmodule GameRunner do
   end
 
   @doc """
-  given a board and history, return
+  given a GameRunner (including board, turn and history), return when the board state ends the game or there is thrice repitition
   """
   def isOver(game) do
     Board.isOver(game.board, game.turn) or
     isThreeFoldRepitition(game.board, game.turn, game.history)
   end
 
+  @doc """
+  Given a board, the color/player to_play and history, return whether there is a threefold repitition
+  """
   def isThreeFoldRepitition(board, to_play, history) do
     placements = board.placements
     first_castleable = board.first_castleable
@@ -267,6 +308,10 @@ defmodule GameRunner do
     historyContainsTwoEqualPositions(history, position)
   end
 
+  @doc """
+  Given a list of history and a position, if the position is in the history list twice return true, else false
+  A position tuple is {color, first_castleable, second_castleable, placements} because different castle status is a different posn
+  """
   def historyContainsTwoEqualPositions(history_list, position_tuple) do
     case Enum.member?(history_list, position_tuple) do
       true ->
@@ -283,9 +328,13 @@ defmodule GameRunner do
   end
 
   @doc """
-  recursively deals with a game, and a color, and maybe a player,
+  Given a GameRunner and a Player, assigns what to do in the game loop as determined by the type of player,
+  assigning human turns to vs and human, cpu turns to computer and cpu, otherwise raising an error,
+  and then appending the GameRunner to the History.
+
+  (recursively deals with a game, and a color, and maybe a player,
   returning at the end of it a game that has taken that turn,
-  asked for input when necessary, or calculated moves
+  asked for input when necessary, or calculated moves)
   """
   def playTurn(game, player) do
     case player.type do
@@ -333,8 +382,17 @@ defmodule GameRunner do
   @doc """
   given a game struct, a turn (color), and a player
   (type, so like :human etc)
-  plays one human turn
+  plays one human turn, displaying the gameboard so the human player can make a move, validating the move, then
+  making the move or asking for another move, if getting bad input, resigning the player
+    # prompt the player for a move
+    # validate the move
+    # if valid, make the move
+    # if invalid, prompt the player again
+    # if invalid again, the player resigns
 
+  TODO:
+    # if the player resigns, end the game
+    # if the player times out, end the game as a timeout loss
   """
   def playHumanTurn(game, player) do
     turn = game.turn
@@ -364,59 +422,357 @@ defmodule GameRunner do
         raise GameError, message: "Player resigned via bad input"
       end
     end
-
-    # prompt the player for a move
-    # validate the move
-    # if valid, make the move
-    # if invalid, prompt the player again
-    # if invalid again, the player resigns
-
-    # if the player resigns, end the game
-    # if the player times out, end the game as a timeout loss
   end
 
-  def playCPUTurn(game, 0) do
-    turn = game.turn
-
-    possible = possible_moves_of_color(game.board, turn)
-
-    # {start_loc, end_loc} = selected_move = possible |> Enum.random()
-    {start_loc, end_loc, promote_to} =
-      case possible |> List.first() do
-        {start_loc, end_loc} -> {start_loc, end_loc, :nopromote}
-        {_start_loc, _end_loc, _promote_to} = x -> x
-      end
-
-    {^turn, piece_type} = Board.get_at(game.board.placements, start_loc)
-    {:ok, new_board} = Board.move(game.board, start_loc, end_loc, turn, piece_type, promote_to)
-    %{game | board: new_board, turn: nextTurn(turn)}
-    # for some reason start_loc can end up being the atom :board, troubleshoot
-    # generate a move
-    # validate the move
-    # if valid, make the move
-    # if invalid, generate a new move
-    # if invalid again, the player resigns
-
-    # if the player resigns, end the game
-    # if the player times out, end the game as a timeout loss
+  @doc """
+  Given a game and an Integer cpu level (one, two, three, etc),
+  return a game with the the move selected according to the level
+  """
+  def playCPUTurn(game, cpu_level) when game |> is_struct() and cpu_level |> is_integer() do
+    choose_atom = cpu_level_to_choose_atom(cpu_level)
+    {start_loc, end_loc, promote_to} = choose_move_from_possible(game, choose_atom)
+    apply_move_to_game(game, start_loc, end_loc, promote_to)
   end
 
-  def playCPUTurn(game, 1) do
+  @doc """
+  Given a cpu_level (integer from 0 to ?) return the atom representing what function
+  to use to pick a move from the list of possible moves
+  """
+  def cpu_level_to_choose_atom(0), do: :first
+  def cpu_level_to_choose_atom(1), do: :random
+  def cpu_level_to_choose_atom(2), do: :evaluate_simple
+
+  @doc """
+  Given an atom indicating how to choose from the possible moves,
+  return a function picking from the list for the desired move
+  """
+  def choose_atom_to_function(:first), do: &List.first/1
+  def choose_atom_to_function(:random), do: &Enum.random/1
+  def choose_atom_to_function(:evaluate_simple), do: &evaluate_best/3
+
+
+  @doc """
+  Given a game, a start_loc, end_loc, promote_to (all the stuff you need for a move),
+  return a game with a board with the move applied and the turn cycled (and any other game transforms)
+  """
+  def apply_move_to_game(game, start_loc, end_loc, promote_to) do
     turn = game.turn
-
-    possible = possible_moves_of_color(game.board, turn)
-
-    {start_loc, end_loc, promote_to} =
-      case possible |> Enum.random() do
-        {start_loc, end_loc} -> {start_loc, end_loc, :nopromote}
-        {_start_loc, _end_loc, _promote_to} = x -> x
-      end
-
     {^turn, piece_type} = Board.get_at(game.board.placements, start_loc)
 
-    {:ok, new_board} = Board.move(game.board, start_loc, end_loc, turn, piece_type, promote_to)
+    {:ok, new_board} = Board.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_to)
     %{game | board: new_board, turn: nextTurn(turn)}
   end
+
+  @doc """
+  Given a game and an atom indicating how to choose from the possible moves,
+  return a thruple of start_loc, end_loc and promote_to using the strategy
+  indicated by the atom
+  """
+  def choose_move_from_possible(game, :evaluate_simple) do
+    choose_fn = choose_atom_to_function(:evaluate_simple)
+    case possible_moves_of_color(game.board, game.turn) |> choose_fn.(game, :minimax) do
+      {start_loc, end_loc} -> {start_loc, end_loc, :nopromote}
+      {_start_loc, _end_loc, _promote_to} = chosen -> chosen
+    end
+  end
+
+  def choose_move_from_possible(game, choose_atom) do
+    choose_fn = choose_atom_to_function(choose_atom)
+    case possible_moves_of_color(game.board, game.turn) |> choose_fn.() do
+      {start_loc, end_loc} -> {start_loc, end_loc, :nopromote}
+      {_start_loc, _end_loc, _promote_to} = chosen -> chosen
+    end
+  end
+
+  @piece_values %{pawn: 100, knight: 295, bishop: 300, rook: 500, queen: 900, king: 0}
+
+  defmodule ListZipper do
+    @moduledoc """
+    Module for the ListZipper data structure, If a list is a book,
+    a zipped list is a book with a bookmark in it. So previous traverse, current element,
+    and next_to_traverse are stored.
+    """
+
+    def create(list), do: %{previous: [], remaining: list}
+
+    def forward(%{remaining: []} = zippedList), do: zippedList
+
+    def forward(%{previous: previous, remaining: [remaining_head | remaining_tail]}) do
+      %{previous: [remaining_head | previous], remaining: remaining_tail}
+    end
+
+    def back(%{previous: []} = zippedList), do: zippedList
+
+    def back(%{previous: [previous_head | previous_tail], remaining: remaining}) do
+      %{previous: previous_tail, remaining: [previous_head | remaining]}
+    end
+
+    def current(%{remaining: []}), do: nil
+
+    def current(%{remaining: [current | _tail]}), do: current
+  end
+
+  # def evaluate_best(list, game) do
+    # this is the implementation that is based on current turn onlys
+
+  #   current_turn_eval = count_material(game.board.placements, game.turn)
+  #   opponent_eval = count_material(game.board.placements, Board.otherColor(game.turn))
+
+  #   current_turn_eval - opponent_eval
+  # end
+
+  @limit 5
+
+  @doc """
+  Given a list of possible moves {start_loc, end_loc, possible_moves} and a gamerunner struct,
+  return the best possible move according to minimax
+  """
+  def evaluate_best(list, game, :minimax) when list |> is_list and game |> is_struct do
+    zipper = list
+    |> ListZipper.create()
+
+    to_play = game.turn
+    depth = 1
+
+    best_eval = recursive_best_move(to_play, depth, @limit, game)
+
+    IO.puts(best_eval, label: :best_eval)
+    best_eval
+
+    # huh, a hash tree structure has logarithmic value lookups, so if
+    # i need a hash map for instance, might be the way
+    # orange_eval = count_material(game.board.placements, :orange)
+    # blue_eval = count_material(game.board.placements, :blue)
+    # evaluation = orange_eval - blue_eval
+    # perspective = case game.turn do
+    #   :orange -> 1
+    #   :blue -> -1
+    # end
+
+    # evaluation * perspective
+  end
+
+  @doc """
+  Given an int returns true if even
+  """
+  def even(int) when int |> is_integer do
+    rem(int, 2) != 1
+  end
+
+  @doc """
+  Given a color (to_play), depth (int), limit (int), and game (struct), take the possible moves on the board,
+  (using alpha beta, based on evenness?) show on cli the possible moves, then set the move score for each and return
+  the best possible move (the one with the highest move_score)
+  """
+  def recursive_best_move(to_play, depth, limit, game) do
+    possible_moves = Board.possible_moves_of_color(game.board, to_play)
+    _alpha_beta = even(depth) # so on even depths, alpha_beta is true, odd false
+
+    IO.inspect(possible_moves, label: :first_poss_moves)
+
+    possible_moves
+    |> Enum.map(fn x -> x |> Enum.into(%{}) end)
+    |> IO.inspect()
+    |> Enum.map(fn move -> set_move_score(move, to_play, depth, limit, game) end)
+    |> Enum.sort()
+    |> Enum.reverse()
+    |> List.first()
+  end
+
+  @doc """
+  returns score o this board
+  Given the board, and the color to play, counts the material and returns the count of material multiplied by who is next
+  to play, so orange wants higher orange material, blue wants higher blue material
+  """
+  def score_board(move_ish_board, to_play) do
+    orange_eval = count_material(move_ish_board.placements, :orange)
+    blue_eval = count_material(move_ish_board.placements, :blue)
+    evaluation = orange_eval - blue_eval
+    perspective = case to_play do
+      :orange -> 1
+      :blue -> -1
+    end
+
+    evaluation * perspective
+  end
+
+  # minimax
+  # -Check if game has reached a terminal state and return a value depending on the outcome
+  # -Generate all available moves (spots on the board)
+  # -Call the minimax function on each available move recursively to reach a terminal state
+  # -Evaluate collection of scored moves
+  # -Return optimal move
+
+
+  @doc """
+  Given a move, a to_play, depth, limit, and board, tries the move and returns a tuple of move and score
+  if depth is more than limit, passes off to helper function decide_this_ply to evaluate the score
+  """
+  def set_move_score(move, to_play, depth, limit, board) do
+    if depth >= limit do
+      # end o it
+      {move, Board.try_move!(board, move) |> score_board(to_play)}
+
+      # %{move | :score => !move(board, move) |> score_board(to_play)}
+    else
+      # depth < limit
+      decide_this_ply(board, move, to_play, depth, limit)
+    end
+  end
+
+  @doc """
+  Given a bunch of stuff, a recursive function helper that
+  calls recursive_best_move with a higher depth and adjusts scores
+  """
+  def decide_this_ply(board, move, to_play, depth, limit) do
+    next_board = Board.makeMove(board, move)
+    opponent = Board.otherColor(to_play)
+    # recursion here
+    next_ply_best_move = recursive_best_move(opponent, depth + 1, limit, next_board)
+
+    alpha_beta = even(depth) # if odd, then it's the other players turn
+    case next_ply_best_move do
+      any when any |> is_integer -> # it's not [] is it?
+        if alpha_beta do
+          # the eval player's turn
+          %{move | score: move.score + score_board(opponent, next_board)}
+        else
+          # other player's turn
+          %{move | score: move.score - (score_board(opponent, next_board))}
+        end
+      any_other ->
+        # this shouldn't happen?
+        # TODO fixme if shouldn't happen, raise error if not an integer, malformed recursive output ?? or just a base case
+        move
+    end
+  end
+
+  @doc """
+  Given placements and a color,
+  returns the value of the material of that color on the placements by adding them up
+  """
+  def count_material(placements, turn_color) do
+    # list: {location, {color, type}}
+    Board.fetch_locations(placements, turn_color)
+    |> Enum.map(fn
+      {location, {^turn_color, type}} -> @piece_values[type]
+    end)
+    |> Enum.sum()
+  end
+
+  @big_number 100_000_000_000
+  @negative_big_number -1 * @big_number
+
+  @doc """
+  given a depth and ... return a number representing the value
+  found by the search
+  {loc, {color, type}}{loc, {color, type}}
+
+  This presumably uses alpha beta pruning
+  """
+  def search(game, depth, alpha, beta) do
+    if depth == 0 do
+      recursive_best_move(game.first, depth, 1, game)
+      # evaluate_best_move(list, game)
+    else
+      possible_moves = Board.possible_moves_of_color(game.board, game.turn)
+      # {loc, placement = {color, type}}
+
+      with {:no_moves, true} <- {:no_moves, possible_moves == []}, true <- Board.isCheck() do
+        @negative_big_number # checkmate bad
+      else
+        {:is_check, false} ->
+          0 # stalemate ok
+        {:no_moves, false} ->
+          # move eval
+
+          # best_evaluation = @negative_big_number
+          best = pick_best_alpha_beta_pruning(game, possible_moves, depth, alpha, beta)
+      end
+    end
+  end
+
+  @doc """
+  Given a list of possible moves, prune the bad ones and return the value represented by search, only possible moves here
+  """
+  def pick_best_alpha_beta_pruning(game, possible_moves, depth, alpha, beta) do
+
+    beta_is_best = false
+
+    # this strays from elixir scoping todo:
+    for move <- possible_moves do
+      # show me the move
+      IO.puts(move)
+      # IS IT?       move = loc, color, type
+      {start_loc, end_loc, player_color, piece_type} = move
+      # pull newboard out of move
+      piece_type = Board.get_at(game.board.placements, start_loc)
+      {:ok, new_board} = Board.move(game.board, start_loc, end_loc, player_color, piece_type)
+      # evaluation is recursive search with 1 less depth and negative beta and alpha times negative 1 ???? todo
+
+      evaluation = search(game, depth - 1, -beta, -alpha) * -1
+      # bestEvaluation = max(evaluation, bestEvaluation)
+      if evaluation >= beta do
+
+        #TODO make break for loop to alpha beta prune properly
+        # (sic) break return beta # todo remake for loop
+
+        # move too good, opponent will avoid this position
+        beta_is_best = true
+      else
+        # move not too good, opponent will not avoid this position
+
+        alpha = max(alpha, evaluation)
+      end
+    end
+
+    if beta_is_best do
+      beta
+    else
+      alpha
+    end
+  end
+
+  # @doc """
+  # Given a list of moves, reorders them to place the good moves first
+  # """
+  # def order_moves(list_o_moves) do
+  #   for {start_loc, end_loc, {color, type}} = move <- list_o_moves do
+  #     move_score_guess = 0
+  #     move_piece_type = type
+  #     capture_piece_type = grab_piece_at(end_loc) # todo or refactor
+
+  #     # prioritize capturing opps best pieces with our worst pieces
+  #     if (capture_piece_type) != {:error, "no piece"} do
+  #       move_score_guess = 10 * @piece_values[capture_piece_type] - @piece_values[move_piece_type]
+  #     end # trying to sideeffect todo
+
+  #     # promoting a pawn is probably good
+  #     if (promote_to != :nopromote) do
+  #       move_score_guess = move_score_guess + @piece_values[promote_to]
+  #     end # trying to sideeffect todo
+
+  #     # moving stuff to a square threatened by an enemy pawn should be deemphasized
+  #     if other_player_threatens_with_pawn(end_loc) do
+  #       move_score_guess = move_score_guess - @piece_values[move_piece_type]
+  #     end
+
+  #   end
+  # end
+
+  # @doc """
+  # TODO stub
+  # """
+  # def other_player_threatens_with_pawn(end_loc) do
+  #   false
+  # end
+
+  # @doc """
+  # Given an end_loc, returns
+  # """
+  # def grab_piece_at(end_loc) do
+
+  # end
 
   def playTurnOnline(_game) do
     # prompt the player for a move

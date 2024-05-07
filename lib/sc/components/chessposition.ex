@@ -43,13 +43,13 @@ defmodule Genomeur.Component.ChessPosition do
 
   @colors_first [{"Brown", :brown},{"Orange", :orange}, {"Thistle", :thistle}, {"Tomato", :tomato}, {"Turquoise", :turquoise}, {"Violet", :violet}, {"Wheat", :wheat}, {"White", :white}, {"White Smoke", :white_smoke}, {"Yellow", :yellow}, {"Yellow Green", :yellow_green}]
   @colors_second [{"Cadet Blue", :cadet_blue},{"Blue", :blue}, {"Chartreuse", :chartreuse}, {"Chocolate", :chocolate}, {"Coral", :coral}, {"Cornflower Blue", :cornflower_blue}, {"Cornsilk", :cornsilk}, {"Crimson", :crimson},
-  {"Cyan", :cyan}, {"Dark Blue", :dark_blue}, {"Dark Cyan", :dark_cyan}]
+  {"Cyan", :cyan}, {"Dark Blue", :dark_blue}, {"Dark Cyan", :dark_cyan}, {"Light Blue", :light_blue}]
 
   @pick_colors_first @colors_first ++ [{"<default>", :unpicked}]
   @pick_colors_second @colors_second ++ [{"<default>", :unpicked}]
 
   @first :brown
-  @second :cadet_blue
+  @second :light_blue
   @first_bkg :orange
   @second_bkg :dark_blue
 
@@ -425,8 +425,11 @@ defmodule Genomeur.Component.ChessPosition do
   """
   def render_game(graph, game) do
     board = game.board
-    first_pieces = Board.fetch_locations(board.placements, :orange) |> change_color_to(:purple)
-    second_pieces = Board.fetch_locations(board.placements, :blue) |> change_color_to(:magenta)
+    first_color = grab_current_color(:orange, graph)
+    second_color = grab_current_color(:blue, graph)
+
+    first_pieces = Board.fetch_locations(board.placements, :orange) |> change_color_to(first_color)
+    second_pieces = Board.fetch_locations(board.placements, :blue) |> change_color_to(second_color)
     first_group_spec = group_spec(produce_piece_spec_list(first_pieces, :first), id: :second_pieces, fill: :purple)
     second_group_spec = group_spec(produce_piece_spec_list(second_pieces, :second), id: :first_pieces, fill: :cyan)
 
@@ -1065,15 +1068,15 @@ defmodule Genomeur.Component.ChessPosition do
         message("GAMEOVER", :gameover, IO.ANSI.black(), IO.ANSI.red_background())
 
         scene = cond do
-          GameRunner.isDrawn(game) ->
+          GameRunner.isDrawn(game, game.turn) ->
             message("DRAWN", :resolution, IO.ANSI.light_red)
             morphscene_render_gray_lines_over_both_kings(scene)
 
-          GameRunner.isLost(game) ->
+          GameRunner.isLost(game, game.turn) ->
             message("LOST", :resolution, IO.ANSI.light_red)
             morphscene_render_red_x_over_losing_king(scene)
 
-          GameRunner.isWon(game) ->
+          GameRunner.isWon(game, game.turn) ->
             message("WON", :resolution, IO.ANSI.light_red)
             morphscene_render_red_x_over_losing_king(scene)
         end
@@ -1595,8 +1598,10 @@ defmodule Genomeur.Component.ChessPosition do
   # color controls
 
   # when the color picker color changes, change every first color id to that color with fill
-  def handle_event({:value_changed, :first_color_dropdown, new_color}, _, %{assigns: %{graph: graph}} = scene) do
-    graph = Graph.modify(graph, :first_color_dropdown, &update_opts(&1, fill: new_color)) |> Graph.modify(:first_color_label, &text(&1, inspect(new_color)))
+  def handle_event({:value_changed, :first_color_dropdown, new_color}, _, %{assigns: %{graph: graph, game: game}} = scene) do
+    graph = Graph.modify(graph, :first_color_dropdown, &update_opts(&1, fill: new_color))
+    |> Graph.modify(:first_color_label, &text(&1, inspect(new_color)))
+    |> render_game(game)
 
     scene =
       scene
@@ -1607,8 +1612,10 @@ defmodule Genomeur.Component.ChessPosition do
   end
 
   # when the color picker color changes, change every first color id to that color with fill
-  def handle_event({:value_changed, :second_color_dropdown, new_color}, _, %{assigns: %{graph: graph}} = scene) do
-    graph = Graph.modify(graph, :second_color_dropdown, &update_opts(&1, fill: new_color)) |> Graph.modify(:second_color_label, &text(&1, inspect(new_color)))
+  def handle_event({:value_changed, :second_color_dropdown, new_color}, _, %{assigns: %{graph: graph, game: game}} = scene) do
+    graph = Graph.modify(graph, :second_color_dropdown, &update_opts(&1, fill: new_color))
+    |> Graph.modify(:second_color_label, &text(&1, inspect(new_color)))
+    |> render_game(game)
 
     scene =
       scene

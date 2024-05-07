@@ -1089,6 +1089,12 @@ defmodule Board do
   #   end
   # end
 
+  def try_move!(board, move) do
+    IO.inspect(board, label: :board)
+    IO.inspect(move, label: :move)
+    board
+  end
+
   def move!(board, start_loc, end_loc, playerColor, pieceType, promote_type \\ :nopromote) do
     placements = board.placements
     castleable_directions = grabCastleable(playerColor, board.first_castleable, board.second_castleable, board.order)
@@ -1367,6 +1373,10 @@ defmodule Board do
     end)
   end
 
+  @doc """
+  Given a list of tuples of {piecetype, possible_move_list} a board, and the color of the player whose turn it is,
+  return a list of all of the possible moves FOR ALL tuples IN THE LIST
+  """
   def perform_list_possible_moves(list_tuple_piecetype_list_possible_moves, board, to_play) do
     list_tuple_piecetype_list_possible_moves
     |> Enum.map(fn

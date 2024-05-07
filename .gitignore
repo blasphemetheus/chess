@@ -33,3 +33,5 @@ example-*.tar
 /apps/*/cover/*
 
 /apps/*/_build/
+
+.vscode/*
