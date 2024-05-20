@@ -1,6 +1,6 @@
 defmodule Genomeur.Scene.Chess do
   @moduledoc """
-  This is all about the Chess game. Playing it. Show the board, show the players etc.
+  This is all about the Chess game. Playing it. Show the board, show the players etc. This is the one with the board linked to the sliders, but is unplayable for the moment
   """
   use Scenic.Scene
   alias Scenic.Graph
@@ -418,6 +418,9 @@ defmodule Genomeur.Scene.Chess do
     |> Notes.add_to_graph(@notes)
     |> Nav.add_to_graph(__MODULE__)
 
+  @doc """
+  Initialize the Chess scene
+  """
   @impl Scenic.Scene
   def init(scene, _param, _opts) do
     PubSub.subscribe(:chess_computers)
@@ -431,6 +434,9 @@ defmodule Genomeur.Scene.Chess do
     {:ok, scene}
   end
 
+  @doc """
+  Handle Events (value changing mostly)
+  """
   @impl Scenic.Scene
   def handle_event({:value_changed, :pos_x, x}, _, %{assigns: %{graph: graph, y: y}} = scene) do
     graph = Graph.modify(graph, :whole_board, &update_opts(&1, translate: {x, y}))
@@ -594,10 +600,15 @@ defmodule Genomeur.Scene.Chess do
   #   {:halt, state}
   # end
 
+  @doc """
+  Given info from chesscomputers' pubsub, have an effect be put into affect
+  """
   @impl true
   def handle_info({{Scenic.PubSub, :data}, {:chess_computers, gr, id}}, %{assigns: %{graph: graph}} = sc) do
     IO.puts("Gamerunner:: #{inspect(gr)} and id: #{inspect(id)}")
     IO.puts("")
+
+    # NO CHANGE TO GRAPH
 
     # graph = Graph.modify(graph, :all_pieces, &update_child(&1, :test, "changed", [{:stroke, {@stroke, :black}}]))
     scene =
@@ -622,7 +633,7 @@ defmodule Genomeur.Scene.Chess do
 
  @spec handle_info({{Scenic.PubSub, :data}, any}) :: {:halt, any}
  def handle_info({{Scenic.PubSub, :data}, thing}) do
-    IO.puts("GameRunner: #{inspect(thing)}")
+    IO.puts("Catchall GameRunner: #{inspect(thing)}")
     {:halt, thing}
   end
 end

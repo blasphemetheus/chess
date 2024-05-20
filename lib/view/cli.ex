@@ -84,6 +84,10 @@ defmodule View.CLI do
     displayGameBoard(contents_str)
   end
 
+  @doc """
+  Given a bgame, a board of some gametype and player_color, display the game board in the right
+  orientation
+  """
   def showGameBoardAs(:ur, urboard, :orange) do
     contents_str = urboard |> UrBoard.printPlacements()
 
@@ -177,24 +181,24 @@ defmodule View.CLI do
   def displayPlacements(placements, color \\ :orange)
   def displayPlacements(placements, :orange) do
     placements
-    |> Board.reversePlacements()
-    |> Board.printPlacements()
+    |> Chessboard.reversePlacements()
+    |> Chessboard.printPlacements()
   end
   def displayPlacements(placements, :blue) do
     placements
-    |> Board.printPlacements()
+    |> Chessboard.printPlacements()
   end
 
   def displayPlacements(placements, color, impale_square) do
     placements
-    |> insertSprintedPawn(impale_square, Board.otherColor(color))
+    |> insertSprintedPawn(impale_square, Chessboard.otherColor(color))
     |> displayPlacements(color)
   end
 
   def insertSprintedPawn(board, impale_square, color) do
-    behind_square = Board.behind(impale_square, color)
+    behind_square = Chessboard.behind(impale_square, color)
     board
-    |> Board.replace_at(behind_square, {color, :pawn})
+    |> Chessboard.replace_at(behind_square, {color, :pawn})
   end
 ############################################################
 

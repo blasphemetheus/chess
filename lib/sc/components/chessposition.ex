@@ -6,6 +6,8 @@ defmodule Genomeur.Component.ChessPosition do
 
   alias Scenic.ViewPort
   alias Scenic.Graph
+  alias Genomeur.Component.Nav
+  alias Genomeur.Component.Notes
 
   import Scenic.Primitives
   import Scenic.Components
@@ -13,6 +15,8 @@ defmodule Genomeur.Component.ChessPosition do
   import GameRunner
 
   @height 60
+
+  @note "Let's play Chess!"
 
   @all_colors_str_atom_tuple_list [
     {"Alice Blue", :alice_blue}, {"Antique White", :antique_white}, {"Aqua", :aqua}, {"Aquamarine", :aquamarine}, {"Azure", :azure}, {"Beige", :beige}, {"Bisque", :bisque},
@@ -177,8 +181,6 @@ defmodule Genomeur.Component.ChessPosition do
 
     rect_spec({500, 500}, id: :occluding_box, hidden: :false)
   ]
-
-
 
   @spacer 15
   @iter 30
@@ -394,6 +396,7 @@ defmodule Genomeur.Component.ChessPosition do
   @promote_type_options Chessboard.promotingOptions()
 
   @namedColors [:alice_blue, :antique_white, :aqua, :aquamarine, :azure, :beige, :bisque, :black, :blanched_almond, :blue, :blue_violet, :brown, :burly_wood, :cadet_blue, :chartreuse, :chocolate, :coral, :cornflower_blue, :cornsilk, :crimson, :cyan, :dark_blue, :dark_cyan, :dark_golden_rod, :dark_gray, :dark_green, :dark_grey, :dark_khaki, :dark_magenta, :dark_olive_green, :dark_orange, :dark_orchid, :dark_red, :dark_salmon, :dark_sea_green, :dark_slate_blue, :dark_slate_gray, :dark_slate_grey, :dark_turquoise, :dark_violet, :deep_pink, :deep_sky_blue, :dim_gray, :dim_grey, :dodger_blue, :fire_brick, :floral_white, :forest_green, :fuchsia, :gainsboro, :ghost_white, :gold, :golden_rod, :gray, :green, :green_yellow, :grey, :honey_dew, :hot_pink, :indian_red, :indigo, :ivory, :khaki, :lavender, :lavender_blush, :lawn_green, :lemon_chiffon, :light_blue, :light_coral, :light_cyan, :light_golden_rod, :light_golden_rod_yellow, :light_gray, :light_green, :light_grey, :light_pink, :light_salmon, :light_sea_green, :light_sky_blue, :light_slate_gray, :light_slate_grey, :light_steel_blue, :light_yellow, :lime, :lime_green, :linen, :magenta, :maroon, :medium_aqua_marine, :medium_blue, :medium_orchid, :medium_purple, :medium_sea_green, :medium_slate_blue, :medium_spring_green, :medium_turquoise, :medium_violet_red, :midnight_blue, :mint_cream, :misty_rose, :moccasin, :navajo_white, :navy, :old_lace, :olive, :olive_drab, :orange, :orange_red, :orchid, :pale_golden_rod, :pale_green, :pale_turquoise, :pale_violet_red, :papaya_whip, :peach_puff, :peru, :pink, :plum, :powder_blue, :purple, :rebecca_purple, :red, :rosy_brown, :royal_blue, :saddle_brown, :salmon, :sandy_brown, :sea_green, :sea_shell, :sienna, :silver, :sky_blue, :slate_blue, :slate_gray, :slate_grey, :snow, :spring_green, :steel_blue, :tan, :teal, :thistle, :tomato, :turquoise, :violet, :wheat, :white, :white_smoke, :yellow, :yellow_green]
+
   @doc """
   Given a type of text (outline or filled), a string representing the piece, and a font atom,
   return the correct character for the font
@@ -517,6 +520,8 @@ defmodule Genomeur.Component.ChessPosition do
         translate: {width - 60, 20}
       )
       |> render_game(game)
+      |> Nav.add_to_graph(__MODULE__)
+      |> Notes.add_to_graph(@note)
 
       scene =
         scene

@@ -41,7 +41,7 @@ defmodule Parser do
 
 
   def compare_intake([first | [second | [{"PROMOTE", promote_type}]]], placements, turn_color) do
-    moving_placement = Board.get_at(placements, first)
+    moving_placement = Chessboard.get_at(placements, first)
 
     case moving_placement do
       :mt -> {:error, "empty at start location of move"}
@@ -51,7 +51,7 @@ defmodule Parser do
   end
 
   def compare_intake([first | [second | [{"CASTLE"}]]], placements, turn_color) do
-    moving_placement = Board.get_at(placements, first)
+    moving_placement = Chessboard.get_at(placements, first)
 
     case moving_placement do
       :mt -> {:error, "empty at start location of move"}
@@ -61,7 +61,7 @@ defmodule Parser do
   end
 
   def compare_intake([first | [second | []]], placements, turn_color) do
-    moving_placement = Board.get_at(placements, first)
+    moving_placement = Chessboard.get_at(placements, first)
 
     case moving_placement do
       :mt -> {:error, "empty at start location of move"}
@@ -76,7 +76,7 @@ defmodule Parser do
         {:error, e}
 
       start ->
-        moving_placement = Board.get_at(placements, start)
+        moving_placement = Chessboard.get_at(placements, start)
 
         case moving_placement do
           :mt ->

@@ -17,12 +17,12 @@ config :genomeur, :viewport,
   name: :main_viewport,
   size: {950, 1600},
   theme: :dark,
-  default_scene: Genomeur.Component.ChessPosition,
+  default_scene: Genomeur.Scene.Welcome,
   drivers: [
     [
       module: Scenic.Driver.Local,
       name: :local,
-      window: [resizeable: false, title: "scene"],
+      window: [resizeable: false, title: "GChess"],
       on_close: :stop_system
     ]
   ]

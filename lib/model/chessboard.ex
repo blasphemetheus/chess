@@ -10,7 +10,7 @@ defmodule Chessboard do
 
   ## IMPORTS ##
   require BoardError
-  require Board.Utils
+  import Board.Utils
   import Location
   import Moves
   #import MoveError
@@ -31,7 +31,7 @@ defmodule Chessboard do
 
   ## GUARDS ## (preconditions for fns)
   # checks if a column and row are in the valid lengths for the board
-  defguard good_col_n_row(columns, rows) when @maxSide >= columns and columns >= @minSide and @maxSide >= rows and rows >= @minSide
+  defguard good_col_and_row(columns, rows) when @maxSide >= columns and columns >= @minSide and @maxSide >= rows and rows >= @minSide
   # checks if a piecetype is real
   defguard valid_piecetype(pieceType) when pieceType in @piecetypes
   # checks if color is real
@@ -186,7 +186,7 @@ defmodule Chessboard do
       _num -> length(List.first(board))
     end
 
-    check = fn (col, row) when good_col_n_row(col, row) -> {col, row} end
+    check = fn (col, row) when good_col_and_row(col, row) -> {col, row} end
 
     check.(cols, rows)
   end
@@ -1628,32 +1628,6 @@ defmodule Chessboard do
     # |> Enum.filter(fn () ->  end)
     # convert each possible remaining move to a convenient move format (?) (ie {start, end} or {start, end, pieceType}) ?
     #|> Enum.map(fn () ->  end)
-
-    def column_to_int(column) do
-      case column do
-        :a -> 1
-        :b -> 2
-        :c -> 3
-        :d -> 4
-        :e -> 5
-        :f -> 6
-        :g -> 7
-        :h -> 8
-      end
-    end
-
-    def int_to_column(num) do
-      case num do
-        1 -> :a
-        2 -> :b
-        3 -> :c
-        4 -> :d
-        5 -> :e
-        6 -> :f
-        7 -> :g
-        8 -> :h
-      end
-    end
 
     @doc """
     returns whether there are any pieces standing between these two locations

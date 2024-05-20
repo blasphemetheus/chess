@@ -9,11 +9,11 @@ defmodule Genomeur.PubSub.ChessComputers do
   alias Scenic.PubSub
 
   @name :chess_computers
-  @version "0.1.0"
+  @version "0.1.1"
   @description "Watch Computers Play Chess Badly"
   @tag "larry"
   @opp_tag "king"
-  @timer_ms 200
+  @timer_ms 800
   #GameRunner.createGame(:computer, :computer, @tag, @opp_tag)
   @initial_game %GameRunner{
     board: Chessboard.createBoard(),

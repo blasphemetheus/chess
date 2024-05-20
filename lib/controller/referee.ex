@@ -8,7 +8,7 @@ defmodule Referee do
   the move is valid or not
   """
   def validateMove(board, s_loc, e_loc, player_color, piece_type, promote \\ :nopromote) do
-    {res, _thing} = Board.move(board, s_loc, e_loc, player_color, piece_type, promote)
+    {res, _thing} = Chessboard.move(board, s_loc, e_loc, player_color, piece_type, promote)
 
     case res do
       :ok -> true

@@ -1,4 +1,4 @@
-defmodule Gchess.Scenes.Demo do
+defmodule Genomeur.Scene.Demo do
   @moduledoc """
   This is where the Demo scene is put togother, will have cpus playing all the
   supported events, first chess.
@@ -60,7 +60,7 @@ defmodule Gchess.Scenes.Demo do
   @impl GenServer
   def handle_info({@pubsub_data, {:chess_computers, board, _something}}, %{assigns: %{graph: graph}} = scene) do
     # take given board and convert into scenic viewable board
-    visual = board |> Board.printPlacements()
+    visual = board |> Chessboard.printPlacements()
 
     # center chesscomputers on viewport
     graph = Graph.modify(graph, :chess_computers, &text(&1, visual))

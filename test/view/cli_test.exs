@@ -34,7 +34,7 @@ defmodule ViewCLITest do
     bob = %Player{type: :human, color: :orange, tag: "Bob"}
     georgina = %Player{type: :cpu, color: :blue, tag: "Georgina"}
     assert capture_io(fn ->
-      View.CLI.displays(:game_intro, bob, georgina, Board.createBoard())
+      View.CLI.displays(:game_intro, bob, georgina, Chessboard.createBoard())
     end) == "LET THE GAME BEGIN!!!\nFACING OFF TODAY:\nWE HAVE THE VENERABLE Bob OF TYPE human\nBATTLING AGAINST Georgina OF TYPE cpu.\n\nWHO SHALL BE THE VICTOR?\nTHE STARTING POSITION IS %Board{placements: [[blue: :rook, blue: :knight, blue: :bishop, blue: :queen, blue: :king, blue: :bishop, blue: :knight, blue: :rook], [blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn], [orange: :rook, orange: :knight, orange: :bishop, orange: :queen, orange: :king, orange: :bishop, orange: :knight, orange: :rook]], order: [:orange, :blue], impale_square: :noimpale, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 1}:\n"
   end
 
@@ -57,7 +57,7 @@ defmodule ViewCLITest do
 
   test "displayGameBoard" do
     assert capture_io(fn ->
-      View.CLI.displayGameBoard(Board.startingPosition() |> Board.printPlacements())
+      View.CLI.displayGameBoard(Chessboard.startingPosition() |> Chessboard.printPlacements())
     end) == "♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖\n♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙\n◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻\n◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼\n◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻\n◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼\n♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎\n♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜\n\n"
     #"♜♞♝♛♚♝♞♜\n♟︎♟︎♟︎♟︎♟︎♟︎♟︎♟︎\n◻◼◻◼◻◼◻◼\n◼◻◼◻◼◻◼◻\n◻◼◻◼◻◼◻◼\n◼◻◼◻◼◻◼◻\n♙♙♙♙♙♙♙♙\n♖♘♗♕♔♗♘♖\n"
   end
@@ -118,7 +118,7 @@ defmodule ViewCLITest do
 
   describe "displayPlacements(board)" do
     test "starting position" do
-      placements = Board.startingPosition()
+      placements = Chessboard.startingPosition()
       #assert View.displayBoard(brd) == String.reverse("♜♞♝♛♚♝♞♜\n♟︎♟︎♟︎♟︎♟︎♟︎♟︎♟︎\n◼◼◼◼◼◼◼◼\n◼◼◼◼◼◼◼◼\n◼◼◼◼◼◼◼◼\n◼◼◼◼◼◼◼◼\n♙♙♙♙♙♙♙♙\n♖♘♗♕♔♗♘♖\n")
       assert View.CLI.displayPlacements(placements, :orange) == "♜♞♝♚♛♝♞♜♟︎♟︎♟︎♟︎♟︎♟︎♟︎♟︎◼◻◼◻◼◻◼◻◻◼◻◼◻◼◻◼◼◻◼◻◼◻◼◻◻◼◻◼◻◼◻◼♙♙♙♙♙♙♙♙♖♘♗♔♕♗♘♖"
       #"♖♘♗♔♕♗♘♖\n♙♙♙♙♙♙♙♙\n◼◼◼◼◼◼◼◼\n◼◼◼◼◼◼◼◼\n◼◼◼◼◼◼◼◼\n◼◼◼◼◼◼◼◼\n♟︎♟︎♟︎♟︎♟︎♟︎♟︎♟︎\n♜♞♝♚♛♝♞♜\n"
@@ -129,7 +129,7 @@ defmodule ViewCLITest do
 
   describe " CLI display" do
     test "displayBoard" do
-      brd = Board.createBoard() |> Map.put_new(:turn, :blue)
+      brd = Chessboard.createBoard() |> Map.put_new(:turn, :blue)
       _placements = brd.placements
       assert capture_io("vs",
       fn -> View.CLI.displayBoard(brd, :blue)

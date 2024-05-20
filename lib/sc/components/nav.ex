@@ -48,10 +48,10 @@ defmodule Genomeur.Component.Nav do
       |> text("Event:", translate: {10, 40}, alight: :right, fill: text)
       |> dropdown(
         {[
-          # {"Welcome", Genomeur.Scene.Welcome},
-          # {"Chess", Genomeur.Scene.Chess},
-          # {"Ur", Genomeur.Scene.Ur},
-          # {"Demo", Genomeur.Scene.Demo},
+          {"Welcome", Genomeur.Scene.Welcome},
+          {"Chess", Genomeur.Scene.Chess},
+          {"Ur", Genomeur.Scene.Ur},
+          {"Demo", Genomeur.Scene.Demo},
           {"ChessPositionComponent", Genomeur.Component.ChessPosition}
           ## todo below
           # {"PositionTest", Genomeur.Position},
@@ -59,7 +59,6 @@ defmodule Genomeur.Component.Nav do
           # {"Tournament", Genomeur.Tournament},
           # {"Match", Genomeur.Matchup},
           # {"Game", Genomeur.Scene.Game},
-          # {"Board", Genomeur.Scene.Board},
           # {"Records", Genomeur.Scene.Records}
 
           # {"EventPicker", Genomeur.Scene.EventPicker},

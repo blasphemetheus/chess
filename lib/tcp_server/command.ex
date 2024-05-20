@@ -59,7 +59,7 @@ defmodule TCPServer.Command do
   def run(command)
 
   def run({:make, "chess"}) do
-    _board = Board.make2DList(8, 8)
+    _board = Chessboard.make2DList(8, 8)
     KV.Registry.create(KV.Registry, "chess")
     {:ok, "OK\r\n"}
   end
