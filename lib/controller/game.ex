@@ -3,9 +3,14 @@ defmodule GameRunner do
   All about the GameRunner
   """
   #import GameError
-  import Board
+  import Chessboard
+  import UrBoard
   #import Player
   import View.CLI
+
+  @board_games [:chess, :ur]
+  @modulize_board_games %{chess: Chessboard, ur: UrBoard}
+  @default_game :chess
 
   #@resolutions [:win, :loss, :drawn, :bye]
   #@end_reasons [:checkmate, :stalemate, :resignation, :timeout, :draw, :disconnection, :other]
@@ -15,7 +20,8 @@ defmodule GameRunner do
   a Board is a struct which holds turn (atom), first (player struct), second (likewise, opposite color though),
   status (built is default), history (a list), resolution (atom), reason (atom)
   """
-  defstruct board: %Board{},
+  defstruct board: %Chessboard{},
+            bgame: :unset,
             turn: :orange,
             first: %Player{color: :orange},
             second: %Player{color: :blue},
@@ -23,6 +29,9 @@ defmodule GameRunner do
             history: [],
             resolution: nil,
             reason: nil
+
+  defguard a_bgame(bg) when bg in @board_games
+
 
   @doc """
   given a string, returns the correct atom based on whether local or remote is in the string, or raises an error
@@ -35,25 +44,41 @@ defmodule GameRunner do
     end
   end
 
+  def modulizeGame(bgame) when a_bgame(bgame), do: @modulize_board_games[bgame]
+
   @doc """
   Given a tag and an opponent tag, tells view to display as a local game and starts Board from starting position,
   showing the game status in between
   """
-  def playLocal(tag \\ "BRAG", opponent \\ "GRED") do
-    View.CLI.displays(:local, tag, opponent)
+  def playLocal(bgame, tag \\ "BRAG", opponent \\ "GRED") when is_atom(bgame) do
+    game_module = modulizeGame(bgame)
 
-    Board.startingPosition()
+    game_module.startingPosition()
     |> showGameStatus({tag, opponent}, {[], []}, 0, 0)
-    |> playTurn(tag, "first")
+    |> playTurn(bgame, tag, "first")
     |> showGameStatus({tag, opponent}, {[], []}, 0, 0)
-    |> playTurn(opponent, "second")
+    |> playTurn(bgame, opponent, "second")
     |> showGameStatus({tag, opponent}, {[], []}, 0, 1)
   end
+
+  # @doc """
+  # The passing the module version
+  # """
+  # def playLocal(tag \\ "cool", opponent \\ "guy") do
+  #   View.CLI.displays(:local, tag, opponent)
+
+  #   Chessboard.startingPosition()
+  #   |> showGameStatus({tag, opponent}, {[], []}, 0, 0)
+  #   |> playTurn(tag, "first")
+  #   |> showGameStatus({tag, opponent}, {[], []}, 0, 0)
+  #   |> playTurn(opponent, "second")
+  #   |> showGameStatus({tag, opponent}, {[], []}, 0, 1)
+  # end
 
   @doc """
   asks the local user indicated for a move, the io.get prompts etc
   """
-  def playTurn(board, localUserTag, color) do
+  def playTurn(:chess, board, localUserTag, color) do
     IO.puts(
       "It is now the turn of #{localUserTag}, please enter your move in the following format (<location> <location> <piececolor> <piecetype>):\n"
     )
@@ -65,6 +90,40 @@ defmodule GameRunner do
     case playerColor do
       ^color -> board |> move(s_loc, e_loc, playerColor, pieceType)
       _any -> raise ArgumentError, message: "tried to move another's piece"
+    end
+  end
+
+  def playTurn(:ur, ur_board, localUserTag, color) do
+    IO.puts("It is the turn of #{localUserTag}, Roll them bones! (press enter to roll them dice)")
+    IO.gets("") # so you have to roll the dice
+
+    roll = roll_pyramids(4) # rolls four pyramids, returns sum of roll value
+    IO.puts("You rolled them dice! you rolled a #{roll}!")
+    input = IO.gets("Please enter the move coordinates in the following format, <starting location> <ending location> <piececolor> <piecetype>")
+    i = String.trim(input)
+    {:ok, {s_loc, e_loc, playerColor, pieceType}} = parseMove(i)
+  end
+
+  ###### UR Game Rules ####### move to Ur model or ur_game.ex or smth
+  # this function should be in random utils or whatever
+  @doc """
+  Roll
+  """
+  def roll_pyramids(amount) do
+    # a corner can be :blank or :marked
+    1..amount
+    |> Enum.map(&roll_tetrahedron/0)
+    |> Enum.sum()
+  end
+
+  @doc """
+  Roll one tetrahedron with default reandomness approximately, returning a 0 for unmarked and 1 for marked
+  """
+  def roll_tetrahedron() do
+    upside = Enum.random([:blank, :blank, :marked, :marked])
+    case upside do
+      :blank -> 0
+      :marked -> 1
     end
   end
 
@@ -82,7 +141,7 @@ defmodule GameRunner do
   """
   def createGame(first_playertype, second_playertype, tag, opp_tag) do
     %GameRunner{
-      board: Board.createBoard(),
+      board: Chessboard.createBoard(),
       turn: :orange,
       first: %Player{type: first_playertype, color: :orange, tag: tag, lvl: 1},
       second: %Player{type: second_playertype, color: :blue, tag: opp_tag, lvl: 1},
@@ -121,14 +180,15 @@ defmodule GameRunner do
 
   Returns an outcome (a struct I suppose giving the info in the game)
   """
-  def runGame([player1, player2], playType) when playType |> is_atom(),
-    do: runGame([player1, player2], [playType, playType])
+  def runGame([player1, player2], playType, bgame) when playType |> is_atom(),
+    do: runGame([player1, player2], [playType, playType], bgame)
 
-  def runGame([player1, player2] = _both_players, [first_pt, second_pt] = _playTypeList) do
+  def runGame([player1, player2] = _both_players, [first_pt, second_pt] = _playTypeList, bgame) do
     # "lvl: randomLevel()" should be subbed in for "lvl: 1" if that is the desired behavior
     # That is, the level of of the player of the first and second should be defined here, then given to the GameRunner
     %GameRunner{
-      board: Board.createBoard(),
+      board: modulizeGame(bgame).createBoard(),
+      bgame: bgame,
       turn: :orange,
       first: %Player{type: first_pt, color: :orange, tag: player1, lvl: 1},
       second: %Player{type: second_pt, color: :blue, tag: player2, lvl: 1},
@@ -186,13 +246,13 @@ defmodule GameRunner do
       cond do
         game.resolution == :drawn ->
           cond do
-            Board.isStalemate(game.board, game.turn) ->
+            Chessboard.isStalemate(game.board, game.turn) ->
               :stalemate
 
-            Board.isInsufficientMaterial(game.board) ->
+            Chessboard.isInsufficientMaterial(game.board) ->
               :insufficient_material
 
-            Board.isFiftyMoveRepitition(game.board, game.turn) ->
+            Chessboard.isFiftyMoveRepitition(game.board, game.turn) ->
               :fifty_move_repitition
 
             true ->
@@ -200,7 +260,7 @@ defmodule GameRunner do
           end
 
         game.resolution == :loss or game.resolution == :win ->
-          if Board.isCheckmate(game.board, game.turn) do
+          if Chessboard.isCheckmate(game.board, game.turn) do
             :checkmate
           else
             :resignation
@@ -233,21 +293,21 @@ defmodule GameRunner do
   Given a GameRunner and color, return whether the board in the game is drawn (calls Board function)
   """
   def isDrawn(game, color) do
-    Board.isDraw(game.board, color)
+    Chessboard.isDraw(game.board, color)
   end
 
   @doc """
   Given a GameRunner and color, return whether the board in the game is won by that color
   """
   def isWon(game, color) do
-    Board.isCheckmate(game.board, Board.otherColor(color))
+    Chessboard.isCheckmate(game.board, Chessboard.otherColor(color))
   end
 
   @doc """
   Given a GameRunner and color, return whether the board in the game is lost by that color
   """
   def isLost(game, color) do
-    Board.isCheckmate(game.board, color)
+    Chessboard.isCheckmate(game.board, color)
   end
 
   @doc """
@@ -272,8 +332,8 @@ defmodule GameRunner do
   """
   def takeTurns(game) do
     case game.first.type do
-      :computer -> View.CLI.showGameBoardAs(game.board, game.first.color)
-      _other -> View.CLI.showGameBoardAs(game.board, game.turn)
+      :computer -> View.CLI.showGameBoardAs(game.bgame, game.board, game.first.color)
+      _other -> View.CLI.showGameBoardAs(game.bgame, game.board, game.turn)
     end
 
     if GameRunner.isOver(game) do
@@ -292,7 +352,7 @@ defmodule GameRunner do
   given a GameRunner (including board, turn and history), return when the board state ends the game or there is thrice repitition
   """
   def isOver(game) do
-    Board.isOver(game.board, game.turn) or
+    Chessboard.isOver(game.board, game.turn) or
     isThreeFoldRepitition(game.board, game.turn, game.history)
   end
 
@@ -396,7 +456,7 @@ defmodule GameRunner do
   """
   def playHumanTurn(game, player) do
     turn = game.turn
-    # View.CLI.displays(:game_board, game.board |> Board.printBoard(), turn)
+    # View.CLI.displays(:game_board, game.board |> Chessboard.printBoard(), turn)
     View.CLI.displays(:turn_intro, turn, player)
     # play a turn
     {start_loc, end_loc, type_at_loc, promote_to} =  askAndCorrectlyParse(game.board, game.turn)
@@ -405,8 +465,8 @@ defmodule GameRunner do
     valid = Referee.validateMove(game.board, start_loc, end_loc, turn, type_at_loc, promote_to)
     # if valid, make the move
     if valid do
-      # new_board = Board.makeMove(game.board, move1)
-      {:ok, new_board} = Board.move(game.board, start_loc, end_loc, turn, type_at_loc, promote_to)
+      # new_board = Chessboard.makeMove(game.board, move1)
+      {:ok, new_board} = Chessboard.move(game.board, start_loc, end_loc, turn, type_at_loc, promote_to)
       %{game | board: new_board, turn: nextTurn(game.turn)}
     else
       {start_loc2, end_loc2, type_at_loc2, promote_to} = askAndCorrectlyParse(game.board, game.turn)
@@ -415,8 +475,8 @@ defmodule GameRunner do
 
       # if invalid again, the player resigns
       if valid_two do
-        # new_board = Board.makeMove(game.board, move2)
-        {:ok, new_board} = Board.move(game.board, start_loc2, end_loc2, turn, type_at_loc2, promote_to)
+        # new_board = Chessboard.makeMove(game.board, move2)
+        {:ok, new_board} = Chessboard.move(game.board, start_loc2, end_loc2, turn, type_at_loc2, promote_to)
         %{game | board: new_board, turn: nextTurn(game.turn)}
       else
         raise GameError, message: "Player resigned via bad input"
@@ -457,9 +517,9 @@ defmodule GameRunner do
   """
   def apply_move_to_game(game, start_loc, end_loc, promote_to) do
     turn = game.turn
-    {^turn, piece_type} = Board.get_at(game.board.placements, start_loc)
+    {^turn, piece_type} = Chessboard.get_at(game.board.placements, start_loc)
 
-    {:ok, new_board} = Board.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_to)
+    {:ok, new_board} = Chessboard.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_to)
     %{game | board: new_board, turn: nextTurn(turn)}
   end
 
@@ -516,7 +576,7 @@ defmodule GameRunner do
     # this is the implementation that is based on current turn onlys
 
   #   current_turn_eval = count_material(game.board.placements, game.turn)
-  #   opponent_eval = count_material(game.board.placements, Board.otherColor(game.turn))
+  #   opponent_eval = count_material(game.board.placements, Chessboard.otherColor(game.turn))
 
   #   current_turn_eval - opponent_eval
   # end
@@ -565,7 +625,7 @@ defmodule GameRunner do
   the best possible move (the one with the highest move_score)
   """
   def recursive_best_move(to_play, depth, limit, game) do
-    possible_moves = Board.possible_moves_of_color(game.board, to_play)
+    possible_moves = Chessboard.possible_moves_of_color(game.board, to_play)
     _alpha_beta = even(depth) # so on even depths, alpha_beta is true, odd false
 
     IO.inspect(possible_moves, label: :first_poss_moves)
@@ -611,7 +671,7 @@ defmodule GameRunner do
   def set_move_score(move, to_play, depth, limit, board) do
     if depth >= limit do
       # end o it
-      {move, Board.try_move!(board, move) |> score_board(to_play)}
+      {move, Chessboard.try_move!(board, move) |> score_board(to_play)}
 
       # %{move | :score => !move(board, move) |> score_board(to_play)}
     else
@@ -625,8 +685,8 @@ defmodule GameRunner do
   calls recursive_best_move with a higher depth and adjusts scores
   """
   def decide_this_ply(board, move, to_play, depth, limit) do
-    next_board = Board.makeMove(board, move)
-    opponent = Board.otherColor(to_play)
+    next_board = Chessboard.makeMove(board, move)
+    opponent = Chessboard.otherColor(to_play)
     # recursion here
     next_ply_best_move = recursive_best_move(opponent, depth + 1, limit, next_board)
 
@@ -653,7 +713,7 @@ defmodule GameRunner do
   """
   def count_material(placements, turn_color) do
     # list: {location, {color, type}}
-    Board.fetch_locations(placements, turn_color)
+    Chessboard.fetch_locations(placements, turn_color)
     |> Enum.map(fn
       {location, {^turn_color, type}} -> @piece_values[type]
     end)
@@ -675,10 +735,10 @@ defmodule GameRunner do
       recursive_best_move(game.first, depth, 1, game)
       # evaluate_best_move(list, game)
     else
-      possible_moves = Board.possible_moves_of_color(game.board, game.turn)
+      possible_moves = Chessboard.possible_moves_of_color(game.board, game.turn)
       # {loc, placement = {color, type}}
 
-      with {:no_moves, true} <- {:no_moves, possible_moves == []}, true <- Board.isCheck() do
+      with {:no_moves, true} <- {:no_moves, possible_moves == []}, true <- Chessboard.isCheck() do
         @negative_big_number # checkmate bad
       else
         {:is_check, false} ->
@@ -706,8 +766,8 @@ defmodule GameRunner do
       # IS IT?       move = loc, color, type
       {start_loc, end_loc, player_color, piece_type} = move
       # pull newboard out of move
-      piece_type = Board.get_at(game.board.placements, start_loc)
-      {:ok, new_board} = Board.move(game.board, start_loc, end_loc, player_color, piece_type)
+      piece_type = Chessboard.get_at(game.board.placements, start_loc)
+      {:ok, new_board} = Chessboard.move(game.board, start_loc, end_loc, player_color, piece_type)
       # evaluation is recursive search with 1 less depth and negative beta and alpha times negative 1 ???? todo
 
       evaluation = search(game, depth - 1, -beta, -alpha) * -1

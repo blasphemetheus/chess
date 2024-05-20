@@ -1,4 +1,4 @@
-defmodule Board do
+defmodule Chessboard do
   @moduledoc """
   This is an implementation of a chess board.
   There's two types of functions right now, those that use the Board struct and those
@@ -10,6 +10,7 @@ defmodule Board do
 
   ## IMPORTS ##
   require BoardError
+  require Board.Utils
   import Location
   import Moves
   #import MoveError
@@ -37,7 +38,7 @@ defmodule Board do
   defguard valid_color(color) when color in [@firstColor, @secondColor]
 
   @doc """
-  Define %Board{} struct.
+  Define %Chessboard{} struct.
 
   It has placements (the implementation of locations), a representation of the
   order of the two colors (order), some way of checking whether the game is over (stalemate, checkmate),
@@ -49,7 +50,7 @@ defmodule Board do
   This struct will probably be added to with the FEN stuff as I create it
   """
   defstruct placements: [], order: [@firstColor, @secondColor], impale_square: :noimpale, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 1
-  ## %Board{placements: rec2DList(columns, rows)}
+  ## %Chessboard{placements: rec2DList(columns, rows)}
 
   ### FUNCTIONS ###
 
@@ -63,19 +64,6 @@ defmodule Board do
   def move_requires_promotion?(:blue, :pawn, {_col, 1} = _end_loc), do: true
   def move_requires_promotion?(:orange, :pawn, {_col, 8} = _end_loc), do: true
   def move_requires_promotion?(_any_piece_color, _any_other_piece_type, _any_end_loc), do: false
-
-  @doc """
-  make the board with no pieces on it, just the layout of the board with tiles
-  """
-  def make2DList(columns, rows) when good_col_n_row(columns, rows), do: rec2DList(columns, rows)
-  def make2DList(columns, rows), do: raise BoardError, message: "bad # of rows or columns, Expected 3 to 8 got Row:#{rows}, Col:#{columns}"
-
-  @doc """
-  Recursively makes the list of lists that represents the board placements
-  maybe make private
-  """
-  def rec2DList(cols, rows) when cols == 0 or rows == 0, do: []
-  def rec2DList(cols, rows), do: :mt |> List.duplicate(cols) |> List.duplicate(rows)
 
   @doc """
   insert a piece into the placements list of lists given a location ie {:a, 1}
@@ -134,17 +122,17 @@ defmodule Board do
 
   # dumb location is tuple {int, int}
   def replace_at(board, {row, col}, :mt) when is_integer(row) and is_integer(col) do
-    rank = board |> reverseRanks |> Enum.at(row)
+    rank = board |> Board.Utils.reverseRanks |> Enum.at(row)
     new_rank = List.replace_at(rank, col, :mt)
 
-    reverseRanks(List.replace_at(reverseRanks(board), row, new_rank))
+    Board.Utils.reverseRanks(List.replace_at(Board.Utils.reverseRanks(board), row, new_rank))
   end
 
   def replace_at(board, {row, col}, {pieceColor, pieceType}) when is_integer(row) and is_integer(col) do
-    rank = board |> reverseRanks |> Enum.at(row) # [[:mt,:mt,:mt],[:mt,:mt,:mt],[:mt,:mt,:mt]]
+    rank = board |> Board.Utils.reverseRanks |> Enum.at(row) # [[:mt,:mt,:mt],[:mt,:mt,:mt],[:mt,:mt,:mt]]
     new_rank = List.replace_at(rank, col, {pieceColor, pieceType})
 
-    reverseRanks(List.replace_at(reverseRanks(board), row, new_rank))
+    Board.Utils.reverseRanks(List.replace_at(Board.Utils.reverseRanks(board), row, new_rank))
   end
 
   def fLocationIsEmpty(board, {_formal_col, _formal_row} = formal_location) do
@@ -160,6 +148,12 @@ defmodule Board do
   end
 
   @doc """
+  Given a string, make a Chessboard struct and give it a placements parsed from the string
+  """
+  def instil(str), do: %Chessboard{placements: str |> Parser.parseBoardFromString()}
+
+
+  @doc """
   We need to be able to grab what's at a location based on the list
   structure that it is stored on (the {row, col} interpretation) {ie {3, 0}
   AND we need to be able to grab what's at a given formal location
@@ -173,7 +167,7 @@ defmodule Board do
 
     #rank = board |> Enum.at(row)
     #Enum.at(rank, col)
-    rank = reverseRanks(placements) |> Enum.at(row)
+    rank = Board.Utils.reverseRanks(placements) |> Enum.at(row)
     Enum.at(rank, col)
   end
 
@@ -678,7 +672,7 @@ defmodule Board do
   end
 
   def newBoardPutsYouInCheck(new_board, playerColor) do
-    Board.kingThreatened(new_board, playerColor)
+    Chessboard.kingThreatened(new_board, playerColor)
   end
 
   @doc """
@@ -1161,7 +1155,7 @@ defmodule Board do
   (so 3x8 is valid), pawns are in their colors rankupzone, either king is in stalemate or checkmate
   """
   def createBoardInitial(list_of_placements) do
-    make2DList(8, 8)
+    Board.Utils.make2DList(8, 8)
     |> recCreateBoardInitial(list_of_placements)
   end
 
@@ -1169,7 +1163,7 @@ defmodule Board do
   Creates a board, ready to play chess on
   """
   def createBoard() do
-    # %Board{
+    # %Chessboard{
     #   placements: startingPosition(),
     #   order: [@firstColor, @secondColor],
     #   impale_square: :noimpale,
@@ -1179,7 +1173,7 @@ defmodule Board do
     #   fullmove_number: 1,
     # }
     # aka
-    %Board{
+    %Chessboard{
       placements: startingPosition()
     }
   end
@@ -1213,12 +1207,16 @@ defmodule Board do
   # the board cannot enforce rules. Baking some basic constraints into the boards'
   # presence is ok to do. Above methods give examples as to what those are
 
+  @doc """
+  Given placements and a line separator, print the placements to commandline
+  as a chess board
+  """
   def printPlacements(placements, line_sep \\ "\n") do
     placements
-    |> Board.reverseRanks()
+    |> Board.Utils.reverseRanks()
     #|> Enum.intersperse(:switch_tiles)
     |> Enum.map(fn
-      x -> printRank(x, "\t ") <> line_sep
+      x -> Chessboard.Util.printRank(x, "\t ") <> line_sep
       end) |> to_string() |> inspect()
     #Enum.intersperse()
     Tile.renderTile(:blue)
@@ -1234,7 +1232,7 @@ defmodule Board do
           end)
         end)
     ## |> Enum.map(fn x -> Enum.chunk_every(x, 2) |> List.to_tuple() end)
-    |> Board.map_to_each(&translate/1)
+    |> Board.Utils.map_to_each(&Board.Utils.translate/1)
     |> Enum.reduce("", fn x, accum -> accum <> Enum.reduce(x, "", fn item, acc -> acc <> item end) end)
   end
 
@@ -1251,31 +1249,11 @@ defmodule Board do
   def listPlacements(placements) do
     #Board.Utils.nested_convert_to_formal(placements) |>
     placements
-    |> Board.reverseRanks()
+    |> Board.Utils.reverseRanks()
     |> Enum.map(fn
       x -> Enum.map(x, fn
-        y -> translate(y) end) end)
+        y -> Board.Utils.translate(y) end) end)
   end
-
-  def printRank(rank, sep \\ "\t ")
-
-  def printRank(rank, sep) do
-    Enum.map(rank, fn
-      x -> translate(x) <> sep end)
-    |> to_string()
-  end
-
-  def translate(pieceColor, pieceType)do
-    Tile.renderTile(pieceColor, pieceType)
-  end
-
-  def translate(:mt), do: Tile.renderTile(:blue)
-  def translate({pieceColor, pieceType}) do
-    Tile.renderTile(pieceColor, pieceType)
-  end
-  def translate(:blue), do: Tile.renderTile(:blue)
-  def translate(:orange), do: Tile.renderTile(:orange)
-
 
   @doc """
   Returns true when the game is over by board-conditions
@@ -1346,15 +1324,6 @@ defmodule Board do
     my_real_king_moves |> length() == 0
 
     # so there's generated possible moves, wh
-  end
-
-
-  @doc """
-  Maps a function to each location on the placements of the board,
-  This returns a new placements list.
-  """
-  def map_to_each(board, fun) do
-    Enum.map(board, fn rank -> Enum.map(rank, fn tile -> fun.(tile) end) end)
   end
 
   @doc """
@@ -1472,7 +1441,7 @@ defmodule Board do
   # returns a list of all moves that a specific placement can make (a piece and color at a certain location)
   # """
   # def possible_moves(board, color) when color |> is_atom() and placements |> is_list() do
-  #   Board.fetch_locations(placements, color)
+  #   Chessboard.fetch_locations(placements, color)
   #   |> Enum.map(fn {loc, {^color, type} = placement} = x ->
   #     Moves.unappraised_moves(color, type, loc)
   #     |> Enum.map(fn
@@ -1542,7 +1511,7 @@ defmodule Board do
   Given a board and a player_color, return all possible moves of that color
   """
   def possible_moves_of_color(board, color) when color |> is_atom() and board |> is_struct() do
-    Board.fetch_locations(board.placements, color)
+    Chessboard.fetch_locations(board.placements, color)
     |> Enum.map(fn {loc, {^color, type} = _placement} ->
       appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(board, loc, color, type)
     end)
@@ -2003,7 +1972,7 @@ defmodule Board do
   def threatens(board, color) when board |> is_struct() and color |> is_atom() do
     placements = board.placements
 
-    list_of_location_placement_tuples = Board.fetch_locations(placements)
+    list_of_location_placement_tuples = Chessboard.fetch_locations(placements)
     |> filter_location_placement_tuples_for_color(color)
     |> grab_possible_moves(board)
     |> infer_move_type_from_board(board)
@@ -2031,7 +2000,7 @@ defmodule Board do
         :mt -> :mt
       end
     end
-    |> Enum.zip(Board.all_locations_list(:formal))
+    |> Enum.zip(Chessboard.all_locations_list(:formal))
     |> Enum.reject(fn
       {:not_king, _loc} -> true
       {:mt, _loc} -> true
@@ -2197,7 +2166,7 @@ defmodule Board do
   then all starting pieces on the board
   """
   def startingPosition() do
-    make2DList(8, 8)
+    Board.Utils.make2DList(8, 8)
     # orange pawns
     |> placePiece({:a, 2}, :orange, :pawn)
     |> placePiece({:b, 2}, :orange, :pawn)
@@ -2242,16 +2211,6 @@ defmodule Board do
   """
   def otherColor(:blue), do: :orange
   def otherColor(:orange), do: :blue
-
-
-  # these are the help for replace_at, deprecated
-  def reversePlacements(board), do: board |> reverseColumns|> reverseRanks
-
-  def reverseRanks(board), do: Enum.reverse(board)
-
-  def reverseColumns(board), do: Enum.map(board, fn x -> Enum.reverse(x) end)
-
-
 
   #########################################
 # TILE FUNCTIONS

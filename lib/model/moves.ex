@@ -58,8 +58,8 @@ defmodule Moves do
   Given a start loc, an end loc, and a board, infers the movetype
   """
   def infer_move_type(board, start_loc, _end_loc) do
-    #moving_piece = Board.get_at(board, start_loc)
-    case Board.get_at(board.placements, start_loc) do
+    #moving_piece = Chessboard.get_at(board, start_loc)
+    case Chessboard.get_at(board.placements, start_loc) do
       :mt -> :invalid_piece
       {_color, piece_type} ->
         #movetypes_possible = piece(piece_type)
@@ -128,8 +128,8 @@ defmodule Moves do
   end
 
   def retrieveMoveType({s_col, s_row} = _start_loc, {e_col, e_row} = _end_loc, :knight, _color) do
-    s_col_i = s_col |> Board.column_to_int()
-    e_col_i = e_col |> Board.column_to_int()
+    s_col_i = s_col |> Board.Utils.column_to_int()
+    e_col_i = e_col |> Board.Utils.column_to_int()
     cond do
       abs(s_col_i - e_col_i) == 1 and abs(s_row - e_row) == 2 -> :jump # gallop/turnabout
       abs(s_col_i - e_col_i) == 2 and abs(s_row - e_row) == 1 -> :jump # trot/rear
@@ -138,8 +138,8 @@ defmodule Moves do
   end
 
   def retrieveMoveType({s_col, s_row} = _start_loc, {e_col, e_row} = _end_loc, :bishop, _color) do
-    s_col_i = s_col |> Board.column_to_int()
-    e_col_i = e_col |> Board.column_to_int()
+    s_col_i = s_col |> Board.Utils.column_to_int()
+    e_col_i = e_col |> Board.Utils.column_to_int()
     on_diagonal = abs(e_col_i - s_col_i) == abs(e_row - s_row)
     if on_diagonal do
       :diagonal
@@ -158,8 +158,8 @@ defmodule Moves do
   end
 
   def retrieveMoveType({s_col, s_row} = _start_loc, {e_col, e_row} = _end_loc, :queen, _color) do
-    s_col_i = s_col |> Board.column_to_int()
-    _e_col_i = e_col |> Board.column_to_int()
+    s_col_i = s_col |> Board.Utils.column_to_int()
+    _e_col_i = e_col |> Board.Utils.column_to_int()
     cond do
       s_col == e_col -> :vertical
       s_row == e_row -> :horizontal

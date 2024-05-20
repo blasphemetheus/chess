@@ -2,11 +2,11 @@ defmodule MoveCollection do
   @moduledoc """
   All about a series or collection of moves (so a certain opening)
   """
-  import Board
+  import Chessboard
   import Board.Utils
 
   def kingBlockedByOwnPiecesRaw() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:d, 2}, {:d, 4}, :orange, :pawn)
     |> move!({:g, 8}, {:f, 6}, :blue, :knight)
     |> move!({:c, 2}, {:c, 4}, :orange, :pawn)
@@ -25,7 +25,7 @@ defmodule MoveCollection do
   end
 
   def kingBlockedByOwnPieces() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move({:d, 2}, {:d, 4}, :orange, :pawn)
     |> split_tuple()
     |> move({:g, 8}, {:f, 6}, :blue, :knight)
@@ -57,7 +57,7 @@ defmodule MoveCollection do
   end
 
   def foolsmate() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:f, 2}, {:f, 3}, :orange, :pawn)
     |> move!({:e, 7}, {:e, 6}, :blue, :pawn)
     |> move!({:g, 2}, {:g, 4}, :orange, :pawn)
@@ -65,7 +65,7 @@ defmodule MoveCollection do
   end
 
   def revfoolsmate() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:e, 2}, {:e, 4}, :orange, :pawn)
     |> move!({:f, 7}, {:f, 6}, :blue, :pawn)
     |> move!({:d, 2}, {:d, 4}, :orange, :pawn)
@@ -74,7 +74,7 @@ defmodule MoveCollection do
   end
 
   def dutchfoolsmate() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:f, 2}, {:f, 3}, :orange, :pawn)
     |> move!({:f, 7}, {:f, 5}, :blue, :pawn)
     |> move!({:c, 1}, {:g, 5}, :orange, :bishop)
@@ -87,7 +87,7 @@ defmodule MoveCollection do
   end
 
   def grobsfoolsmate() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:g, 2}, {:g, 4}, :orange, :pawn)
     |> move!({:e, 7}, {:e, 5}, :blue, :pawn)
     |> move!({:f, 2}, {:f, 4}, :orange, :pawn)
@@ -95,7 +95,7 @@ defmodule MoveCollection do
   end
 
   def scholarsmate() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:e, 2}, {:e, 4}, :orange, :pawn)
     |> move!({:e, 7}, {:e, 5}, :blue, :pawn)
     |> move!({:f, 1}, {:c, 4}, :orange, :bishop)
@@ -106,7 +106,7 @@ defmodule MoveCollection do
   end
 
   def birdfoolsmate() do
-    placements = Board.createBoard()
+    placements = Chessboard.createBoard()
     |> move!({:f, 2}, {:f, 4}, :orange, :pawn)
     |> move!({:e, 7}, {:e, 5}, :blue, :pawn)
     |> move!({:f, 4}, {:e, 5}, :orange, :pawn)
@@ -125,7 +125,7 @@ defmodule MoveCollection do
   end
 
   def carokannsmotheredmate() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:e, 2}, {:e, 4}, :orange, :pawn)
     |> move!({:c, 7}, {:c, 6}, :blue, :pawn)
     |> move!({:d, 2}, {:d, 4}, :orange, :pawn)
@@ -153,7 +153,7 @@ defmodule MoveCollection do
   end
 
   def myopeningcapture() do
-    placements = Board.createBoard()
+    placements = Chessboard.createBoard()
     |> move!({:d, 2}, {:d, 4}, :orange, :pawn)
     |> move!({:d, 7}, {:d, 5}, :blue, :pawn)
     |> move!({:b, 1}, {:c, 3}, :orange, :knight)
@@ -172,7 +172,7 @@ defmodule MoveCollection do
   end
 
   def italiangame() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:e, 2}, {:e, 4}, :orange, :pawn)
     |> move!({:e, 7}, {:e, 5}, :blue, :pawn)
     |> move!({:g, 1}, {:f, 3}, :orange, :knight)
@@ -181,7 +181,7 @@ defmodule MoveCollection do
   end
 
   def owensfoolsmate() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:e, 2}, {:e, 4}, :orange, :pawn)
     |> move!({:b, 7}, {:b, 6}, :blue, :pawn)
     |> move!({:d, 2}, {:d, 4}, :orange, :pawn)
@@ -200,7 +200,7 @@ defmodule MoveCollection do
   end
 
   def englundgambitmate() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:d, 2}, {:d, 4}, :orange, :pawn)
     |> move!({:d, 7}, {:d, 5}, :blue, :pawn)
     |> move!({:d, 4}, {:e, 5}, :orange, :pawn)
@@ -220,7 +220,7 @@ defmodule MoveCollection do
   end
 
   def budapestsmotheredmate() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:d, 2}, {:d, 4}, :orange, :pawn)
     |> move!({:g, 8}, {:f, 6}, :blue, :knight)
     |> move!({:c, 2}, {:c, 4}, :orange, :pawn)
@@ -240,7 +240,7 @@ defmodule MoveCollection do
   end
 
   def shorteststalemate() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move({:c, 2}, {:c, 4}, :orange, :pawn)
     |> split_tuple()
     |> move({:h, 7}, {:h, 5}, :blue, :pawn)
@@ -283,7 +283,7 @@ defmodule MoveCollection do
   end
 
   def shorteststalemateraw() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:c, 2}, {:c, 4}, :orange, :pawn)
     |> move!({:h, 7}, {:h, 5}, :blue, :pawn)
     |> move!({:h, 2}, {:h, 4}, :orange, :pawn)
@@ -306,7 +306,7 @@ defmodule MoveCollection do
   end
 
   def nocapturesstalemate() do
-    Board.createBoard()
+    Chessboard.createBoard()
     |> move!({:d, 2}, {:d, 4}, :orange, :pawn)
     |> move!({:e, 7}, {:e, 5}, :blue, :pawn)
     |> move!({:d, 1}, {:d, 2}, :orange, :queen)

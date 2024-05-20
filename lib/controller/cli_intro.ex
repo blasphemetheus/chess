@@ -6,11 +6,13 @@ defmodule CLIIntro do
   """
   @context_inputs ["TOURNAMENT", "T", "MATCH", "M", "GAME", "G"]
   @playtype_inputs ["ONLINE", "O", "VS", "V", "CPU", "C"]
+  @game_inputs ["CHESS", "C", "UR", "U"]
 
   @asks %{
     tag: "\nHello!. What is your player tag?\n",
+    which_game: "What game are you playing today?\n",
     play_type:
-      "Let's play chess.\n\rHow would you like to play it? pick one of (online, vs, cpu)\n",
+      "Let's play.\n\rHow would you like to play it? pick one of (online, vs, cpu)\n",
     opponent_tag: "What is the name of your opponent?\n",
     cpu_level: "What level opponent would you like to play vs?\n",
     context: "What context would you like to play in? (tournament, match, game)\n",
@@ -44,6 +46,7 @@ defmodule CLIIntro do
   end
 
   def tagval(tag), do: String.length(tag) > 0 and String.length(tag) < 30
+  def gameval(game), do: game in @game_inputs
   def contextval(context), do: context in @context_inputs
   def playtypeval(playType), do: playType in @playtype_inputs
   def cpulevelval(cpulevel), do: String.to_integer(cpulevel) in 1..10
@@ -53,6 +56,7 @@ defmodule CLIIntro do
   def types(atom) do
     case atom do
       :tag -> &CLIIntro.tagval/1
+      :which_game -> &CLIIntro.gameval/1
       :opponent_tag -> &CLIIntro.tagval/1
       :context -> &CLIIntro.contextval/1
       :play_type -> &CLIIntro.playtypeval/1
@@ -123,6 +127,7 @@ defmodule CLIIntro do
   def unshorten("O"), do: "ONLINE"
   def unshorten("V"), do: "VS"
   def unshorten("C"), do: "CPU"
+  def unshorten("U"), do: "UR"
   def unshorten(string), do: string
 
   @doc """
@@ -161,6 +166,9 @@ defmodule CLIIntro do
     # input: me -> output: "ME"
     tag_str = ask(:tag)
 
+    game_str = ask(:which_game)
+    game = convert(game_str)
+
     # random greeting on it's own line.
     address(tag_str, " ")
     # input: "t" -> output: "TOURNAMENT"
@@ -177,6 +185,6 @@ defmodule CLIIntro do
 
     CLIIntro.displayMsg(play_type, tag_str)
 
-    {tag_str, context, play_type}
+    {tag_str, game, context, play_type}
   end
 end

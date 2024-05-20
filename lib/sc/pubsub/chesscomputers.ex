@@ -16,7 +16,7 @@ defmodule Genomeur.PubSub.ChessComputers do
   @timer_ms 200
   #GameRunner.createGame(:computer, :computer, @tag, @opp_tag)
   @initial_game %GameRunner{
-    board: Board.createBoard(),
+    board: Chessboard.createBoard(),
     turn: :orange,
     first: %Player{type: :computer, color: :orange, tag: @tag, lvl: 1},
     second: %Player{type: :computer, color: :blue, tag: @opp_tag, lvl: 1},

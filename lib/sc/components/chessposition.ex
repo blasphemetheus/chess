@@ -9,7 +9,7 @@ defmodule Genomeur.Component.ChessPosition do
 
   import Scenic.Primitives
   import Scenic.Components
-  import Board
+  import Chessboard
   import GameRunner
 
   @height 60
@@ -372,7 +372,7 @@ defmodule Genomeur.Component.ChessPosition do
   @opp_tag "you"
 
   @initial_game %GameRunner{
-    board: Board.createBoard(),
+    board: Chessboard.createBoard(),
     turn: :orange,
     first: %Player{type: :computer, color: :orange, tag: @tag, lvl: 1},
     second: %Player{type: :computer, color: :blue, tag: @opp_tag, lvl: 1},
@@ -391,7 +391,7 @@ defmodule Genomeur.Component.ChessPosition do
       ], translate: {0, @body_offset}
     )
 
-  @promote_type_options Board.promotingOptions()
+  @promote_type_options Chessboard.promotingOptions()
 
   @namedColors [:alice_blue, :antique_white, :aqua, :aquamarine, :azure, :beige, :bisque, :black, :blanched_almond, :blue, :blue_violet, :brown, :burly_wood, :cadet_blue, :chartreuse, :chocolate, :coral, :cornflower_blue, :cornsilk, :crimson, :cyan, :dark_blue, :dark_cyan, :dark_golden_rod, :dark_gray, :dark_green, :dark_grey, :dark_khaki, :dark_magenta, :dark_olive_green, :dark_orange, :dark_orchid, :dark_red, :dark_salmon, :dark_sea_green, :dark_slate_blue, :dark_slate_gray, :dark_slate_grey, :dark_turquoise, :dark_violet, :deep_pink, :deep_sky_blue, :dim_gray, :dim_grey, :dodger_blue, :fire_brick, :floral_white, :forest_green, :fuchsia, :gainsboro, :ghost_white, :gold, :golden_rod, :gray, :green, :green_yellow, :grey, :honey_dew, :hot_pink, :indian_red, :indigo, :ivory, :khaki, :lavender, :lavender_blush, :lawn_green, :lemon_chiffon, :light_blue, :light_coral, :light_cyan, :light_golden_rod, :light_golden_rod_yellow, :light_gray, :light_green, :light_grey, :light_pink, :light_salmon, :light_sea_green, :light_sky_blue, :light_slate_gray, :light_slate_grey, :light_steel_blue, :light_yellow, :lime, :lime_green, :linen, :magenta, :maroon, :medium_aqua_marine, :medium_blue, :medium_orchid, :medium_purple, :medium_sea_green, :medium_slate_blue, :medium_spring_green, :medium_turquoise, :medium_violet_red, :midnight_blue, :mint_cream, :misty_rose, :moccasin, :navajo_white, :navy, :old_lace, :olive, :olive_drab, :orange, :orange_red, :orchid, :pale_golden_rod, :pale_green, :pale_turquoise, :pale_violet_red, :papaya_whip, :peach_puff, :peru, :pink, :plum, :powder_blue, :purple, :rebecca_purple, :red, :rosy_brown, :royal_blue, :saddle_brown, :salmon, :sandy_brown, :sea_green, :sea_shell, :sienna, :silver, :sky_blue, :slate_blue, :slate_gray, :slate_grey, :snow, :spring_green, :steel_blue, :tan, :teal, :thistle, :tomato, :turquoise, :violet, :wheat, :white, :white_smoke, :yellow, :yellow_green]
   @doc """
@@ -428,8 +428,8 @@ defmodule Genomeur.Component.ChessPosition do
     first_color = grab_current_color(:orange, graph)
     second_color = grab_current_color(:blue, graph)
 
-    first_pieces = Board.fetch_locations(board.placements, :orange) |> change_color_to(first_color)
-    second_pieces = Board.fetch_locations(board.placements, :blue) |> change_color_to(second_color)
+    first_pieces = Chessboard.fetch_locations(board.placements, :orange) |> change_color_to(first_color)
+    second_pieces = Chessboard.fetch_locations(board.placements, :blue) |> change_color_to(second_color)
     first_group_spec = group_spec(produce_piece_spec_list(first_pieces, :first), id: :second_pieces, fill: :purple)
     second_group_spec = group_spec(produce_piece_spec_list(second_pieces, :second), id: :first_pieces, fill: :cyan)
 
@@ -533,11 +533,11 @@ defmodule Genomeur.Component.ChessPosition do
   def attempt_show_possible_moves(%{assigns: %{game: game}} = scene, loc) do
     message("#{inspect loc}", :attempt_show_possible_moves, IO.ANSI.magenta)
     # is_selected isn't necessarily set on the board yet
-    with {:selected_is_mt, false} <- {:selected_is_mt, Board.get_at(game.board.placements, loc) == :mt},
+    with {:selected_is_mt, false} <- {:selected_is_mt, Chessboard.get_at(game.board.placements, loc) == :mt},
          {:show_possible_moves_on, true} <- {:show_possible_moves_on, scene |> show_moves?()} do
 
       # set selected to new_click, change toggles, show possible moves, show selected
-      moves = Board.possible_moves(game.board, loc)
+      moves = Chessboard.possible_moves(game.board, loc)
       is_empty = moves == []
       message(moves, :moves)
       message(is_empty, :is_empty)
@@ -710,7 +710,7 @@ defmodule Genomeur.Component.ChessPosition do
   Given a placements 2D list and a location tuple,
   """
   def location_to_color(placements, loc) when is_list(placements) and is_tuple(loc) do
-    case Board.get_at(placements, loc) do
+    case Chessboard.get_at(placements, loc) do
       :mt -> :mt
       {color, _type} -> color
     end
@@ -744,7 +744,7 @@ defmodule Genomeur.Component.ChessPosition do
   end
 
   def morphscene_show_possible_moves_of_turn_highlights(%{assigns: %{graph: graph, game: game}} = scene) do
-    moves = Board.possible_moves_of_color(game.board, game.turn)
+    moves = Chessboard.possible_moves_of_color(game.board, game.turn)
     message(moves, :moves)
 
     start_loc_specs = for {start_loc, _end_loc} <- moves do
@@ -874,7 +874,7 @@ defmodule Genomeur.Component.ChessPosition do
   end
 
   def board_sc_loc({col, row}) do
-    int_col = Board.column_to_int(col)
+    int_col = Board.Utils.column_to_int(col)
     row = rem(rem(row, 8) - 8, 8) * -1
     {int_col * @col + @x_buf, row * @row + @y_buf}
   end
@@ -1213,17 +1213,17 @@ defmodule Genomeur.Component.ChessPosition do
         # destination is selected too (can't select without validating)!
         end_loc = grab_text_value(graph, :move_to_tag) |> selected_tag_to_location()
 
-        {piece_color, piece_type} = _moving_piece = Board.get_at(game.board.placements, start_loc)
+        {piece_color, piece_type} = _moving_piece = Chessboard.get_at(game.board.placements, start_loc)
         # game.turn not piece_color
         message("{#{piece_color}, #{piece_type}}", :moving_piece, IO.ANSI.green())
 
-        if Board.move_requires_promotion?(game.turn, piece_type, end_loc) do
+        if Chessboard.move_requires_promotion?(game.turn, piece_type, end_loc) do
           # move requires promotion
           if graph |> is_promote_type_chosen?() do
             # promoting to is chosen
             promote_type = grab_promote_type(graph)
 
-            case Board.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_type) do
+            case Chessboard.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_type) do
               {:ok, new_board} ->
                 # promoting move is valid, send the move
                 new_game = progress_game(game, new_board)
@@ -1248,7 +1248,7 @@ defmodule Genomeur.Component.ChessPosition do
           end
         else
           # move does not require promotion
-          case Board.move(game.board, start_loc, end_loc, game.turn, piece_type, :nopromote) do
+          case Chessboard.move(game.board, start_loc, end_loc, game.turn, piece_type, :nopromote) do
             {:ok, new_board} ->
               # move is valid, send the move
               new_game = progress_game(game, new_board)
@@ -1286,12 +1286,12 @@ defmodule Genomeur.Component.ChessPosition do
     message(start_loc, :start_loc)
 
     with {:is_selected, true} <- {:is_selected, graph |> is_origin_selected?()},
-         {:selected_is_mt, false} <- {:selected_is_mt, Board.get_at(game.board.placements, start_loc) == :mt} do
+         {:selected_is_mt, false} <- {:selected_is_mt, Chessboard.get_at(game.board.placements, start_loc) == :mt} do
       # then show possible moves of selected square (which is not empty)
-      moves = Board.possible_moves(game.board, start_loc)
+      moves = Chessboard.possible_moves(game.board, start_loc)
       is_empty = moves == []
       message(start_loc, :start_loc)
-      message(Board.get_at(game.board.placements, start_loc), :piece_at_start_loc)
+      message(Chessboard.get_at(game.board.placements, start_loc), :piece_at_start_loc)
       message(moves, :moves)
       message(is_empty, :is_empty)
 
@@ -1305,7 +1305,7 @@ defmodule Genomeur.Component.ChessPosition do
     else
       {:is_selected, false} ->
         # show all possible moves of all pieces of the side whose turn it is
-        message(Board.threatens(game.board, game.turn), :threatens)
+        message(Chessboard.threatens(game.board, game.turn), :threatens)
         scene = scene
         |> morphscene_possible_moves_tag_n_toggle()
         |> morphscene_show_possible_moves_of_turn_highlights()
@@ -1347,7 +1347,7 @@ defmodule Genomeur.Component.ChessPosition do
 
     start_loc = selected_tag |> selected_tag_to_location()
     end_loc = destination_tag |> selected_tag_to_location()
-    {piece_color, piece_type} = Board.get_at(game.board.placements, start_loc)
+    {piece_color, piece_type} = Chessboard.get_at(game.board.placements, start_loc)
 
     message("{#{piece_color}, #{piece_type}}", :moving_piece, IO.ANSI.green())
 
@@ -1362,7 +1362,7 @@ defmodule Genomeur.Component.ChessPosition do
   def handle_move_promote_type_chosen(scene, game, start_loc, end_loc, piece_type, promote_type) do
     if scene |> send_it?() do
       # send_it is toggled on
-      case Board.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_type) do
+      case Chessboard.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_type) do
         {:ok, new_board} ->
           # move is valid, send that shcnat!
           new_game = progress_game(game, new_board)
@@ -1385,7 +1385,7 @@ defmodule Genomeur.Component.ChessPosition do
       scene = scene
       |> morphscene_remove_possible_moves_highlight()
 
-      {res, _content} = Board.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_type)
+      {res, _content} = Chessboard.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_type)
 
       if res == :ok do
         # move is valid, set moveto to clicked
@@ -1428,7 +1428,7 @@ defmodule Genomeur.Component.ChessPosition do
       # already a selected, so selected is start_loc, clicked is end_loc
       start_loc = selected_tag |> selected_tag_to_location()
       end_loc = button |> button_to_location()
-      {piece_color, piece_type} = Board.get_at(game.board.placements, start_loc)
+      {piece_color, piece_type} = Chessboard.get_at(game.board.placements, start_loc)
 
       message("{#{piece_color}, #{piece_type}}", :moving_piece, IO.ANSI.green())
 
@@ -1442,7 +1442,7 @@ defmodule Genomeur.Component.ChessPosition do
         # so we need to prompt for the promote type (BETWEEN moves kind of), so like an alert in the browser
 
         message("1", :one, IO.ANSI.light_yellow)
-        if Board.move_requires_promotion?(game.turn, piece_type, end_loc) do
+        if Chessboard.move_requires_promotion?(game.turn, piece_type, end_loc) do
           # move requires promotion
           message("2", :two, IO.ANSI.light_yellow)
 
@@ -1471,7 +1471,7 @@ defmodule Genomeur.Component.ChessPosition do
             # send_it is toggled on
             message("5", :five, IO.ANSI.light_yellow)
 
-            case Board.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_type) do
+            case Chessboard.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_type) do
               {:ok, new_board} ->
                 # move is valid, send that shcnat!
                 message("6", :six, IO.ANSI.light_yellow)
@@ -1496,7 +1496,7 @@ defmodule Genomeur.Component.ChessPosition do
             scene = scene
             |> morphscene_remove_possible_moves_highlight()
 
-            {res, _content} = Board.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_type)
+            {res, _content} = Chessboard.move(game.board, start_loc, end_loc, game.turn, piece_type, promote_type)
 
             if res == :ok do
               # move is valid, set moveto to clicked
@@ -1515,7 +1515,7 @@ defmodule Genomeur.Component.ChessPosition do
     else
       # Nothing selected, so try to select clicked
 
-      if Board.get_at(game.board.placements, clicked_loc) == :mt do
+      if Chessboard.get_at(game.board.placements, clicked_loc) == :mt do
         # clicked is empty
         # do nothing
         # selected square is empty, so no possible moves,
@@ -1531,7 +1531,7 @@ defmodule Genomeur.Component.ChessPosition do
 
         if selected_scene |> show_moves?() do
           # toggled on so show them moves
-          moves = Board.possible_moves(game.board, clicked_loc)
+          moves = Chessboard.possible_moves(game.board, clicked_loc)
 
           selected_scene = selected_scene
           |> morphscene_show_possible_move_highlights(moves)
@@ -1561,7 +1561,7 @@ defmodule Genomeur.Component.ChessPosition do
 
   def at_least_one_promote_valid(board, start_loc, end_loc, color, :pawn) do
     thing = @promote_type_options
-    |> Enum.any?(&(Board.move(board, start_loc, end_loc, color, :pawn, &1) |> okify()))
+    |> Enum.any?(&(Chessboard.move(board, start_loc, end_loc, color, :pawn, &1) |> okify()))
     message("#{inspect thing}", :promote_type_validity)
     thing
   end

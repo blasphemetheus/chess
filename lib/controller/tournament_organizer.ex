@@ -73,7 +73,7 @@ defmodule TournamentOrganizer do
                           "Gotan"
                         ])
 
-  def runTournament(amount_players, games_per_matchup, playType) do
+  def runTournament(amount_players, games_per_matchup, playType, bgame) do
     accepted_players = MapSet.new()
 
     fn_to_pass =
@@ -111,7 +111,7 @@ defmodule TournamentOrganizer do
 
     # doRound is a Recursive function. This is our while loop. It is just recursion.
     # Eventually the round will be passed in 1 player and it will not call doRound anymore, and the tournament will end.
-    {winner, round_records} = doRounds(accepted_players, playType, games_per_matchup, [])
+    {winner, round_records} = doRounds(bgame, accepted_players, playType, games_per_matchup, [])
 
     # this conception of tournament completion relies on the only possible way to win a tournament is to play and win games.
     # If a player goes into a round, there is no way for a player to lose that round if the other player loses first.
@@ -125,18 +125,18 @@ defmodule TournamentOrganizer do
     {winner, round_records}
   end
 
-  def doRounds(accepted_players, playType, games_per_matchup \\ 2, round_records \\ [])
+  def doRounds(bgame, accepted_players, playType, games_per_matchup \\ 2, round_records \\ [])
 
-  def doRounds([], _playType, _games_per_matchup, _round_records) do
+  def doRounds(_bgame, [], _playType, _games_per_matchup, _round_records) do
     raise TournamentError, message: "Round attempted on zero players, there is no possible winner"
   end
 
   # this is our base case, this must return
-  def doRounds([one_player] = _accepted_players, _playType, _games_per_matchup, round_records) do
+  def doRounds(_bgame, [one_player] = _accepted_players, _playType, _games_per_matchup, round_records) do
     {one_player, round_records}
   end
 
-  def doRounds(accepted_players, playType, games_per_matchup, round_records) do
+  def doRounds(bgame, accepted_players, playType, games_per_matchup, round_records) do
     # DO A ROUND
     outcomes =
       accepted_players
@@ -146,7 +146,7 @@ defmodule TournamentOrganizer do
       # have the game runner run the games
       |> Enum.map(fn
         players ->
-          TournamentOrganizer.runMatchup(players, games_per_matchup, playType)
+          TournamentOrganizer.runMatchup(bgame, players, games_per_matchup, playType)
       end)
 
     # [outcome1, outcome2, outcome3]
@@ -178,7 +178,7 @@ defmodule TournamentOrganizer do
     # then we just try doing another round
     # we could save matchup_history (so a map of each player in the tournament to a list of their opponents)
     #  and could use that when finding next game pairs, but not right now
-    |> doRounds(playType, games_per_matchup, [outcomes | round_records])
+    |> doRounds(bgame, playType, games_per_matchup, [outcomes | round_records])
   end
 
   def convertOutcomeToPlayers(outcome) do
@@ -208,16 +208,17 @@ defmodule TournamentOrganizer do
   defp add_scores([p1_score, p2_score], :loss), do: [p1_score, p2_score + 1]
   defp add_scores([p1_score, p2_score], :drawn), do: [p1_score + 0.5, p2_score + 0.5]
 
-  def runMatchup(players, games_per_matchup, playType, matchup_score \\ [0, 0], matchAcc \\ [])
+  def runMatchup(bgame, players, games_per_matchup, playType, matchup_score \\ [0, 0], matchAcc \\ [])
 
   # the matchup is between one player and themself, so they get a bye Outcome
-  def runMatchup([_player] = players, _games_per_matchup, _playType, _, _) do
+  def runMatchup(_bgame, [_player] = players, _games_per_matchup, _playType, _, _) do
     # if there is only one player, they get a bye
     %Outcome{players: players, resolution: :bye, reason: :bye, games: []}
   end
 
   # haha you could call this module MatchupRunner instead if you're feeling cheeky
   def runMatchup(
+        bgame,
         [player1, player2] = players,
         games_per_matchup,
         playType,
@@ -225,7 +226,7 @@ defmodule TournamentOrganizer do
         matchAcc
       ) do
     IO.puts(
-      "Matchup: #{inspect(players)}, Score: #{inspect(matchup_score)}, Games: #{inspect(matchAcc)}, PlayType: #{inspect(playType)}"
+      "Matchup: #{inspect(players)}, Score: #{inspect(matchup_score)}, Games: #{inspect(matchAcc)}, PlayType: #{inspect(playType)}, BGame: #{inspect(bgame)}"
     )
 
     # determine the color of the first player and run the game with the right players
@@ -233,8 +234,8 @@ defmodule TournamentOrganizer do
       length(matchAcc)
       |> rem(2)
       |> case do
-        0 -> {player1, GameRunner.runGame(players, playType)}
-        1 -> {player2, GameRunner.runGame([player2, player1], playType)}
+        0 -> {player1, GameRunner.runGame(bgame, players, playType)}
+        1 -> {player2, GameRunner.runGame(bgame, [player2, player1], playType)}
       end
 
     IO.puts("Game Outcome: #{inspect(gameOutcome)}")
@@ -263,7 +264,7 @@ defmodule TournamentOrganizer do
         }
 
       best_score < needed_to_resolve_matchup ->
-        runMatchup(players, games_per_matchup, playType, new_matchup_score, [
+        runMatchup(bgame, players, games_per_matchup, playType, new_matchup_score, [
           {orange, res, reas} | matchAcc
         ])
     end

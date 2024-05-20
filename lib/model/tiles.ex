@@ -42,6 +42,12 @@ defmodule Tile do
     raise ArgumentError, message: "invalid render tile color, got #{inspect color} and #{inspect piece}"
   end
 
+  def renderTile(a_list) when is_list(a_list) do
+    case Enum.at(a_list, 0) do
+      {:blue, :chit} -> "⛁"
+      {:orange, :chit} -> "⛃"
+    end
+  end
 
   def renderTile(tileColor) do
     case tileColor do
@@ -94,10 +100,10 @@ defmodule Tile do
   end
 
   def nestedTileColors do
-    ## same as all_locations_nested(:formal) in Board
+    ## same as all_locations_nested(:formal) in Chessboard
     8..1
     |> Enum.map(fn rank -> 1..8
-    |> Enum.map(fn file -> {Board.int_to_column(file), rank} |> Tile.loc_to_color() end) end)
+    |> Enum.map(fn file -> {Chessboard.int_to_column(file), rank} |> Tile.loc_to_color() end) end)
     ## NOW ON TO OTHER STUFF
   end
 
@@ -106,7 +112,7 @@ defmodule Tile do
   Given a formal location, returns either :blue or :orange, representing what color tile should be there
   """
   def loc_to_color({file, rank}) do
-    file_num = file |> Board.column_to_int()
+    file_num = file |> Board.Utils.column_to_int()
     case rem(file_num + rank, 2) do
       0 -> :blue #even
       1 -> :orange #odd

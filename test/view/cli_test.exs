@@ -11,16 +11,25 @@ defmodule ViewCLITest do
   # if contemplating mocking -> no
   # https://blog.appsignal.com/2023/04/11/an-introduction-to-mocking-tools-for-elixir.html
 
-  test "showGameBoardAs (orange and blue)" do
+  test "showGameBoardAs chess (orange and blue)" do
     assert capture_io(fn ->
-      View.CLI.showGameBoardAs(Board.createBoard(), :blue)
+      View.CLI.showGameBoardAs(Chessboard.createBoard(), :blue)
     end) == "♜ ♞ ♝ ♚ ♛ ♝ ♞ ♜\n♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎\n◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻\n◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼\n◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻\n◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼\n♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙\n♖ ♘ ♗ ♔ ♕ ♗ ♘ ♖\n\n"
 
     assert capture_io(fn ->
-      View.CLI.showGameBoardAs(Board.createBoard(), :orange)
+      View.CLI.showGameBoardAs(Chessboard.createBoard(), :orange)
     end) == "♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖\n♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙\n◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻\n◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼\n◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻\n◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼\n♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎\n♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜\n\n"
   end
 
+  test "showGameBoardAs ur (orange and blue)" do
+    assert capture_io(fn ->
+      View.CLI.showGameBoardAs(UrBoard.createBoard(), :orange)
+    end) == "cool"
+
+    assert capture_io(fn  ->
+      View.CLI.showGameBoardAs(UrBoard.createBoard(), :orange)
+    end) == "dope"
+  end
   test "displays :game_intro, with Bob, Georgina, and the default starting board" do
     bob = %Player{type: :human, color: :orange, tag: "Bob"}
     georgina = %Player{type: :cpu, color: :blue, tag: "Georgina"}

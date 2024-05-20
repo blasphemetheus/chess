@@ -10,6 +10,7 @@ defmodule Main do
 
   @default_play_type :vs
   @default_context :game
+  @default_bgame :chess
   @default_tag "_player_"
   @default_opponent "_opponent_"
   @default_games_per_matchup 2
@@ -121,7 +122,7 @@ defmodule Main do
   @doc """
   Runs the default, auto game between two cpus with randomized moves and returns a winner
   """
-  def cpu(), do: main(:auto, @default_tag, :game, :cpu)
+  def cpu(), do: main(:auto, @default_tag, :chess, :game, :cpu)
 
   def simulation(), do: main(:auto, @default_tag, :game, :computer, :computer)
 
@@ -155,21 +156,22 @@ defmodule Main do
   but you can also run with with default, context included and more specific defaults will be used.
   """
   ## CONVENIENCE FUNCTIONS FOR RUNNING DEFAULTS
-  def main(:auto), do: main(:auto, @default_tag, @default_context, @default_play_type)
-  def main(:auto, context), do: main(:auto, @default_tag, context, @default_play_type)
-  def main(:auto, context, playtype), do: main(:auto, @default_tag, context, playtype)
+  def main(:auto), do: main(:auto, @default_tag, @default_bgame, @default_context, @default_play_type)
+  def main(:auto, context), do: main(:auto, @default_tag, @default_bgame, context, @default_play_type)
+  def main(:auto, context, playtype), do: main(:auto, @default_tag, @default_bgame, context, playtype)
+  def main(:auto, context, playtype, bgame), do: main(:auto, @default_tag, bgame, context, playtype)
 
   def main() do
-    {tag_str, context, playType} = CLIIntro.welcome()
+    {tag_str, bgame, context, playType} = CLIIntro.welcome()
 
-    main(:input, tag_str, context, playType)
+    main(:input, tag_str, bgame, context, playType)
   end
 
   @doc """
   Starts a tournament of the playtype specified, with the input_type specified,
   with your tag as specified
   """
-  def main(input_type, _tag_str, :tournament, playType) do
+  def main(input_type, _tag_str, bgame, :tournament, playType) do
     amount_of_players =
       case input_type do
         :input -> CLIIntro.ask(:amount_of_players) |> String.to_integer()
@@ -183,14 +185,14 @@ defmodule Main do
       end
 
     # returns a tournament winner
-    winner = TO.runTournament(amount_of_players, games_per_matchup, playType)
+    winner = TO.runTournament(amount_of_players, games_per_matchup, playType, bgame)
     IO.puts("Tournament Winner: #{inspect(winner)}")
   end
 
 
   # Starts a match of the playtype specified, with the input_type specified,
   # with your tag as specified
-  def main(input_type, tag_str, :match, playType) do
+  def main(input_type, tag_str, bgame, :match, playType) do
     games_per_matchup =
       case input_type do
         :auto -> @default_games_per_matchup
@@ -204,13 +206,13 @@ defmodule Main do
       end
 
     # returns a list of game outcomes
-    list_of_outcomes = runMatchup([tag_str, opp_tag_str], games_per_matchup, playType)
+    list_of_outcomes = runMatchup([tag_str, opp_tag_str], games_per_matchup, playType, bgame)
     IO.puts("Match Result: #{list_of_outcomes}")
   end
 
   # Starts a game of the playtype specified, with the input_type specified,
   # with your tag as specified
-  def main(input_type, tag_str, :game, playType) do
+  def main(input_type, tag_str, bgame, :game, playType) do
     opp_tag_str =
       case input_type do
         :auto -> @default_opponent
@@ -232,11 +234,11 @@ defmodule Main do
         :netplay -> [:human, :online]
       end
 
-    outcome = GameRunner.runGame([tag_str, opp_tag_str], playTypeList)
+    outcome = GameRunner.runGame([tag_str, opp_tag_str], playTypeList, bgame)
     IO.puts("Game Outcome: #{inspect(outcome)}")
   end
 
-  def main(:auto, tag_str, :game, playType, playType2) do
+  def main(:auto, tag_str, bgame, :game, playType, playType2) do
     list =
       case Enum.random(0..2) do
         0 -> [tag_str, @default_opponent]
@@ -244,6 +246,6 @@ defmodule Main do
         2 -> ["jimbo", "jombo"]
       end
 
-    GameRunner.runGame(list, [playType, playType2])
+    GameRunner.runGame(list, [playType, playType2], bgame)
   end
 end

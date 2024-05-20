@@ -1,10 +1,10 @@
-defmodule BoardTest do
+defmodule ChessboardTest do
   @moduledoc """
-  Testing the Board module in Model
+  Testing the Chessboard module in Model
   """
   use ExUnit.Case
-  doctest Board
-  import Board
+  doctest Chessboard
+  import Chessboard
   import Board.Utils
   require View.CLI
 
@@ -42,7 +42,7 @@ defmodule BoardTest do
 describe " debug based on scenic GUI findings" do
   test "castle not showing up in possible moves" do
     game = %GameRunner{
-      board: %Board{
+      board: %Chessboard{
         placements: [
           [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
           [
@@ -109,7 +109,7 @@ describe " debug based on scenic GUI findings" do
   end
   test "king can't castle despite being able to castle?" do
     castle_game = %GameRunner{
-      board: %Board{
+      board: %Chessboard{
         placements: [
           [:mt, :mt, :mt, :mt, :mt, :mt, :mt, {:blue, :rook}],
           [
@@ -168,7 +168,7 @@ describe " debug based on scenic GUI findings" do
     assert :ob == Moves.duck({:a, 5}, :orange, :left)
     assert {:b, 6} == Moves.duck({:a, 5}, :orange, :right)
     assert [{:b, 4}] == reject_ob([:ob, {:b, 4}])
-    assert {:blue, :king} == Board.get_at(castle_game.board.placements, {:b, 4})
+    assert {:blue, :king} == Chessboard.get_at(castle_game.board.placements, {:b, 4})
     assert [{{:b, 4}, {:blue, :king}}] == process([{:b, 4}], fn {_loc, {_piececolor, :queen}} -> true
     {_loc, {_piececolor, :pawn}} -> false
     {_loc, {_piececolor, :knight}} -> false
@@ -217,17 +217,17 @@ describe " debug based on scenic GUI findings" do
     {res2, _board} = appraise_move(castle_game.board, {:e, 1}, {:g, 1}, {:orange, :king})
     assert res2 == :ok
     # each_unappraised = evaluate_each_unappraised([{{:e, 1}, {:g, 1}}], castle_game.board, {:orange, :king}, {:e, 1}, :orange)
-    # my_answer = {{:g, 1}, {:ok, %Board{}}}
+    # my_answer = {{:g, 1}, {:ok, %Chessboard{}}}
     assert shortcastle: {:g, 1} in Moves.unappraised_moves(:orange, :king, {:e, 1})
     assert {{:e, 1}, {:g, 1}} in appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(castle_game.board, {:e, 1}, :orange, :king)
 
-    pos_moves_king_loc = Board.possible_moves(castle_game.board, {:e, 1})
+    pos_moves_king_loc = Chessboard.possible_moves(castle_game.board, {:e, 1})
 
     assert {{:e, 1},{:g, 1}} in pos_moves_king_loc
   end
   test "promotion does not show up on the GUI, why?" do
     game = %GameRunner{
-      board: %Board{
+      board: %Chessboard{
         placements: [
           [
             {:blue, :rook},
@@ -290,30 +290,30 @@ describe " debug based on scenic GUI findings" do
       reason: nil
     }
 
-    pos_moves_loc = Board.possible_moves(game.board, {:c, 7})
-    pos_moves_loc_color = Board.possible_moves(game.board, {:c, 7}, :orange)
-    pos_moves_color = Board.possible_moves_of_color(game.board, :orange)
+    pos_moves_loc = Chessboard.possible_moves(game.board, {:c, 7})
+    pos_moves_loc_color = Chessboard.possible_moves(game.board, {:c, 7}, :orange)
+    pos_moves_color = Chessboard.possible_moves_of_color(game.board, :orange)
     promote_march = {{:c, 7}, {:c, 8}, :knight}
     promote_capture = {{:c, 7}, {:d, 8}, :queen}
 
-    assert promote_march in Board.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(game.board, {:c, 7}, :orange, :pawn)
+    assert promote_march in Chessboard.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(game.board, {:c, 7}, :orange, :pawn)
     assert promote_march in pos_moves_loc_color
     assert promote_march in pos_moves_loc
     assert promote_march in pos_moves_color
 
-    assert promote_capture in Board.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(game.board, {:c, 7}, :orange, :pawn)
+    assert promote_capture in Chessboard.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(game.board, {:c, 7}, :orange, :pawn)
     assert promote_capture in pos_moves_loc_color
     assert promote_capture in pos_moves_loc
     assert promote_capture in pos_moves_color
 
-    assert true == Board.move_requires_promotion?(:orange, :pawn, {:b, 8})
+    assert true == Chessboard.move_requires_promotion?(:orange, :pawn, {:b, 8})
 
     assert Genomeur.Component.ChessPosition.at_least_one_promote_valid(game.board, {:c, 7}, {:c, 8}, :orange, :pawn)
     assert [:bishop, :knight, :rook, :queen] == Genomeur.Component.ChessPosition.evaluate_each_promote_option_for_move(game.board, {:c, 7}, {:c, 8}, :orange, :pawn)
   end
   test "en passant aka impalement shows up in possible moves" do
     game = %GameRunner{
-      board: %Board{
+      board: %Chessboard{
         placements: [
           [
             blue: :rook,
@@ -386,14 +386,14 @@ describe " debug based on scenic GUI findings" do
     }
 
     #march_or_impale_left
-    pos_moves_loc = Board.possible_moves(game.board, {:f, 5})
-    pos_moves_loc_color = Board.possible_moves(game.board, {:f, 5}, :orange)
-    pos_moves_color = Board.possible_moves_of_color(game.board, :orange)
+    pos_moves_loc = Chessboard.possible_moves(game.board, {:f, 5})
+    pos_moves_loc_color = Chessboard.possible_moves(game.board, {:f, 5}, :orange)
+    pos_moves_color = Chessboard.possible_moves_of_color(game.board, :orange)
     en_passant_move = {{:f, 5}, {:e, 6}}
     _march_move = {{:f, 5}, {:f, 6}}
 
     assert {:ok,
-      %Board{placements: game.board.placements |> Board.remove_at({:f, 5}) |> Board.placePiece({:f, 6}, :orange, :pawn),
+      %Chessboard{placements: game.board.placements |> Chessboard.remove_at({:f, 5}) |> Chessboard.placePiece({:f, 6}, :orange, :pawn),
       impale_square: :noimpale, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 3
       }} == appraise_move(game.board, {:f, 5}, {:f, 6}, {:orange, :pawn})
 
@@ -404,17 +404,17 @@ describe " debug based on scenic GUI findings" do
     # assert "hi" == pawn_move_take_validation(game.board, {:f, 5}, {:e, 6}, :orange, {:orange, :pawn}, :mt, :nopromote)
     # assert "yes" == move(game.board, {:f, 5}, {:e, 6}, :orange, :pawn, :nopromote)
     assert {:ok,
-    %Board{placements: game.board.placements |> Board.remove_at({:f, 5}) |> Board.remove_at({:e, 5}) |> Board.placePiece({:e, 6}, :orange, :pawn),
+    %Chessboard{placements: game.board.placements |> Chessboard.remove_at({:f, 5}) |> Chessboard.remove_at({:e, 5}) |> Chessboard.placePiece({:e, 6}, :orange, :pawn),
     impale_square: :noimpale, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 3
     }} == appraise_move(game.board, {:f, 5}, {:e, 6}, {:orange, :pawn})
     # assert {:ok,
-    #   %Board{placements: game.board.placements |> Board.remove_at({:f, 5}) |> Board.remove_at({:e, 6}) |> Board.placePiece({:e, 6}, :orange, :pawn),
+    #   %Chessboard{placements: game.board.placements |> Chessboard.remove_at({:f, 5}) |> Chessboard.remove_at({:e, 6}) |> Chessboard.placePiece({:e, 6}, :orange, :pawn),
     #   impale_square: :noimpale, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 3
     #   }} == appraise_move(game.board, {:f, 5}, {:e, 6}, {:orange, :pawn})
     assert {:capture, {:e, 6}} in Moves.unappraised_moves(:orange, :pawn, {:f, 5})
 
     # assert 6 == evaluate_each_unappraised([{:capture, {:e, 6}}], game.board, {:orange, :pawn}, {:f, 5}, :orange)
-    assert en_passant_move in Board.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(game.board, {:f, 5}, :orange, :pawn)
+    assert en_passant_move in Chessboard.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(game.board, {:f, 5}, :orange, :pawn)
     assert en_passant_move in pos_moves_loc_color
     assert en_passant_move in pos_moves_loc
     assert en_passant_move in pos_moves_color
@@ -436,7 +436,7 @@ describe " debug endgame stalemate in place of checkmate" do
 ♙ ◻ ◼ ◻ ◼ ♕ ◼ ◻
 ◻ ◼ ♚ ♘ ◻ ◼ ◻ ◼
 """
-      {res, _promote_capture} = %Board{placements: promote_capture_str |> Parser.parseBoardFromString()}
+      {res, _promote_capture} = %Chessboard{placements: promote_capture_str |> Parser.parseBoardFromString()}
       |> move({:b, 7}, {:c, 8}, :orange, :pawn, :knight)
 
       assert res == :ok
@@ -491,7 +491,7 @@ describe " debug endgame stalemate in place of checkmate" do
     ◼ ◻ ◼ ◻ ◼ ◻ ♚ ◻
     ◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼
     """
-    one_horse_vs_king = one_horse_vs_king_str |> Board.Utils.instil()
+    one_horse_vs_king = one_horse_vs_king_str |> Chessboard.instil()
     #IO.inspect(one_horse_vs_king)
     one_horse_vs_bishop_str =
       """
@@ -515,23 +515,23 @@ describe " debug endgame stalemate in place of checkmate" do
     assert knight == 2
 
 
-    assert Board.kingKnightKnight(two_horse_vs_king.placements, :orange) == true
-    assert Board.kingKnightKnight(two_horse_vs_king.placements, :blue) == false
+    assert Chessboard.kingKnigBoardhtKnight(two_horse_vs_king.placements, :orange) == true
+    assert Chessboard.kingKnightKnight(two_horse_vs_king.placements, :blue) == false
 
-    assert Board.kingKnightKnight(one_horse_vs_king.placements, :orange) == false
-    assert Board.kingKnightKnight(one_horse_vs_king.placements, :blue) == false
+    assert Chessboard.kingKnightKnight(one_horse_vs_king.placements, :orange) == false
+    assert Chessboard.kingKnightKnight(one_horse_vs_king.placements, :blue) == false
 
-    assert Board.justKing(one_horse_vs_king.placements, :blue) == true
-    assert Board.justKing(one_horse_vs_king.placements, :orange) == false
+    assert Chessboard.justKing(one_horse_vs_king.placements, :blue) == true
+    assert Chessboard.justKing(one_horse_vs_king.placements, :orange) == false
 
-    assert Board.badMaterial(one_horse_vs_king.placements, :blue) == true
-    assert Board.badMaterial(one_horse_vs_king.placements, :orange) == true
+    assert Chessboard.badMaterial(one_horse_vs_king.placements, :blue) == true
+    assert Chessboard.badMaterial(one_horse_vs_king.placements, :orange) == true
 
-    assert Board.badMaterial(one_horse_vs_bishop.placements, :blue) == true
-    assert Board.badMaterial(one_horse_vs_bishop.placements, :orange) == true
+    assert Chessboard.badMaterial(one_horse_vs_bishop.placements, :blue) == true
+    assert Chessboard.badMaterial(one_horse_vs_bishop.placements, :orange) == true
 
-    assert Board.badMaterial(two_horse_vs_king.placements, :blue) == true
-    assert Board.badMaterial(two_horse_vs_king.placements, :orange) == false
+    assert Chessboard.badMaterial(two_horse_vs_king.placements, :blue) == true
+    assert Chessboard.badMaterial(two_horse_vs_king.placements, :orange) == false
 
     assert one_horse_vs_king |> isInsufficientMaterial() == true
     assert two_horse_vs_king |> isInsufficientMaterial() == true
@@ -566,13 +566,13 @@ describe " debug endgame stalemate in place of checkmate" do
 ◼ ◻ ◼ ◻ ◼ ◻ ◼ ♙
 ◻ ◼ ◻ ◼ ◻ ◼ ◻ ♔
 """
-    pawns_mobile = %Board{placements: pawns_mobile_str |> Parser.parseBoardFromString()}
-    assert {:blue, :pawn} == get_at(pawns_mobile.placements, {:a, 6})
-    assert Board.kingThreatened(pawns_mobile, :blue) == false
+    pawns_mobile = %Chessboard{placements: pawns_mobile_str |> Parser.parseBoardFromString()}
+    assert {:blue, :pawn} == Chessboard.get_at(pawns_mobile.placements, {:a, 6})
+    assert Chessboard.kingThreatened(pawns_mobile, :blue) == false
 
 
     assert possible_moves(pawns_mobile, {:h, 1}) == []
-    assert Board.kingImmobile(pawns_mobile, :blue) == true
+    assert Chessboard.kingImmobile(pawns_mobile, :blue) == true
     a_6 = Moves.unappraised_moves(:blue, :pawn, {:a, 6})
     assert a_6 == [{:march, {:a, 5}}, {:capture, {:b, 5}}]
     h_2 = Moves.unappraised_moves(:blue, :pawn, {:h, 2})
@@ -593,13 +593,13 @@ describe " debug endgame stalemate in place of checkmate" do
       {:capturepromote, {{:blue, :queen}, {:g, 1}}}
     ]
 
-    #assert Board.evaluate_each_unappraised()
-    #assert Board.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(pawns_mobile, {:h, 2}, :blue, :pawn) == [{{:h, 2}, {:h, 3}}]
-    #assert Board.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(pawns_mobile, {:a, 6}, :blue, :pawn) == [{{:a, 6}, {:a, 7}}]
+    #assert Chessboard.evaluate_each_unappraised()
+    #assert Chessboard.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(pawns_mobile, {:h, 2}, :blue, :pawn) == [{{:h, 2}, {:h, 3}}]
+    #assert Chessboard.appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(pawns_mobile, {:a, 6}, :blue, :pawn) == [{{:a, 6}, {:a, 7}}]
 
-    assert Board.possible_moves_of_color(pawns_mobile, :blue) == []
-    assert Board.noPieceCanMove(pawns_mobile, :blue) == true
-    assert Board.isStalemate(pawns_mobile, :blue) == true
+    assert Chessboard.possible_moves_of_color(pawns_mobile, :blue) == []
+    assert Chessboard.noPieceCanMove(pawns_mobile, :blue) == true
+    assert Chessboard.isStalemate(pawns_mobile, :blue) == true
   end
 
   test "pawns can put the king in check" do
@@ -646,8 +646,8 @@ iex(49)>
 ◼ ◻ ◼ ♝ ◼ ◻ ♜ ♜
 ◻ ◼ ◻ ◼ ♞ ◼ ◻ ◼
 """
-    pawn_checkmate = %Board{placements: pawn_checkmate_s |> Parser.parseBoardFromString()}
-    threatening_moves = Board.threatens(pawn_checkmate, :orange)
+    pawn_checkmate = %Chessboard{placements: pawn_checkmate_s |> Parser.parseBoardFromString()}
+    threatening_moves = Chessboard.threatens(pawn_checkmate, :orange)
 
     assert Moves.unappraised_moves(:orange, :pawn, {:d, 7}) == [march: {:d, 8}, capture: {:c, 8}, capture: {:e, 8}, promote: {{:orange, :knight}, {:d, 8}}, promote: {{:orange, :rook}, {:d, 8}}, promote: {{:orange, :bishop}, {:d, 8}}, promote: {{:orange, :queen}, {:d, 8}}, capturepromote: {{:orange, :knight}, {:c, 8}}, capturepromote: {{:orange, :knight}, {:e, 8}}, capturepromote: {{:orange, :rook}, {:c, 8}}, capturepromote: {{:orange, :rook}, {:e, 8}}, capturepromote: {{:orange, :bishop}, {:c, 8}}, capturepromote: {{:orange, :bishop}, {:e, 8}}, capturepromote: {{:orange, :queen}, {:c, 8}}, capturepromote: {{:orange, :queen}, {:e, 8}}]
 
@@ -666,7 +666,7 @@ iex(49)>
     ], [{{:a, 5}, {:b, 5}}]]
 
 
-    # assert Board.fetch_locations(pawn_checkmate.placements)
+    # assert Chessboard.fetch_locations(pawn_checkmate.placements)
     # |> filter_location_placement_tuples_for_color(:orange)
     # |> grab_possible_moves(pawn_checkmate) == ""
     # |> infer_move_type_from_board(board)
@@ -683,17 +683,17 @@ iex(49)>
     assert findKing(pawn_checkmate.placements, :blue) == {:e, 8}
     assert Enum.member?(threatened, {:e, 8})
 
-    assert Board.isCheck(pawn_checkmate, :blue) == true
+    assert Chessboard.isCheck(pawn_checkmate, :blue) == true
 
-    assert {{:d, 8}, {:blue, :queen}} in Board.fetch_locations(pawn_checkmate.placements, :blue)
+    assert {{:d, 8}, {:blue, :queen}} in Chessboard.fetch_locations(pawn_checkmate.placements, :blue)
     assert {:advance, {:d, 7}} in Moves.unappraised_moves(:blue, :queen, {:d, 8})
 
     assert evaluate_each_unappraised([{{:d, 8}, {:d, 7}}], pawn_checkmate, {:blue, :queen}, {:d, 8}, :blue)
 
 
 
-    assert Board.possible_moves_of_color(pawn_checkmate, :blue) == [{{:d, 8}, {:d, 7}}]
-    assert Board.isCheckmate(pawn_checkmate, :blue) == false
+    assert Chessboard.possible_moves_of_color(pawn_checkmate, :blue) == [{{:d, 8}, {:d, 7}}]
+    assert Chessboard.isCheckmate(pawn_checkmate, :blue) == false
   end
   test "ensure pawns can promote, no stalemate if it's only option" do
     promote_only_str =
@@ -707,8 +707,8 @@ iex(49)>
 ◼ ◻ ◼ ◻ ♙ ◻ ◼ ◻
 ◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼
 """
-    promote_only = %Board{placements: promote_only_str |> Parser.parseBoardFromString()}
-    assert Board.fetch_locations(promote_only.placements, :blue) == [{{:d, 7}, {:blue, :king}}, {{:d, 6}, {:blue, :pawn}}, {{:h, 5}, {:blue, :pawn}}, {{:e, 2}, {:blue, :pawn}}]
+    promote_only = %Chessboard{placements: promote_only_str |> Parser.parseBoardFromString()}
+    assert Chessboard.fetch_locations(promote_only.placements, :blue) == [{{:d, 7}, {:blue, :king}}, {{:d, 6}, {:blue, :pawn}}, {{:h, 5}, {:blue, :pawn}}, {{:e, 2}, {:blue, :pawn}}]
     assert Moves.unappraised_moves(:blue, :pawn, {:e, 2}) == [march: {:e, 1}, capture: {:f, 1}, capture: {:d, 1}, promote: {{:blue, :knight}, {:e, 1}}, promote: {{:blue, :rook}, {:e, 1}}, promote: {{:blue, :bishop}, {:e, 1}}, promote: {{:blue, :queen}, {:e, 1}}, capturepromote: {{:blue, :knight}, {:f, 1}}, capturepromote: {{:blue, :knight}, {:d, 1}}, capturepromote: {{:blue, :rook}, {:f, 1}}, capturepromote: {{:blue, :rook}, {:d, 1}}, capturepromote: {{:blue, :bishop}, {:f, 1}}, capturepromote: {{:blue, :bishop}, {:d, 1}}, capturepromote: {{:blue, :queen}, {:f, 1}}, capturepromote: {{:blue, :queen}, {:d, 1}}]
 
     rook = appraise_move(promote_only, {:e, 2}, {:e, 1}, {:blue, :pawn}, :rook)
@@ -726,9 +726,9 @@ iex(49)>
 
     assert appraise_each_loc_placement_tuples_to_move_tuples_or_thruples(promote_only, {:e, 2}, :blue, :pawn) == [{{:e, 2}, {:e, 1}, :knight}, {{:e, 2}, {:e, 1}, :rook}, {{:e, 2}, {:e, 1}, :bishop}, {{:e, 2}, {:e, 1}, :queen}]
 
-    assert promote_only |> Board.possible_moves_of_color(:blue) == [{{:e, 2}, {:e, 1}, :knight}, {{:e, 2}, {:e, 1}, :rook}, {{:e, 2}, {:e, 1}, :bishop}, {{:e, 2}, {:e, 1}, :queen}]
-    assert promote_only |> Board.noPieceCanMove(:blue) == false
-    assert promote_only |> Board.isStalemate(:blue) == false
+    assert promote_only |> Chessboard.possible_moves_of_color(:blue) == [{{:e, 2}, {:e, 1}, :knight}, {{:e, 2}, {:e, 1}, :rook}, {{:e, 2}, {:e, 1}, :bishop}, {{:e, 2}, {:e, 1}, :queen}]
+    assert promote_only |> Chessboard.noPieceCanMove(:blue) == false
+    assert promote_only |> Chessboard.isStalemate(:blue) == false
 
 
   end
@@ -752,18 +752,18 @@ iex(49)>
 # ◼ ◻ ♜ ◻ ◼ ◻ ◼ ◻
 # ◻ ◼ ◻ ♜ ◻ ♚ ◻ ◼
 
-# ** (FunctionClauseError) no function clause matching in anonymous fn/1 in Board.noMovesResolvingCheck/2
+# ** (FunctionClauseError) no function clause matching in anonymous fn/1 in Chessboard.noMovesResolvingCheck/2
 
-#     The following arguments were given to anonymous fn/1 in Board.noMovesResolvingCheck/2:
+#     The following arguments were given to anonymous fn/1 in Chessboard.noMovesResolvingCheck/2:
 
 #         # 1
 #         [{{:c, 8}, {:d, 7}}]
 
-#     (board_model 0.1.0) lib/board.ex:1390: anonymous fn/1 in Board.noMovesResolvingCheck/2
+#     (board_model 0.1.0) lib/board.ex:1390: anonymous fn/1 in Chessboard.noMovesResolvingCheck/2
 #     (elixir 1.14.4) lib/enum.ex:1658: Enum."-map/2-lists^map/1-0-"/2
 #     (elixir 1.14.4) lib/enum.ex:1658: Enum."-map/2-lists^map/1-0-"/2
-#     (board_model 0.1.0) lib/board.ex:1390: Board.noMovesResolvingCheck/2
-#     (board_model 0.1.0) lib/board.ex:1284: Board.isOver/2
+#     (board_model 0.1.0) lib/board.ex:1390: Chessboard.noMovesResolvingCheck/2
+#     (board_model 0.1.0) lib/board.ex:1284: Chessboard.isOver/2
 #     (controller 0.1.0) lib/game.ex:231: GameRunner.takeTurns/1
 #     (controller 0.1.0) lib/game.ex:104: GameRunner.runGame/2
 # iex(6)>
@@ -779,8 +779,8 @@ iex(49)>
 ◼ ◻ ♜ ◻ ◼ ◻ ◼ ◻
 ◻ ◼ ◻ ♜ ◻ ♚ ◻ ◼
 """
-    checkmated = %Board{placements: checkmated_str |> Parser.parseBoardFromString()}
-    assert Board.noMovesResolvingCheck(checkmated, :blue) == false
+    checkmated = %Chessboard{placements: checkmated_str |> Parser.parseBoardFromString()}
+    assert Chessboard.noMovesResolvingCheck(checkmated, :blue) == false
 
     checkmated2_str =
 """
@@ -793,8 +793,8 @@ iex(49)>
 ◼ ◻ ◼ ♞ ◼ ◻ ◼ ◻
 ◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼
 """
-    checkmated2 = %Board{placements: checkmated2_str |> Parser.parseBoardFromString()}
-    assert checkmated2 |> Board.isCheckmate(:blue) == true
+    checkmated2 = %Chessboard{placements: checkmated2_str |> Parser.parseBoardFromString()}
+    assert checkmated2 |> Chessboard.isCheckmate(:blue) == true
 
     one_move_str =
 """
@@ -807,10 +807,10 @@ iex(49)>
 ◼ ◻ ♜ ♟︎ ♚ ◻ ◼ ◻
 ◻ ◼ ◻ ◼ ◻ ◼ ◻ ♝
 """
-    one_move = %Board{placements: one_move_str |> Parser.parseBoardFromString()}
+    one_move = %Chessboard{placements: one_move_str |> Parser.parseBoardFromString()}
 
-    assert one_move |> Board.noMovesResolvingCheck(:blue) == false
-    assert one_move |> Board.isCheckmate(:blue) == false
+    assert one_move |> Chessboard.noMovesResolvingCheck(:blue) == false
+    assert one_move |> Chessboard.isCheckmate(:blue) == false
 
   end
   test "stalemate when should be checkmate " do
@@ -845,26 +845,26 @@ iex(49)>
       [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
       [:mt, :mt, :mt, {:orange, :king}, :mt, :mt, :mt, {:orange, :bishop}]
     ]
-    start = %Board{placements: placements}
+    start = %Chessboard{placements: placements}
     #View.CLI.showGameBoardAs(start, :orange)
-    assert Board.isCheck(start, :orange) == false
-    assert Board.isCheck(start, :blue) == false
+    assert Chessboard.isCheck(start, :orange) == false
+    assert Chessboard.isCheck(start, :blue) == false
 
-    {res, checkmate} = Board.move(start, {:g, 7}, {:f, 8}, :orange, :queen, :nopromote)
+    {res, checkmate} = Chessboard.move(start, {:g, 7}, {:f, 8}, :orange, :queen, :nopromote)
     assert checkmate |> is_struct()
     assert res == :ok
-    assert Board.kingImmobile(checkmate, :blue) == true
+    assert Chessboard.kingImmobile(checkmate, :blue) == true
     threatening_moves = threatens(checkmate, :orange)
     threatened = threatening_moves |> Enum.map(&move_to_end_loc/1)
     assert {{:f, 8}, {:e, 8}} in threatening_moves
     assert findKing(checkmate.placements, :blue) == {:e, 8}
     assert {:e, 8} in threatened
 
-    assert Board.isCheck(checkmate, :blue) == true
-    assert Board.isStalemate(checkmate, :blue) == false
-    assert Board.kingImmobile(checkmate, :blue) == true # done
-    assert Board.possible_moves(checkmate, {:e, 8}, :blue) == []
-    assert Board.fetch_locations(checkmate.placements, :blue) == [
+    assert Chessboard.isCheck(checkmate, :blue) == true
+    assert Chessboard.isStalemate(checkmate, :blue) == false
+    assert Chessboard.kingImmobile(checkmate, :blue) == true # done
+    assert Chessboard.possible_moves(checkmate, {:e, 8}, :blue) == []
+    assert Chessboard.fetch_locations(checkmate.placements, :blue) == [
       {{:b, 8}, {:blue, :rook}},
       {{:c, 8}, {:blue, :bishop}},
       {{:d, 8}, {:blue, :queen}},
@@ -880,8 +880,8 @@ iex(49)>
     ]
 
 
-    assert Board.noMovesResolvingCheck(checkmate, :blue) == true # todo
-    assert Board.isCheckmate(checkmate, :blue)
+    assert Chessboard.noMovesResolvingCheck(checkmate, :blue) == true # todo
+    assert Chessboard.isCheckmate(checkmate, :blue)
 
 
     _contextt =
@@ -931,11 +931,11 @@ assert parsed_placements_almost == [
   [:mt, :mt, :mt, :mt, :mt, :mt, :mt, {:orange, :pawn}],
   [:mt, :mt, :mt, :mt, {:orange, :king}, {:orange, :rook}, :mt, :mt]
 ]
-parsed_almost = %Board{placements: parsed_placements_almost}
+parsed_almost = %Chessboard{placements: parsed_placements_almost}
 assert kingImmobile(parsed_almost, :blue) == true
 assert placementAgreesWithProvidedInfo({:orange, :knight}, :orange, :knight) == true
 
-{res, checkmated_moved} = Board.move(parsed_almost, {:h, 6}, {:g, 8}, :orange, :knight, :nopromote)
+{res, checkmated_moved} = Chessboard.move(parsed_almost, {:h, 6}, {:g, 8}, :orange, :knight, :nopromote)
 assert res == :ok
 
     checkmated =
@@ -960,7 +960,7 @@ assert res == :ok
       [:mt, :mt, :mt, :mt, :mt, :mt, :mt, {:orange, :pawn}],
       [:mt, :mt, :mt, :mt, {:orange, :king}, {:orange, :rook}, :mt, :mt]
     ]
-    parsed_checkmated = %Board{placements: parsed_placements_checkmated}
+    parsed_checkmated = %Chessboard{placements: parsed_placements_checkmated}
     assert kingImmobile(parsed_checkmated, :blue) == true
     assert noMovesResolvingCheck(parsed_checkmated, :blue)
 
@@ -1031,7 +1031,7 @@ assert res == :ok
       {{:h, 1}, :mt}
     ]
 
-    checkmate_fetched_locs = Board.fetch_locations(parsed_checkmated.placements)
+    checkmate_fetched_locs = Chessboard.fetch_locations(parsed_checkmated.placements)
     assert checkmate_fetched_locs == parsed_checkmate_locs
 
 
@@ -1159,7 +1159,7 @@ assert res == :ok
 end
   describe "debugging worktest" do
     test "debug kingThreatened, pawn taking a pawn puts king in check (because pawn is not visible to uncovered king)" do
-      b_unscanned = %Board{
+      b_unscanned = %Chessboard{
         placements: [
           [
             blue: :rook,
@@ -1214,13 +1214,13 @@ end
         fullmove_number: 2
       }
 
-      b1 = Board.createBoard()
+      b1 = Chessboard.createBoard()
       |> move({:e, 2}, {:e, 4}, :orange, :pawn)
       |> split_tuple()
       |> move({:d, 7}, {:d, 5}, :blue, :pawn)
       |> split_tuple()
 
-      king_loc = Board.findKing(b1.placements, :orange)
+      king_loc = Chessboard.findKing(b1.placements, :orange)
       assert king_loc == {:e, 1}
       #View.CLI.showGameBoardAs(b1, :orange)
 
@@ -1371,18 +1371,18 @@ end
       # ◼ ◻ ◼ ♝ ◼ ◻ ◼ ♟︎
       # ◻ ◼ ◻ ♜ ◻ ◼ ◻ ◼
 
-      # ** (FunctionClauseError) no function clause matching in anonymous fn/1 in Board.noMovesResolvingCheck/2
+      # ** (FunctionClauseError) no function clause matching in anonymous fn/1 in Chessboard.noMovesResolvingCheck/2
 
-      #     The following arguments were given to anonymous fn/1 in Board.noMovesResolvingCheck/2:
+      #     The following arguments were given to anonymous fn/1 in Chessboard.noMovesResolvingCheck/2:
 
       #         # 1
       #         [{{:h, 6}, {:f, 7}}]
 
-      #     (board_model 0.1.0) lib/board.ex:1390: anonymous fn/1 in Board.noMovesResolvingCheck/2
+      #     (board_model 0.1.0) lib/board.ex:1390: anonymous fn/1 in Chessboard.noMovesResolvingCheck/2
       #     (elixir 1.14.4) lib/enum.ex:1658: Enum."-map/2-lists^map/1-0-"/2
       #     (elixir 1.14.4) lib/enum.ex:1658: Enum."-map/2-lists^map/1-0-"/2
-      #     (board_model 0.1.0) lib/board.ex:1390: Board.noMovesResolvingCheck/2
-      #     (board_model 0.1.0) lib/board.ex:1285: Board.isOver/2
+      #     (board_model 0.1.0) lib/board.ex:1390: Chessboard.noMovesResolvingCheck/2
+      #     (board_model 0.1.0) lib/board.ex:1285: Chessboard.isOver/2
       #     (controller 0.1.0) lib/game.ex:231: GameRunner.takeTurns/1
       #     (controller 0.1.0) lib/game.ex:104: GameRunner.runGame/2
       # iex(8)>
@@ -1407,18 +1407,18 @@ end
 # ◼ ◻ ♝ ◻ ◼ ◻ ◼ ♝
 # ◻ ◼ ◻ ◼ ◻ ◼ ♚ ♞
 
-# ** (FunctionClauseError) no function clause matching in anonymous fn/1 in Board.noMovesResolvingCheck/2
+# ** (FunctionClauseError) no function clause matching in anonymous fn/1 in Chessboard.noMovesResolvingCheck/2
 
-#     The following arguments were given to anonymous fn/1 in Board.noMovesResolvingCheck/2:
+#     The following arguments were given to anonymous fn/1 in Chessboard.noMovesResolvingCheck/2:
 
 #         # 1
 #         [{{:h, 6}, {:g, 6}}]
 
-#     (board_model 0.1.0) lib/board.ex:1389: anonymous fn/1 in Board.noMovesResolvingCheck/2
+#     (board_model 0.1.0) lib/board.ex:1389: anonymous fn/1 in Chessboard.noMovesResolvingCheck/2
 #     (elixir 1.14.4) lib/enum.ex:1658: Enum."-map/2-lists^map/1-0-"/2
 #     (elixir 1.14.4) lib/enum.ex:1658: Enum."-map/2-lists^map/1-0-"/2
-#     (board_model 0.1.0) lib/board.ex:1389: Board.noMovesResolvingCheck/2
-#     (board_model 0.1.0) lib/board.ex:1284: Board.isOver/2
+#     (board_model 0.1.0) lib/board.ex:1389: Chessboard.noMovesResolvingCheck/2
+#     (board_model 0.1.0) lib/board.ex:1284: Chessboard.isOver/2
 #     (controller 0.1.0) lib/game.ex:231: GameRunner.takeTurns/1
 #     (controller 0.1.0) lib/game.ex:104: GameRunner.runGame/2
 # iex(2)>
@@ -1442,18 +1442,18 @@ end
 # ◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻
 # ◻ ◼ ♚ ◼ ♞ ◼ ◻ ◼
 
-# ** (FunctionClauseError) no function clause matching in anonymous fn/1 in Board.noMovesResolvingCheck/2
+# ** (FunctionClauseError) no function clause matching in anonymous fn/1 in Chessboard.noMovesResolvingCheck/2
 
-#     The following arguments were given to anonymous fn/1 in Board.noMovesResolvingCheck/2:
+#     The following arguments were given to anonymous fn/1 in Chessboard.noMovesResolvingCheck/2:
 
 #         # 1
 #         [{{:d, 7}, {:e, 8}}]
 
-#     (board_model 0.1.0) lib/board.ex:1389: anonymous fn/1 in Board.noMovesResolvingCheck/2
+#     (board_model 0.1.0) lib/board.ex:1389: anonymous fn/1 in Chessboard.noMovesResolvingCheck/2
 #     (elixir 1.14.4) lib/enum.ex:1658: Enum."-map/2-lists^map/1-0-"/2
 #     (elixir 1.14.4) lib/enum.ex:1658: Enum."-map/2-lists^map/1-0-"/2
-#     (board_model 0.1.0) lib/board.ex:1389: Board.noMovesResolvingCheck/2
-#     (board_model 0.1.0) lib/board.ex:1284: Board.isOver/2
+#     (board_model 0.1.0) lib/board.ex:1389: Chessboard.noMovesResolvingCheck/2
+#     (board_model 0.1.0) lib/board.ex:1284: Chessboard.isOver/2
 #     (controller 0.1.0) lib/game.ex:231: GameRunner.takeTurns/1
 #     (controller 0.1.0) lib/game.ex:104: GameRunner.runGame/2
 # iex(5)>
@@ -1541,7 +1541,7 @@ end
         [{:orange, :bishop}, :mt, {:orange, :pawn}, :mt, :mt, {:orange, :rook}, :mt, :mt],
         [:mt, {:orange, :knight}, :mt, :mt, {:orange, :rook}, {:orange, :king}, :mt, :mt]
       ]
-      before = %Board{placements: before_placements}
+      before = %Chessboard{placements: before_placements}
       assert isCheckmate(before, :blue) == false
       assert isStalemate(before, :blue) == false
 
@@ -1567,7 +1567,7 @@ end
       [:mt, :mt, {:orange, :pawn}, :mt, :mt, {:orange, :rook}, :mt, :mt],
       [:mt, {:orange, :knight}, :mt, :mt, {:orange, :rook}, {:orange, :king}, :mt, :mt]
     ]
-    after_b = %Board{placements: after_placements}
+    after_b = %Chessboard{placements: after_placements}
     assert isCheckmate(after_b, :blue) == true
     assert isStalemate(after_b, :blue) == false
     assert isOver(after_b, :blue) == true
@@ -1579,14 +1579,14 @@ end
 
   describe "kingImmobile" do
     test "them doctests" do
-      b = Board.createBoard()
+      b = Chessboard.createBoard()
       p = b.placements
       blocked = MoveCollection.kingBlockedByOwnPieces()
       stale = MoveCollection.shorteststalemate()
-      assert Board.kingImmobile(b, :orange) == true
+      assert Chessboard.kingImmobile(b, :orange) == true
       #View.CLI.showPlacementsAs(blocked.placements, :orange)
       #IO.puts("")
-      assert Board.kingImmobile(blocked, :orange) == true
+      assert Chessboard.kingImmobile(blocked, :orange) == true
       #IO.puts("")
       #View.CLI.showPlacementsAs(blocked.placements, :orange)
       #IO.puts("")
@@ -1631,8 +1631,8 @@ end
       {res2, _msg2} = move(blocked, {:e, 8}, {:f, 8}, :blue, :king, :nopromote)
       assert res2 == :ok
       assert my_possible_king_moves_blue == [{{:e, 8}, {:f, 8}}, {{:e, 8}, {:d, 8}}, {{:e, 8}, {:g, 8}}]
-      assert Board.kingImmobile(blocked, :blue) == false
-      assert Board.kingImmobile(blocked, :orange) == true
+      assert Chessboard.kingImmobile(blocked, :blue) == false
+      assert Chessboard.kingImmobile(blocked, :orange) == true
 
       #View.CLI.showPlacementsAs(stale.placements, :blue)
       #IO.puts("")
@@ -1647,7 +1647,7 @@ end
 
       assert findKing(stale.placements, :blue) == {:g, 6}
       assert possible_moves(stale, {:g, 6}, :blue) == []
-      assert Board.kingImmobile(stale, :blue) == true
+      assert Chessboard.kingImmobile(stale, :blue) == true
       #View.CLI.showGameBoardAs(stale, :orange)
       assert findKing(stale.placements, :orange) == {:e, 1}
       assert Moves.unappraised_moves(:orange, :king, {:e, 1}) == [
@@ -1668,17 +1668,17 @@ end
       {res2, _msg2} = appraise_move(stale, {:e, 1}, {:d, 1}, {:orange, :king})
       assert res2 == :ok
       assert possible_moves(stale, {:e, 1}, :orange) == [{{:e, 1}, {:d, 1}}]
-      assert Board.kingImmobile(stale, :orange) == false
-      assert Board.kingImmobile(stale, :blue) == true
-      assert Board.kingImmobile(stale, :orange) == false
+      assert Chessboard.kingImmobile(stale, :orange) == false
+      assert Chessboard.kingImmobile(stale, :blue) == true
+      assert Chessboard.kingImmobile(stale, :orange) == false
       assert_raise FunctionClauseError, fn ->
-        Board.kingImmobile(p, :orange)
+        Chessboard.kingImmobile(p, :orange)
       end
     end
   end
 
 
-  describe "Board.make2DList(_,_)" do
+  describe "Chessboard.make2DList(_,_)" do
     test "make 3x3 board" do
       assert make2DList(3, 3) == [[:mt, :mt, :mt], [:mt, :mt, :mt], [:mt, :mt, :mt]]
     end
@@ -1857,7 +1857,7 @@ end
 
   # end of rec2DList(cols, rows) tests
 
-  describe "Board.placePiece(board, location, pieceColor, pieceType) tests" do
+  describe "Chessboard.placePiece(board, location, pieceColor, pieceType) tests" do
     #setup "initialize all the various boards" do
     #  a3x3 = [[:mt, :mt, :mt], [:mt, :mt, :mt], [:mt, :mt, :mt]]
     #end
@@ -2058,7 +2058,7 @@ end
 
   # end of placePiece(board, piecetype, location, color)
 
-  describe "Board.inRankUpZone(di)" do
+  describe "Chessboard.inRankUpZone(di)" do
     test "basic 3x3 board has rank up zone orange at top (so row 3) and rank up zone blue at bottom (so row 1)" do
       assert inRankUpZone({3, 3}, {3, 1}, :orange) == false
       assert inRankUpZone({3, 3}, {3, 3}, :orange) == true
@@ -2078,7 +2078,7 @@ end
     end
   end
 
-  describe "Board.boardSize(board) tests" do
+  describe "Chessboard.boardSize(board) tests" do
     test "make sure boardsize works on 3 x 3" do
       assert boardSize([[:mt, :mt, :mt], [:mt, :mt, :mt], [:mt, :mt, :mt]]) == {3, 3}
     end
@@ -2120,7 +2120,7 @@ end
     end
   end
 
-  describe "Board.placeTile" do
+  describe "Chessboard.placeTile" do
     test "basic placeTile" do
       assert placeTile([], :orange, {:a, 1}) == [{:orange, {:a, 1}}]
       assert placeTile([{:blue, {:a, 1}}, {:orange, {:a, 3}}], :orange, {:a, 2}) == [{:blue, {:a, 1}}, {:orange, {:a, 3}}, {:orange, {:a, 2}}]
@@ -2174,7 +2174,7 @@ end
 
   # end of placeTile tests
 
-  describe "Board.startingPosition" do
+  describe "Chessboard.startingPosition" do
     test "basic starting position" do
       starting_board = [[{:blue, :rook}, {:blue, :knight}, {:blue, :bishop}, {:blue, :queen}, {:blue, :king}, {:blue, :bishop}, {:blue, :knight}, {:blue, :rook}],
       [{:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}],
@@ -2203,7 +2203,7 @@ end
       # might just do another turn where the only legal move is rankup of that specific pawn?
 
       assert is_atom(:e)
-      scotch = %Board{placements: [
+      scotch = %Chessboard{placements: [
         [{:blue, :rook}, :mt, {:blue, :bishop}, {:blue, :queen}, {:blue, :king}, {:blue, :bishop}, {:blue, :knight}, {:blue, :rook}],
         [{:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, :mt, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}],
         [:mt, :mt, {:blue, :knight}, :mt, :mt, :mt, :mt, :mt],
@@ -2213,10 +2213,10 @@ end
         [{:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, :mt, :mt, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}],
         [{:orange, :rook}, {:orange, :knight}, {:orange, :bishop}, {:orange, :queen}, {:orange, :king}, {:orange, :bishop}, :mt, {:orange, :rook}]
       ], fullmove_number: 3, impale_square: {:d, 3}}
-      scotch_copy_pasted = %Board{placements: [[{:blue, :rook}, :mt, {:blue, :bishop}, {:blue, :queen}, {:blue, :king}, {:blue, :bishop}, {:blue, :knight}, {:blue, :rook}], [{:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, :mt, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}], [:mt, :mt, {:blue, :knight}, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, {:blue, :pawn}, :mt, :mt, :mt], [:mt, :mt, :mt, {:orange, :pawn}, {:orange, :pawn}, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, {:orange, :knight}, :mt, :mt], [{:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, :mt, :mt, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}], [{:orange, :rook}, {:orange, :knight}, {:orange, :bishop}, {:orange, :queen}, {:orange, :king}, {:orange, :bishop}, :mt, {:orange, :rook}]],
+      scotch_copy_pasted = %Chessboard{placements: [[{:blue, :rook}, :mt, {:blue, :bishop}, {:blue, :queen}, {:blue, :king}, {:blue, :bishop}, {:blue, :knight}, {:blue, :rook}], [{:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, :mt, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}], [:mt, :mt, {:blue, :knight}, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, {:blue, :pawn}, :mt, :mt, :mt], [:mt, :mt, :mt, {:orange, :pawn}, {:orange, :pawn}, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, {:orange, :knight}, :mt, :mt], [{:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, :mt, :mt, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}], [{:orange, :rook}, {:orange, :knight}, {:orange, :bishop}, {:orange, :queen}, {:orange, :king}, {:orange, :bishop}, :mt, {:orange, :rook}]],
         order: [:orange, :blue], impale_square: {:d, 3}, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 3}
-      %Board{placements: scotch}
-      scotch_moved = Board.createBoard()
+      %Chessboard{placements: scotch}
+      scotch_moved = Chessboard.createBoard()
       |> move({:e, 2}, {:e, 4}, :orange, :pawn) # or sprint
       |> split_tuple()
       |> move({:e, 7}, {:e, 5}, :blue, :pawn) # or :sprint
@@ -2236,12 +2236,12 @@ end
   # end of startingPosition tests
 
   @tag :move
-  describe "Board.move" do
+  describe "Chessboard.move" do
     test "basic move, lets say e4 as orange" do
-      b = Board.createBoard()
-      {res, msg} = Board.move(b, {:d, 2}, {:d, 4}, :orange, :pawn, :nopromote)
+      b = Chessboard.createBoard()
+      {res, msg} = Chessboard.move(b, {:d, 2}, {:d, 4}, :orange, :pawn, :nopromote)
       assert res == :ok
-      assert msg == %Board{placements: [[blue: :rook, blue: :knight, blue: :bishop, blue: :queen, blue: :king, blue: :bishop, blue: :knight, blue: :rook], [blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, {:orange, :pawn}, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [{:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, :mt, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}], [orange: :rook, orange: :knight, orange: :bishop, orange: :queen, orange: :king, orange: :bishop, orange: :knight, orange: :rook]], order: [:orange, :blue], impale_square: {:d, 3}, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 1}
+      assert msg == %Chessboard{placements: [[blue: :rook, blue: :knight, blue: :bishop, blue: :queen, blue: :king, blue: :bishop, blue: :knight, blue: :rook], [blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, {:orange, :pawn}, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [{:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, :mt, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}], [orange: :rook, orange: :knight, orange: :bishop, orange: :queen, orange: :king, orange: :bishop, orange: :knight, orange: :rook]], order: [:orange, :blue], impale_square: {:d, 3}, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 1}
 
     end
 
@@ -2249,7 +2249,7 @@ end
     end
 
     test "a series of moves with a pawn capture" do
-      b1 = Board.createBoard()
+      b1 = Chessboard.createBoard()
       |> move({:e, 2}, {:e, 4}, :orange, :pawn)
       |> split_tuple()
       |> move({:d, 7}, {:d, 5}, :blue, :pawn)
@@ -2267,7 +2267,7 @@ end
 
     test "a series of moves passed into each other, lets say the scandinavian opening where queen moves to a5" do
 
-      scandinavian = %Board{placements: [
+      scandinavian = %Chessboard{placements: [
         [{:blue, :rook}, {:blue, :knight}, {:blue, :bishop}, :mt, {:blue, :king}, {:blue, :bishop}, {:blue, :knight}, {:blue, :rook}],
         [{:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, :mt, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}, {:blue, :pawn}],
         [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
@@ -2277,7 +2277,7 @@ end
         [{:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}, :mt, {:orange, :pawn}, {:orange, :pawn}, {:orange, :pawn}],
         [{:orange, :rook}, :mt, {:orange, :bishop}, {:orange, :queen}, {:orange, :king}, {:orange, :bishop}, {:orange, :knight}, {:orange, :rook}]
       ], fullmove_number: 4, halfmove_clock: 2}
-      scandinavian_copy_pasted = %Board{
+      scandinavian_copy_pasted = %Chessboard{
         first_castleable: :both,
         fullmove_number: 4,
         halfmove_clock: 2,
@@ -2296,7 +2296,7 @@ end
         second_castleable: :both
       }
 
-      scandinavian_moved = Board.createBoard()
+      scandinavian_moved = Chessboard.createBoard()
       |> move({:e, 2}, {:e, 4}, :orange, :pawn)
       |> split_tuple()
       |> move({:d, 7}, {:d, 5}, :blue, :pawn)
@@ -2316,21 +2316,21 @@ end
     end
   end
 
-  # end of Board.move tests
+  # end of Chessboard.move tests
 
   describe "createBoardInitial" do
     test "basic initial create board" do
     end
   end
 
-  # end of Board.createBoardInitial
+  # end of Chessboard.createBoardInitial
 
   describe "createBoard (intermediate)" do
     test "basic intermediate createBoard" do
     end
   end
 
-  # end of Board.createBoard
+  # end of Chessboard.createBoard
 
   describe "printBoard (board)" do
     test "startingposition" do
@@ -2341,7 +2341,7 @@ end
 
   describe "listPlacements (board)" do
     test "startingposition" do
-      start = Board.createBoard()
+      start = Chessboard.createBoard()
       assert listPlacements(start.placements) == [["♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"], ["♟︎", "♟︎", "♟︎", "♟︎", "♟︎", "♟︎", "♟︎", "♟︎"], ["◻", "◻", "◻", "◻", "◻", "◻", "◻", "◻"], ["◻", "◻", "◻", "◻", "◻", "◻", "◻", "◻"], ["◻", "◻", "◻", "◻", "◻", "◻", "◻", "◻"], ["◻", "◻", "◻", "◻", "◻", "◻", "◻", "◻"], ["♙", "♙", "♙", "♙", "♙", "♙", "♙", "♙"], ["♖", "♘", "♗", "♕", "♔", "♗", "♘", "♖"]]
     end
   end

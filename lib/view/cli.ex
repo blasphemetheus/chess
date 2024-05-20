@@ -72,26 +72,40 @@ defmodule View.CLI do
   makes a string representation of those placements and
   calls a fn to display it on the screen
   """
-  def showGameBoardAs(board, :blue) do
-    contents_str = board.placements |> Board.reversePlacements() |> Board.printPlacements()
+  def showGameBoardAs(:chess, chessboard, :blue) do
+    contents_str = chessboard.placements |> Board.Utils.reversePlacements() |> Chessboard.printPlacements()
 
     displayGameBoard(contents_str)
   end
 
-  def showGameBoardAs(board, :orange) do
-    contents_str = board.placements |> Board.printPlacements()
+  def showGameBoardAs(:chess, chessboard, :orange) do
+    contents_str = chessboard.placements |> Chessboard.printPlacements()
 
     displayGameBoard(contents_str)
   end
 
+  def showGameBoardAs(:ur, urboard, :orange) do
+    contents_str = urboard |> UrBoard.printPlacements()
+
+    displayGameBoard(contents_str)
+  end
+
+  def showGameBoardAs(:ur, urboard, :blue) do
+    contents_str = urboard |> Board.Utils.reversePlacements() |> UrBoard.printPlacements()
+
+    displayGameBoard(contents_str)
+  end
+
+  @doc """
+  """
   def showPlacementsAs(placements, :blue) do
-    contents_str = placements |> Board.reversePlacements() |> Board.printPlacements()
+    contents_str = placements |> Board.Utils.reversePlacements() |> Chessboard.printPlacements()
 
     displayGameBoard(contents_str)
   end
 
   def showPlacementsAs(placements, :orange) do
-    contents_str = placements |> Board.printPlacements()
+    contents_str = placements |> Chessboard.printPlacements()
 
     displayGameBoard(contents_str)
   end
@@ -100,6 +114,9 @@ defmodule View.CLI do
 
 
 
+  @doc """
+  Given a board, a color, a first_player and second_player,  show the board with the information given
+  """
   def displayBoard(board, color, first_p, second_p) do
     displayOrder(board.order)
     displayTurn(color, {first_p, second_p})
@@ -228,6 +245,9 @@ defmodule View.CLI do
     {:ok, parsed}
   end
 
+  @doc """
+  Given a board, a tuple of tags, a taken, time_elapsed and turns, pass off to displays
+  """
   def showGameStatus(board, {tag, opponent} = tags, taken, time_elapsed, turns) do
     displays(:metadata, tags, taken, time_elapsed, turns)
     board
