@@ -75,13 +75,13 @@ defmodule View.CLI do
   def showGameBoardAs(:chess, chessboard, :blue) do
     contents_str = chessboard.placements |> Board.Utils.reversePlacements() |> Chessboard.printPlacements()
 
-    displayGameBoard(contents_str)
+    displayGameBoard(:chess, contents_str)
   end
 
   def showGameBoardAs(:chess, chessboard, :orange) do
     contents_str = chessboard.placements |> Chessboard.printPlacements()
 
-    displayGameBoard(contents_str)
+    displayGameBoard(:chess, contents_str)
   end
 
   @doc """
@@ -91,27 +91,13 @@ defmodule View.CLI do
   def showGameBoardAs(:ur, urboard, :orange) do
     contents_str = urboard |> UrBoard.printPlacements()
 
-    displayGameBoard(contents_str)
+    displayGameBoard(:ur, contents_str)
   end
 
   def showGameBoardAs(:ur, urboard, :blue) do
     contents_str = urboard |> Board.Utils.reversePlacements() |> UrBoard.printPlacements()
 
-    displayGameBoard(contents_str)
-  end
-
-  @doc """
-  """
-  def showPlacementsAs(placements, :blue) do
-    contents_str = placements |> Board.Utils.reversePlacements() |> Chessboard.printPlacements()
-
-    displayGameBoard(contents_str)
-  end
-
-  def showPlacementsAs(placements, :orange) do
-    contents_str = placements |> Chessboard.printPlacements()
-
-    displayGameBoard(contents_str)
+    displayGameBoard(:ur, contents_str)
   end
 
   ############################################################
@@ -212,14 +198,22 @@ defmodule View.CLI do
     end
   end
 
+  @doc """
+  Given a raw_color (str), return an atom representing the color or raise an ArgumentError
+  """
   def parseColor(raw_color) do
     case raw_color do
       "orange" -> :orange
+      "o" -> :orange
       "blue" -> :blue
+      "b" -> :blue
       _ -> raise ArgumentError, message: "Expected: valid playerColor, Got:#{raw_color}"
     end
   end
 
+  @doc """
+  Given a raw_piece (str), return an atom representing the
+  """
   def parsePiece(raw_piece) do
     case raw_piece do
       "pawn" -> :pawn
@@ -228,11 +222,15 @@ defmodule View.CLI do
       "rook" -> :rook
       "queen" -> :queen
       "king" -> :king
+      "chit" -> :chit
       _ -> raise ArgumentError, message: "Expected: valid pieceType, Got: #{raw_piece}"
     end
   end
 
-  # given a string which could be malicious or whatever, or lie about any number of things, pull out the four things for a move
+  @doc """
+  For Chess
+  given a string which could be malicious or whatever, or lie about any number of things, pull out the four things for a move
+  """
   def parseMove(input) do
     {start_loc, end_loc, pieceColor, pieceType} = String.split(input)
     |> List.to_tuple()
@@ -245,6 +243,19 @@ defmodule View.CLI do
 
     parsed = {p_start_loc, p_end_loc, p_pieceColor, p_pieceType}
     # raise ArgumentError, message: "hello #{inspect parsed}"
+
+    {:ok, parsed}
+  end
+
+  def parse_ur_move(input) do
+    {start_loc, end_loc, pieceColor} = String.split(input)
+    |> List.to_tuple()
+
+    p_start_loc = parseLocation(start_loc)
+    p_end_loc = parseLocation(end_loc)
+    p_pieceColor = parseColor(pieceColor)
+
+    parsed = {p_start_loc, p_end_loc, p_pieceColor}
 
     {:ok, parsed}
   end
@@ -303,7 +314,7 @@ defmodule View.CLI do
   prints out the placements line by line (in chunks of 8)
   to the CLI
   """
-  def displayGameBoard(board_contents) do
+  def displayGameBoard(:chess, board_contents) do
     # IO.puts("TO_PLAY: #{inspect(:orange)}, BOARD: #{inspect(board_contents)} dope")
     #Parser.parseFor(board_contents, "\n")
     #String.splitter(board_contents, "\n")
@@ -318,6 +329,24 @@ defmodule View.CLI do
     IO.puts("")
   end
 
+  @doc """
+  Given an Ur board, display the contents of the board in std out
+  """
+  def displayGameBoard(:ur, urboard_contents) do
+    urboard_contents
+    |> String.graphemes()
+    |> Enum.chunk_every(16) # tiles and placements, ranks of 8
+    |> Enum.map(fn any -> Enum.map(any,
+        fn
+          "🏵"-> "🏵 "
+          any -> any
+      end)
+    end)
+    |> Enum.map(&(&1 |> List.to_string()))
+    |> Enum.each(fn x -> IO.puts(x) end)
+
+    IO.puts("")
+  end
 
   @doc """
   Asks CLI for move, but if help is returned, displays a message,

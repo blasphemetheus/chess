@@ -1216,7 +1216,7 @@ defmodule Chessboard do
     |> Board.Utils.reverseRanks()
     #|> Enum.intersperse(:switch_tiles)
     |> Enum.map(fn
-      x -> Chessboard.Util.printRank(x, "\t ") <> line_sep
+      x -> Board.Utils.printRank(:chess, x, "\t ") <> line_sep
       end) |> to_string() |> inspect()
     #Enum.intersperse()
     Tile.renderTile(:blue)

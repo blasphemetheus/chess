@@ -56,39 +56,122 @@ Given placements (3 by 8) in the ur fashion and a line separator, print the
 Ur Board to Command Line
 """
 def printPlacements(urboard, line_sep \\ "\n") when is_struct(urboard) do
-  printPlacements(urboard.placements)
+  inspect(urboard, label: "urboard")
+  printPlacements(urboard.placements, urboard.tiles, line_sep)
 end
-def printPlacements(placements, line_sep) do
-  placements
-  |> Board.Utils.reverseRanks()
-  #|> Enum.intersperse(:switch_tiles)
-  |> Enum.map(fn
-    x -> printRank(x, "\t ") <> line_sep
-    end) |> to_string() |> inspect()
+def printPlacements(placements, tiles, line_sep) do
+  inspect(placements, label: "placements")
+  inspect(tiles, label: "tiles")
+
+  tiles
+  # zip twice (ranks then placements)
+  |> Enum.zip_with(placements,
+  fn (tile_rank, place_rank) ->
+    Enum.zip_with(tile_rank, place_rank,
+    fn
+      tile, placement -> {tile, placement}
+   end)
+  end
+  )
+  |> Board.Utils.map_to_each(&translate_ur/1)
+  |> Enum.reduce("", fn x, accum -> accum <> Enum.reduce(x, "", fn item, acc -> acc <> item end) end)
+
+
+
+  # Enum.intersperse(tiles, placements)
+  # |> Enum.chunk_every(2)
+  # |> Enum.map(fn [tile, placement] -> {tile, placement} end)
+  # # |> Board.Utils.reverseRanks()
+  # #|> Enum.intersperse(:switch_tiles)
+  # |> Enum.map(fn
+  #   x -> printRank(:ur, x, "\t ") <> line_sep
+  #   end) |> to_string() |> inspect()
 
   #Enum.intersperse()
-  Tile.renderTile(:blue)
-  Tile.renderTile(:orange)
+  # Tile.renderTile(:blue)
+  # Tile.renderTile(:orange)
+
   # we need nested tile colors to zip into the board
-  Tile.nestedTileColors()
-  # so we must zip TWICE (zip ranks, zip placements)
-  |> Enum.zip_with(placements,
-    fn (tile_color_rank, board_rank) ->
-      Enum.zip_with(tile_color_rank, board_rank, fn
-        tile_color, :mt -> tile_color
-        _tile_color, not_empty -> not_empty
-        end)
-      end)
-  ## |> Enum.map(fn x -> Enum.chunk_every(x, 2) |> List.to_tuple() end)
-  |> Board.Utils.map_to_each(&translate/1)
-  |> Enum.reduce("", fn x, accum -> accum <> Enum.reduce(x, "", fn item, acc -> acc <> item end) end)
+  # Tile.nestedTileColors()
+  # # so we must zip TWICE (zip ranks, zip placements)
+  # |> Enum.zip_with(placements,
+  #   fn (tile_color_rank, board_rank) ->
+  #     Enum.zip_with(tile_color_rank, board_rank, fn
+  #       tile_color, :mt -> tile_color
+  #       _tile_color, not_empty -> not_empty
+  #       end)
+  #     end)
+  # ## |> Enum.map(fn x -> Enum.chunk_every(x, 2) |> List.to_tuple() end)
+  # |> Board.Utils.map_to_each(&translate_ur/1)
+  # |> Enum.reduce("", fn x, accum -> accum <> Enum.reduce(x, "", fn item, acc -> acc <> item end) end)
+end
+
+###### UR Game Rules ####### move to Ur model or ur_game.ex or smth
+# this function should be in random utils or whatever
+@doc """
+Roll
+"""
+def roll_pyramids_sum(amount) do
+  # a corner can be :blank or :marked
+  roll_pyramids_list(amount)
+  |> Enum.sum()
+end
+
+@doc """
+Given an amount of tetrahedrons (3D pyramids) to roll, return a list of values (from 0 to 1) that were rolled
+"""
+def roll_pyramids_list(amount) do
+  # a corner can be :blank or :marked
+  1..amount
+  |> Enum.map(&roll_tetrahedron/0)
+end
+
+@doc """
+Roll one tetrahedron with default reandomness approximately, returning a 0 for unmarked and 1 for marked
+"""
+def roll_tetrahedron() do
+  upside = Enum.random([:blank, :blank, :marked, :marked])
+  case upside do
+    :blank -> 0
+    :marked -> 1
+  end
+end
+
+
+@doc """
+Given an urboard (doesn't matter whose turn) and returns whether the position is final
+"""
+def isOver(urboard) do
+  # over when 7 pieces make it to a home space
+  scored_seven(urboard.placements, :orange) or scored_seven(urboard.placements, :blue)
+end
+
+@doc """
+Given placements and  color, returns whether that color has seven in their end square
+"""
+def scored_seven(placements, color) do
+  placements
+  |> Enum.at(0)
+  |> Enum.at(5)
+  |> is_it_seven_chits_of_color(color)
+end
+
+def is_it_seven_chits_of_color(alist, color) when is_list(alist) and is_atom(color) do
+    length(alist) == 7 and Enum.all?(fn
+      {color, :chit} -> true
+      {_color, _any} -> false
+  end)
+end
+
+def is_it_seven_chits_of_color(alist, color) do
+  false
 end
 
 @doc """
 Creates a starting position, placing all chits on the board
 """
 def startingPosition() do
-  Board.Utils.make2DList(3, 8)
+  Board.Utils.make2DList(8, 3)
   |> placeMultipleOfPiece(:orange, :chit, 11, @orange_home)
   |> placeMultipleOfPiece(:blue, :chit, 11, @blue_home)
 end

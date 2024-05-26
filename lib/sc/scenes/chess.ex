@@ -157,7 +157,7 @@ defmodule Genomeur.Scene.Chess do
 
   @event_texts [
     text_spec("Unhandled EVENT TEXT", id: :event_text, t: {0, 800}),
-    text_spec("Unhandled 2 EVENT TEXT", id: :event_text2, t: {00, 1000})
+    text_spec("Unhandled 2 EVENT TEXT", id: :event_text2, t: {0, 900})
   ]
 
   @controltext [
@@ -482,6 +482,7 @@ defmodule Genomeur.Scene.Chess do
     {:halt, scene}
   end
 
+  # when rotate_board slider is changed, angle of the board is updated
   def handle_event({:value_changed, :rotate_board, angle}, _, %{assigns: %{graph: graph}} = scene) do
     graph = Graph.modify(graph, :the_board, &update_opts(&1, rotate: angle))
 
@@ -577,6 +578,7 @@ defmodule Genomeur.Scene.Chess do
   #   {:noreply, scene}
   # end
 
+  # change moving tag
   def handle_event({:value_changed, :moving_toggle, true} = event, _pid, %{assigns: %{graph: graph}} = scene) do
     graph = Graph.modify(graph, :moving_tag, &text(&1, (Enum.random(0..200) |> Integer.to_string()) <> "#{inspect(event)}"))
 

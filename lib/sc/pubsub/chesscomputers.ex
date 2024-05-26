@@ -13,10 +13,12 @@ defmodule Genomeur.PubSub.ChessComputers do
   @description "Watch Computers Play Chess Badly"
   @tag "larry"
   @opp_tag "king"
-  @timer_ms 800
+  # @timer_ms 800
+  @timer_ms 50
   #GameRunner.createGame(:computer, :computer, @tag, @opp_tag)
   @initial_game %GameRunner{
     board: Chessboard.createBoard(),
+    bgame: :chess,
     turn: :orange,
     first: %Player{type: :computer, color: :orange, tag: @tag, lvl: 1},
     second: %Player{type: :computer, color: :blue, tag: @opp_tag, lvl: 1},
@@ -48,7 +50,7 @@ defmodule Genomeur.PubSub.ChessComputers do
   def handle_info(:tick, %{t: t, chess_computers: old_game} = state) do
     play_turn =
       old_game
-      |> GameRunner.playCPUTurn(1)
+      |> GameRunner.playCPUTurn(1, :chess)
 
     new_game =
       if GameRunner.isOver(play_turn) do

@@ -21,6 +21,7 @@ defmodule Tile do
       :bishop -> "♗"
       :knight -> "♘"
       :pawn -> "♙"
+      :chit -> "☺"
       _ -> raise ArgumentError, message: "invalid piecetype"
     end
   end
@@ -34,25 +35,51 @@ defmodule Tile do
       :bishop -> "♝"
       :knight -> "♞"
       :pawn -> "♟︎"
+      :chit -> "☻"
       _ ->  raise ArgumentError, message: "invalid piecetype"
     end
   end
 
-  def renderTile(color, piece) do
-    raise ArgumentError, message: "invalid render tile color, got #{inspect color} and #{inspect piece}"
-  end
-
   def renderTile(a_list) when is_list(a_list) do
+    # grabs the first one and uses that as it's only lists of many of the same piecetype
     case Enum.at(a_list, 0) do
       {:blue, :chit} -> "⛁"
       {:orange, :chit} -> "⛃"
     end
   end
 
-  def renderTile(tileColor) do
+  def renderTile(tileColor) when tileColor in [:orange, :blue] do
     case tileColor do
       :blue -> "◻"
       :orange -> "◼"
+    end
+  end
+
+  def renderTile(:mt) do
+    "_"
+  end
+
+  def renderTile(tile, {color, piecetype} = piece_tuple) when is_atom(tile) do
+    "#{renderTileFace(tile)}#{renderTile(color, piecetype)}"
+  end
+  def renderTile(tile, :mt) when is_atom(tile) do
+    "#{renderTileFace(tile)}#{renderTile(:mt)}"
+  end
+
+  def renderTile(color, piece) do
+    raise ArgumentError, message: "invalid render tile color, got #{inspect color} and #{inspect piece}"
+  end
+
+  def renderTileFace(tile) when is_atom(tile) do
+    case tile do
+      :rosette -> "🏵"
+      :ice -> "🧊"
+      :water -> "🌊"
+      :eyes -> "👀"
+      :crystal -> "🪨"
+      :plasma -> "⚡"
+      :home -> "🏠"
+      :end -> "🫀"
     end
   end
 
@@ -103,7 +130,7 @@ defmodule Tile do
     ## same as all_locations_nested(:formal) in Chessboard
     8..1
     |> Enum.map(fn rank -> 1..8
-    |> Enum.map(fn file -> {Chessboard.int_to_column(file), rank} |> Tile.loc_to_color() end) end)
+    |> Enum.map(fn file -> {Board.Utils.int_to_column(file), rank} |> Tile.loc_to_color() end) end)
     ## NOW ON TO OTHER STUFF
   end
 

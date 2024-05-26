@@ -51,14 +51,21 @@ defmodule Board.Utils do
   def reverseColumns(two_d_list), do: Enum.map(two_d_list, fn x -> Enum.reverse(x) end)
 
     @doc """
-  Given a rank and a separator, translate and reduce to a string
+  Given a rank and a separator, translate and reduce to a string with a translate function depending on the bgame
   """
-  def printRank(rank, sep \\ "\t ")
+  def printRank(bgame, rank, sep \\ "\t ")
 
-  def printRank(rank, sep) do
+  def printRank(:chess, rank, sep) do
     Enum.map(rank, fn
       x -> translate(x) <> sep end)
     |> to_string()
+  end
+
+  def printRank(:ur, rank, sep) do
+    Enum.map(rank, fn
+      {tile_spot, piece_spot} = _x -> translate_ur({tile_spot, piece_spot}) <> sep
+      x -> translate_ur(x) <> sep
+     end) |> to_string()
   end
 
   @doc """
@@ -74,9 +81,17 @@ defmodule Board.Utils do
   end
   def translate(:blue), do: Tile.renderTile(:blue)
   def translate(:orange), do: Tile.renderTile(:orange)
-  def translate(a_list) when is_list(a_list) do
-    Tile.renderTile(a_list)
+
+  def translate_ur({tilespot, piecespot}) do
+    Tile.renderTile(tilespot, piecespot)
   end
+
+  def translate_ur(alist) when is_list(alist) do
+    {color, piece_type} = Enum.at(alist, 0)
+    Tile.renderTile(color, piece_type)
+  end
+
+  def translate_ur(:mt), do: "?"
 
   @doc """
   Maps a function to each location on the placements of the board,

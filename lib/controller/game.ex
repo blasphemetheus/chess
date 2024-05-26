@@ -76,6 +76,9 @@ defmodule GameRunner do
   # end
 
   @doc """
+  Given a bgame, a board, a localUserTag and color to play, calls the appropriate
+  View functions to play a full turn of the game, so might ask for input or choose between options
+
   asks the local user indicated for a move, the io.get prompts etc
   """
   def playTurn(:chess, board, localUserTag, color) do
@@ -94,37 +97,15 @@ defmodule GameRunner do
   end
 
   def playTurn(:ur, ur_board, localUserTag, color) do
-    IO.puts("It is the turn of #{localUserTag}, Roll them bones! (press enter to roll them dice)")
+    IO.puts("It is the turn of #{localUserTag}, of color #{color}. Roll them bones! (press enter to roll them dice)")
     IO.gets("") # so you have to roll the dice
 
-    roll = roll_pyramids(4) # rolls four pyramids, returns sum of roll value
+    roll = roll_pyramids_list(4) # rolls four pyramids, returns sum of roll value
+    IO.puts("Rolled the following: #{inspect(roll)}")
     IO.puts("You rolled them dice! you rolled a #{roll}!")
-    input = IO.gets("Please enter the move coordinates in the following format, <starting location> <ending location> <piececolor> <piecetype>")
+    input = IO.gets("Please enter the move coordinates in the following format, <starting location> <ending location> <piececolor>")
     i = String.trim(input)
-    {:ok, {s_loc, e_loc, playerColor, pieceType}} = parseMove(i)
-  end
-
-  ###### UR Game Rules ####### move to Ur model or ur_game.ex or smth
-  # this function should be in random utils or whatever
-  @doc """
-  Roll
-  """
-  def roll_pyramids(amount) do
-    # a corner can be :blank or :marked
-    1..amount
-    |> Enum.map(&roll_tetrahedron/0)
-    |> Enum.sum()
-  end
-
-  @doc """
-  Roll one tetrahedron with default reandomness approximately, returning a 0 for unmarked and 1 for marked
-  """
-  def roll_tetrahedron() do
-    upside = Enum.random([:blank, :blank, :marked, :marked])
-    case upside do
-      :blank -> 0
-      :marked -> 1
-    end
+    {:ok, {s_loc, e_loc, playerColor}} = parse_ur_move(i)
   end
 
   @doc """
@@ -352,8 +333,13 @@ defmodule GameRunner do
   given a GameRunner (including board, turn and history), return when the board state ends the game or there is thrice repitition
   """
   def isOver(game) do
-    Chessboard.isOver(game.board, game.turn) or
-    isThreeFoldRepitition(game.board, game.turn, game.history)
+    case game.bgame do
+      :chess -> Chessboard.isOver(game.board, game.turn) or
+        isThreeFoldRepitition(game.board, game.turn, game.history)
+      :ur -> UrBoard.isOver(game.board)
+      # default to chess if bgame is unset
+      :unset -> Chessboard.isOver(game.board, game.turn) or isThreeFoldRepitition(game.board, game.turn, game.history)
+    end
   end
 
   @doc """
@@ -398,10 +384,10 @@ defmodule GameRunner do
   """
   def playTurn(game, player) do
     case player.type do
-      :vs -> playHumanTurn(game, player)
-      :human -> playHumanTurn(game, player)
-      :computer -> playCPUTurn(game, player.lvl)
-      :cpu -> playCPUTurn(game, player.lvl)
+      :vs -> playHumanTurn(game, player, game.bgame)
+      :human -> playHumanTurn(game, player, game.bgame)
+      :computer -> playCPUTurn(game, player.lvl, game.bgame)
+      :cpu -> playCPUTurn(game, player.lvl, game.bgame)
       _ -> raise GameError, message: "Invalid player type #{inspect(player)}"
     end
     |> appendToHistory(game)
@@ -454,10 +440,11 @@ defmodule GameRunner do
     # if the player resigns, end the game
     # if the player times out, end the game as a timeout loss
   """
-  def playHumanTurn(game, player) do
+  def playHumanTurn(game, player, :chess) do
     turn = game.turn
     # View.CLI.displays(:game_board, game.board |> Chessboard.printBoard(), turn)
     View.CLI.displays(:turn_intro, turn, player)
+
     # play a turn
     {start_loc, end_loc, type_at_loc, promote_to} =  askAndCorrectlyParse(game.board, game.turn)
 
@@ -484,11 +471,34 @@ defmodule GameRunner do
     end
   end
 
+
+  def playHumanTurn(game, player, :ur) do
+    turn = game.turn
+
+    View.CLI.displays(:turn_intro, turn, player)
+
+    #play a turn
+    # show the player they need to roll the dice
+    View.CLI.promptForRollOfDice(:ur, 4)
+
+    #
+    UrBoard.roll
+
+  end
+
+  @doc """
+  Given a bgame and the amount of dice, prompt for the player to roll the dice (press enter) and
+  continue afterwards. Basically a 'stop and wait for player input' function
+  """
+  def promptForRollOfDice(bgame, number_of_dice) do
+
+  end
+
   @doc """
   Given a game and an Integer cpu level (one, two, three, etc),
   return a game with the the move selected according to the level
   """
-  def playCPUTurn(game, cpu_level) when game |> is_struct() and cpu_level |> is_integer() do
+  def playCPUTurn(game, cpu_level, :chess) when game |> is_struct() and cpu_level |> is_integer() do
     choose_atom = cpu_level_to_choose_atom(cpu_level)
     {start_loc, end_loc, promote_to} = choose_move_from_possible(game, choose_atom)
     apply_move_to_game(game, start_loc, end_loc, promote_to)
