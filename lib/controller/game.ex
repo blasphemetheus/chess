@@ -479,20 +479,37 @@ defmodule GameRunner do
 
     #play a turn
     # show the player they need to roll the dice
-    View.CLI.promptForRollOfDice(:ur, 4)
+    View.CLI.promptForRollOfDice(:ur, 4, "It is the turn of #{player.tag}, of color #{turn}.")
 
     #
-    UrBoard.roll
+    roll = UrBoard.roll_pyramids_list(4)
 
+    View.CLI.displayRoll(roll)
+
+    int_roll = roll |> Enum.sum()
+
+    {:ok, new_board} = case UrBoard.is_there_a_move_available(game.board, int_roll, game.turn) do
+      true ->
+        {:ok, {start_loc, end_loc, turn}} = View.CLI.promptForUrMove(game, int_roll) |> View.CLI.parse_ur_move()
+        valid = Referee.validateUrMove(game.board, start_loc, end_loc, turn)
+
+        if valid do
+          UrBoard.move(game.board, start_loc, end_loc, turn)
+        else
+          raise GameError, message: "Player resigned via bad input"
+        end
+      false ->
+        View.CLI.promptForNoMove(int_roll)
+        {:ok, game.board}
+    end
+
+    %{game | board: new_board, turn: nextTurn(game.turn)}
   end
 
-  @doc """
-  Given a bgame and the amount of dice, prompt for the player to roll the dice (press enter) and
-  continue afterwards. Basically a 'stop and wait for player input' function
-  """
-  def promptForRollOfDice(bgame, number_of_dice) do
 
-  end
+  # input = IO.gets("Please enter the move coordinates in the following format, <starting location> <ending location> <piececolor>")
+  # i = String.trim(input)
+  # {:ok, {s_loc, e_loc, playerColor}} = parse_ur_move(i)
 
   @doc """
   Given a game and an Integer cpu level (one, two, three, etc),

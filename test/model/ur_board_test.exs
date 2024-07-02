@@ -92,4 +92,49 @@ defmodule Model.UrBoardTest do
 
     end
   end
+
+  describe "UrBoard. ahead of" do
+    test "get location so many ahead of color" do
+      assert this_many_ahead({1, 5}, 2, :orange) == {1, 3}
+      assert this_many_ahead({1, 5}, 5, :orange) == {2, 1}
+      assert this_many_ahead({3, 5}, 4, :blue) == {3, 1}
+      assert this_many_ahead({3, 1}, 3, :blue) == {2, 3}
+      assert this_many_ahead({1, 5}, 6, :orange) == {2, 2}
+      assert this_many_ahead({2, 4}, 5, :orange) == {1, 8}
+      assert this_many_ahead({2, 4}, 5, :blue) == {3, 8}
+      assert this_many_ahead({2, 4}, 7, :orange) == {1, 6}
+      assert this_many_ahead({2, 4}, 7, :blue) == {3, 6}
+    end
+
+    test "get location so many ahead returns nil or false" do
+      assert this_many_ahead({2, 4}, 8, :blue) == false
+      assert this_many_ahead({2, 4}, 8, :orange) == false
+    end
+  end
+
+  describe "possible moves" do
+    test "possible moves of starting board" do
+      urboard = %UrBoard{placements: startingPlacements()}
+      assert possible_moves(urboard, :orange) == [
+        {{1, 5}, {1, 4}, :orange},
+        {{1, 5}, {1, 3}, :orange},
+        {{1, 5}, {1, 2}, :orange},
+        {{1, 5}, {1, 1}, :orange}
+      ]
+
+      assert possible_moves(urboard, :blue) == [
+        {{3, 5}, {3, 4}, :orange},
+        {{3, 5}, {3, 3}, :orange},
+        {{3, 5}, {3, 2}, :orange},
+        {{3, 5}, {3, 1}, :orange}
+      ]
+    end
+  end
+
+  describe "get at" do
+    test "getat :(" do
+      assert startingPlacements() |> get_at({1, 5}) |> length() == 11
+      assert startingPlacements() |> get_at({1, 4}) == :mt
+    end
+  end
 end

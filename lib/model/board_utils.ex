@@ -44,7 +44,8 @@ defmodule Board.Utils do
   def rec2DList(cols, rows), do: :mt |> List.duplicate(cols) |> List.duplicate(rows)
 
   # these are the help for replace_at, deprecated
-  def reversePlacements(two_d_list), do: two_d_list |> reverseColumns|> reverseRanks
+  def reversePlacements(urboard) when urboard |> is_struct(), do: %{urboard | placements: urboard.placements |> reversePlacements()}
+  def reversePlacements(two_d_list) when is_list(two_d_list), do: two_d_list |> reverseColumns|> reverseRanks
 
   def reverseRanks(two_d_list), do: Enum.reverse(two_d_list)
 

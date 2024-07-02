@@ -15,4 +15,14 @@ defmodule Referee do
       :error -> false
     end
   end
+
+  @doc """
+  Given an ur move and board, return a bool representing whether the move is valid or not
+  """
+  def validateUrMove(urboard, start_loc, end_loc, turn) do
+    case UrBoard.move(urboard, start_loc, end_loc, turn) do
+      {:ok, _new_board} -> true
+      {:error, _new_board} -> false
+    end
+  end
 end

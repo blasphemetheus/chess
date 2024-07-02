@@ -188,12 +188,12 @@ defmodule View.CLI do
   end
 ############################################################
 
-
   # parse a location of the format string "d5" etc
   def parseLocation(raw_location) do
     l = String.graphemes(raw_location)
     case l do
       [col, row] when col in ["a", "b", "c", "d", "e", "f", "g", "h"] and row in ["1", "2", "3", "4", "5", "6", "7", "8"] -> {col, String.to_integer(row)}
+      [rank, col] when rank in ["1", "2", "3"] and col in ["1", "2", "3", "4", "5", "6", "7", "8"] -> {String.to_integer(rank), String.to_integer(col)}
       yes -> raise ArgumentError, message: "you done #{inspect yes} messed up"
     end
   end
@@ -258,6 +258,58 @@ defmodule View.CLI do
     parsed = {p_start_loc, p_end_loc, p_pieceColor}
 
     {:ok, parsed}
+  end
+
+  @doc """
+  Given a bgame and a number of dice, prompt for the player to roll the dice (press enter) and
+  continue afterwards. Basically a 'stop and wait for player input' function
+  """
+  def promptForRollOfDice(:ur, dice_number, intro_string) do
+    IO.puts("#{intro_string} Roll them bones! (press enter to roll them (#{dice_number |> Integer.to_string()}) dice)")
+    IO.gets("") # so you have to roll the dice
+  end
+
+  @doc """
+  Given a roll (list of 0s or 1s), displays the contents of the roll
+  """
+  def displayRoll(roll) when is_list(roll) do
+    roll_string = roll |> rollString()
+    IO.puts("Rolled: #{roll_string}")
+    IO.puts("Total: #{Enum.sum(roll) |> Integer.to_string()}")
+  end
+
+  @doc """
+  """
+  def promptForUrMove(game, int_roll) do
+    input = IO.gets("Please enter the move coordinates in the following format, <starting location> <ending location> <piececolor>")
+    String.trim(input)
+  end
+
+  @doc """
+  Given an int_roll (0 to 4) print to stdout a notice of no move to be made
+  """
+  def promptForNoMove(int_roll) do
+    IO.puts("There is no move to make for this roll of #{int_roll |> Integer.to_string()}")
+    IO.gets("Press enter to continue ...")
+  end
+
+  @doc """
+  Given a roll (list of 0s or 1s), turns that list into a string representation of tetrahedrons
+  """
+  def rollString(roll) do
+    roll
+    |> Enum.map(fn roll_num -> num_to_emoji(roll_num) end)
+    |> List.to_string()
+  end
+
+  @doc """
+  Given a number representing a roll (0 or 1), return a unicode character representing the roll
+  """
+  def num_to_emoji(num_roll) do
+    case num_roll do
+      0 -> "△"
+      1 -> "▣"
+    end
   end
 
   @doc """
@@ -328,6 +380,7 @@ defmodule View.CLI do
 
     IO.puts("")
   end
+
 
   @doc """
   Given an Ur board, display the contents of the board in std out

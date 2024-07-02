@@ -66,6 +66,10 @@ defmodule Tile do
     "#{renderTileFace(tile)}#{renderTile(:mt)}"
   end
 
+  def renderTile(tile, list_pieces) when is_list(list_pieces) do
+    "#{renderTileFace(tile)}#{renderManyPieces(list_pieces)}"
+  end
+
   def renderTile(color, piece) do
     raise ArgumentError, message: "invalid render tile color, got #{inspect color} and #{inspect piece}"
   end
@@ -81,6 +85,12 @@ defmodule Tile do
       :home -> "🏠"
       :end -> "🫀"
     end
+  end
+
+  def renderManyPieces(list_pieces) do
+    list_pieces
+    |> Enum.map(fn {color, piece} -> renderTile(color, piece) end)
+    |> List.first()
   end
 
   @doc """
