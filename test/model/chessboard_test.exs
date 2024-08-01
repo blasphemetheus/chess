@@ -515,7 +515,7 @@ describe " debug endgame stalemate in place of checkmate" do
     assert knight == 2
 
 
-    assert Chessboard.kingKnigBoardhtKnight(two_horse_vs_king.placements, :orange) == true
+    assert Chessboard.kingKnightKnight(two_horse_vs_king.placements, :orange) == true
     assert Chessboard.kingKnightKnight(two_horse_vs_king.placements, :blue) == false
 
     assert Chessboard.kingKnightKnight(one_horse_vs_king.placements, :orange) == false

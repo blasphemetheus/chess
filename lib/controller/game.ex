@@ -652,14 +652,12 @@ defmodule GameRunner do
   the best possible move (the one with the highest move_score)
   """
   def recursive_best_move(to_play, depth, limit, game) do
+    # todo finish this best moves
     possible_moves = Chessboard.possible_moves_of_color(game.board, to_play)
     _alpha_beta = even(depth) # so on even depths, alpha_beta is true, odd false
 
-    IO.inspect(possible_moves, label: :first_poss_moves)
-
     possible_moves
     |> Enum.map(fn x -> x |> Enum.into(%{}) end)
-    |> IO.inspect()
     |> Enum.map(fn move -> set_move_score(move, to_play, depth, limit, game) end)
     |> Enum.sort()
     |> Enum.reverse()

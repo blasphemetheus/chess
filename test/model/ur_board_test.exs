@@ -107,23 +107,21 @@ defmodule Model.UrBoardTest do
     end
 
     test "get location so many ahead returns nil or false" do
-      assert this_many_ahead({2, 4}, 8, :blue) == false
-      assert this_many_ahead({2, 4}, 8, :orange) == false
+      assert this_many_ahead({2, 4}, 8, :blue) == nil
+      assert this_many_ahead({2, 4}, 8, :orange) == nil
     end
   end
 
   describe "possible moves" do
     test "possible moves of starting board" do
-      urboard = %UrBoard{placements: startingPlacements()}
-      assert possible_moves(urboard, :orange) == [
-        {{1, 5}, {1, 4}, :orange},
+      urboard = %UrBoard{placements: startingPosition()}
+      assert possible_moves(urboard, :orange) == [{{1, 5}, {1, 4}, :orange},
         {{1, 5}, {1, 3}, :orange},
         {{1, 5}, {1, 2}, :orange},
         {{1, 5}, {1, 1}, :orange}
       ]
 
-      assert possible_moves(urboard, :blue) == [
-        {{3, 5}, {3, 4}, :orange},
+      assert possible_moves(urboard, :blue) == [{{3, 5}, {3, 4}, :orange},
         {{3, 5}, {3, 3}, :orange},
         {{3, 5}, {3, 2}, :orange},
         {{3, 5}, {3, 1}, :orange}
@@ -133,8 +131,19 @@ defmodule Model.UrBoardTest do
 
   describe "get at" do
     test "getat :(" do
-      assert startingPlacements() |> get_at({1, 5}) |> length() == 11
-      assert startingPlacements() |> get_at({1, 4}) == :mt
+      assert startingPosition() |> get_pretty_at({1, 5}) |> length() == 11
+      assert startingPosition() |> get_pretty_at({1, 4}) == :mt
+    end
+  end
+
+  describe "move" do
+    test "move " do
+      urboard = %UrBoard{placements: startingPosition()}
+      {:ok, new_urboard} = move(urboard, {1, 5}, {1, 4}, :orange)
+      assert new_urboard.placements == [[:mt, :mt, :mt, {:orange, :chit}, [{:orange, :chit}, {:orange, :chit}, {:orange, :chit}, {:orange, :chit}, {:orange, :chit}, {:orange, :chit}, {:orange, :chit}, {:orange, :chit}, {:orange, :chit}, {:orange, :chit}], :mt, :mt, :mt],
+          [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt],
+          [:mt, :mt, :mt, :mt, [{:blue, :chit}, {:blue, :chit}, {:blue, :chit}, {:blue, :chit}, {:blue, :chit}, {:blue, :chit}, {:blue, :chit}, {:blue, :chit}, {:blue, :chit}, {:blue, :chit}, {:blue, :chit}], :mt, :mt, :mt]
+        ]
     end
   end
 end

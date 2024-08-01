@@ -167,7 +167,7 @@ defmodule View.CLI do
   def displayPlacements(placements, color \\ :orange)
   def displayPlacements(placements, :orange) do
     placements
-    |> Chessboard.reversePlacements()
+    |> Board.Utils.reversePlacements()
     |> Chessboard.printPlacements()
   end
   def displayPlacements(placements, :blue) do

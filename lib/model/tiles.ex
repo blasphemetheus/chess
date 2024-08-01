@@ -12,6 +12,15 @@ defmodule Tile do
   #PieceColors can be orange or blue, but this will be expanded.
   # There are only 2 + 6 + 6 (so 14 difference possible tile states for graphics purposes)
   """
+
+  def renderTile(a_list) when is_list(a_list) do
+    # grabs the first one and uses that as it's only lists of many of the same piecetype
+    case Enum.at(a_list, 0) do
+      {:blue, :chit} -> "⛁"
+      {:orange, :chit} -> "⛃"
+    end
+  end
+
   def renderTile(:blue, piece) when is_atom(piece) do
     case piece do
       :mt -> "◻"
@@ -40,14 +49,6 @@ defmodule Tile do
     end
   end
 
-  def renderTile(a_list) when is_list(a_list) do
-    # grabs the first one and uses that as it's only lists of many of the same piecetype
-    case Enum.at(a_list, 0) do
-      {:blue, :chit} -> "⛁"
-      {:orange, :chit} -> "⛃"
-    end
-  end
-
   def renderTile(tileColor) when tileColor in [:orange, :blue] do
     case tileColor do
       :blue -> "◻"
@@ -67,7 +68,7 @@ defmodule Tile do
   end
 
   def renderTile(tile, list_pieces) when is_list(list_pieces) do
-    "#{renderTileFace(tile)}#{renderManyPieces(list_pieces)}"
+    "#{renderTileFace(tile)}#{renderTile(list_pieces)}"
   end
 
   def renderTile(color, piece) do
@@ -87,11 +88,11 @@ defmodule Tile do
     end
   end
 
-  def renderManyPieces(list_pieces) do
-    list_pieces
-    |> Enum.map(fn {color, piece} -> renderTile(color, piece) end)
-    |> List.first()
-  end
+  # def renderManyPieces(list_pieces) do
+  #   list_pieces
+  #   |> Enum.map(fn {color, piece} -> renderTile(color, piece) end)
+  #   |> List.first()
+  # end
 
   @doc """
   function that computes data representations of the 14 unique configurations (with room for more!)

@@ -1084,8 +1084,6 @@ defmodule Chessboard do
   # end
 
   def try_move!(board, move) do
-    IO.inspect(board, label: :board)
-    IO.inspect(move, label: :move)
     board
   end
 

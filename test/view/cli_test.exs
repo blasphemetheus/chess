@@ -13,29 +13,29 @@ defmodule ViewCLITest do
 
   test "showGameBoardAs chess (orange and blue)" do
     assert capture_io(fn ->
-      View.CLI.showGameBoardAs(Chessboard.createBoard(), :blue)
+      View.CLI.showGameBoardAs(:chess, Chessboard.createBoard(), :blue)
     end) == "♜ ♞ ♝ ♚ ♛ ♝ ♞ ♜\n♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎\n◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻\n◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼\n◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻\n◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼\n♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙\n♖ ♘ ♗ ♔ ♕ ♗ ♘ ♖\n\n"
 
     assert capture_io(fn ->
-      View.CLI.showGameBoardAs(Chessboard.createBoard(), :orange)
+      View.CLI.showGameBoardAs(:chess, Chessboard.createBoard(), :orange)
     end) == "♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖\n♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙\n◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻\n◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼\n◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻\n◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼\n♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎\n♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜\n\n"
   end
 
   test "showGameBoardAs ur (orange and blue)" do
     assert capture_io(fn ->
-      View.CLI.showGameBoardAs(UrBoard.createBoard(), :orange)
-    end) == "cool"
+      View.CLI.showGameBoardAs(:ur, UrBoard.createBoard(), :orange)
+    end) == "🏵 _👀_🌊_👀_🏠⛃🫀_🏵 _⚡_\n🪨_🌊_🧊_🏵 _🌊_🧊_👀_🌊_\n🏵 _👀_🌊_👀_🏠⛁🫀_🏵 _⚡_\n\n"
 
     assert capture_io(fn  ->
-      View.CLI.showGameBoardAs(UrBoard.createBoard(), :orange)
-    end) == "dope"
+      View.CLI.showGameBoardAs(:ur, UrBoard.createBoard(), :orange)
+    end) == "🏵 _👀_🌊_👀_🏠⛃🫀_🏵 _⚡_\n🪨_🌊_🧊_🏵 _🌊_🧊_👀_🌊_\n🏵 _👀_🌊_👀_🏠⛁🫀_🏵 _⚡_\n\n"
   end
   test "displays :game_intro, with Bob, Georgina, and the default starting board" do
     bob = %Player{type: :human, color: :orange, tag: "Bob"}
     georgina = %Player{type: :cpu, color: :blue, tag: "Georgina"}
     assert capture_io(fn ->
       View.CLI.displays(:game_intro, bob, georgina, Chessboard.createBoard())
-    end) == "LET THE GAME BEGIN!!!\nFACING OFF TODAY:\nWE HAVE THE VENERABLE Bob OF TYPE human\nBATTLING AGAINST Georgina OF TYPE cpu.\n\nWHO SHALL BE THE VICTOR?\nTHE STARTING POSITION IS %Board{placements: [[blue: :rook, blue: :knight, blue: :bishop, blue: :queen, blue: :king, blue: :bishop, blue: :knight, blue: :rook], [blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn], [orange: :rook, orange: :knight, orange: :bishop, orange: :queen, orange: :king, orange: :bishop, orange: :knight, orange: :rook]], order: [:orange, :blue], impale_square: :noimpale, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 1}:\n"
+    end) == "LET THE GAME BEGIN!!!\nFACING OFF TODAY:\nWE HAVE THE VENERABLE Bob OF TYPE human\nBATTLING AGAINST Georgina OF TYPE cpu.\n\nWHO SHALL BE THE VICTOR?\nTHE STARTING POSITION IS %Chessboard{placements: [[blue: :rook, blue: :knight, blue: :bishop, blue: :queen, blue: :king, blue: :bishop, blue: :knight, blue: :rook], [blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn, blue: :pawn], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [:mt, :mt, :mt, :mt, :mt, :mt, :mt, :mt], [orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn, orange: :pawn], [orange: :rook, orange: :knight, orange: :bishop, orange: :queen, orange: :king, orange: :bishop, orange: :knight, orange: :rook]], order: [:orange, :blue], impale_square: :noimpale, first_castleable: :both, second_castleable: :both, halfmove_clock: 0, fullmove_number: 1}:\n"
   end
 
   test "displays turn intro" do
@@ -57,7 +57,7 @@ defmodule ViewCLITest do
 
   test "displayGameBoard" do
     assert capture_io(fn ->
-      View.CLI.displayGameBoard(Chessboard.startingPosition() |> Chessboard.printPlacements())
+      View.CLI.displayGameBoard(:chess, Chessboard.startingPosition() |> Chessboard.printPlacements())
     end) == "♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖\n♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙\n◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻\n◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼\n◼ ◻ ◼ ◻ ◼ ◻ ◼ ◻\n◻ ◼ ◻ ◼ ◻ ◼ ◻ ◼\n♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎ ♟︎\n♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜\n\n"
     #"♜♞♝♛♚♝♞♜\n♟︎♟︎♟︎♟︎♟︎♟︎♟︎♟︎\n◻◼◻◼◻◼◻◼\n◼◻◼◻◼◻◼◻\n◻◼◻◼◻◼◻◼\n◼◻◼◻◼◻◼◻\n♙♙♙♙♙♙♙♙\n♖♘♗♕♔♗♘♖\n"
   end

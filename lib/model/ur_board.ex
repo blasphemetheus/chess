@@ -118,27 +118,58 @@ def printPlacements(placements, tiles, line_sep) do
   # |> Enum.reduce("", fn x, accum -> accum <> Enum.reduce(x, "", fn item, acc -> acc <> item end) end)
 end
 
+def get_first_if_list(possible_list) when possible_list |> is_list() do
+  List.first(possible_list)
+end
+
+def get_first_if_list(possible_list) do
+  possible_list
+end
+
 @doc """
 Given an urboard, a start_loc, end_loc and turn (color) return a result tuple with the new_board state after the move
 """
 def move(urboard, start_loc, end_loc, move_color) do
+  # todo : currently does not remove when moving chit
   placements = urboard.placements
-  moving_piece = get_pretty_at(placements, start_loc)
+  moving_piece = get_pretty_at(placements, start_loc) |> get_first_if_list()
 
   end_loc_placement = get_pretty_at(placements, end_loc)
 
   if end_loc_placement == {move_color, :chit} do
     {:error, "taking own chit, cannot make move"}
   else
-    new_placements = placements |> remove_at(start_loc) |> replace_at(end_loc, moving_piece)
+    new_placements = placements |> remove_first_at(start_loc) |> replace_at(end_loc, moving_piece)
 
     {:ok, %{urboard | placements: new_placements}}
   end
 end
 
+def remove_only_first_chit([first | rest] = starting_placement_precise) do
+  first
+end
+
+def remove_only_first_chit([first] = starting_placement) do
+  first
+end
+
+def remove_only_first_chit([]) do
+  :mt
+end
+
 def remove_at(placements, location) do
   placements
   |> replace_at(location, :mt)
+end
+
+def remove_first_at(placements, {row, col} = location) do
+  placements
+  rank = placements |> Enum.at(row - 1)
+  existing_precise = Enum.at(rank, col - 1)
+  changed_precise = existing_precise |> remove_only_first_chit()
+  new_rank = List.replace_at(rank, col - 1, changed_precise)
+
+  List.replace_at(placements, row - 1, new_rank)
 end
 
 def replace_at(placements, {row, col} = location, replacing) do
@@ -199,7 +230,6 @@ def is_there_a_move_available(urboard, int_roll, turn) do
     any -> false
   end)
   |> Enum.empty?()
-  |> IO.inspect()
 
   not empty_huh
 end
@@ -229,8 +259,8 @@ def possible_moves(urboard, turn) do
   condensed_placements
   |> interweave_2D_lists(urboard.tiles, @location_list)
   |> Enum.map(fn
-    {tile, start_location, :mt} -> nil
-    {tile, start_location, {turn, :chit}} ->
+    {:mt, tile, start_location} -> nil
+    {{turn, :chit}, tile, start_location} ->
       possible_moves_list_with_nils = for roll <- 1..4  do
         ahead_loc = this_many_ahead(start_location, roll, turn)
         at_ahead_loc = get_at(condensed_placements, ahead_loc)
@@ -464,7 +494,6 @@ def startingPosition() do
   Board.Utils.make2DList(8, 3)
   |> placeMultipleOfPiece(:orange, :chit, 11, @orange_home)
   |> placeMultipleOfPiece(:blue, :chit, 11, @blue_home)
-  |> IO.inspect()
 end
 
 @doc """
